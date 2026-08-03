@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#020617" />
+    <meta name="description" content="How the QC Scholar website handles community and download data." />
+    <link rel="icon" href="/assets/app_ic.png" type="image/png" />
+    <title>Privacy · QC Scholar</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
+      * { box-sizing: border-box; }
+      body { min-width: 320px; min-height: 100vh; margin: 0; background: radial-gradient(circle at 75% 10%, rgba(79,70,229,.18), transparent 28rem), #020617; }
+      a { color: #a5b4fc; }
+      a:focus-visible { outline: 3px solid #22d3ee; outline-offset: 4px; }
+      .wrap { width: min(760px, calc(100% - 2.5rem)); margin: 0 auto; padding: 3rem 0 5rem; }
+      .back { display: inline-flex; min-height: 44px; align-items: center; font-weight: 700; text-decoration: none; }
+      .mark { display: block; width: 48px; height: 48px; margin-top: 3rem; border-radius: 15px; object-fit: cover; box-shadow: 0 18px 60px rgba(79,70,229,.3); }
+      h1, h2 { font-family: Sora, ui-sans-serif, system-ui, sans-serif; color: #fff; letter-spacing: -.035em; }
+      h1 { margin: 1.5rem 0 .75rem; font-size: clamp(2.2rem, 8vw, 3.6rem); line-height: 1.08; }
+      h2 { margin: 2.5rem 0 .75rem; font-size: 1.25rem; }
+      p, li { color: #94a3b8; font-size: .95rem; line-height: 1.85; }
+      ul { padding-left: 1.25rem; }
+      .updated { color: #64748b; font-size: .8rem; }
+      .panel { margin-top: 2.25rem; padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid rgba(148,163,184,.14); border-radius: 24px; background: rgba(15,23,42,.72); box-shadow: inset 0 1px rgba(255,255,255,.04); }
+      code { color: #c7d2fe; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <a class="back" href="/">← Back to QC Scholar</a>
+      <img class="mark" src="/assets/app_ic.png" alt="" width="48" height="48" />
+      <h1>Website privacy</h1>
+      <p class="updated">Effective 2 August 2026</p>
+      <p>This page describes data handled by the QC Scholar landing page. It does not replace the privacy information shipped with the Android application.</p>
+
+      <div class="panel">
+        <h2>Anonymous community identity</h2>
+        <p>Firebase Anonymous Authentication creates a random account identifier in your browser so reactions can be toggled and writes can be protected by database rules. QC Scholar does not ask for a social login on this page.</p>
+
+        <h2>Public comments and reactions</h2>
+        <p>Your chosen display name and comment are public. Public comment records do not contain your Firebase author identifier. Reaction membership is stored under random anonymous Firebase identifiers so each account can manage its own vote. Those pseudonymous keys are technically readable with the public reaction data, although the interface displays only totals.</p>
+
+        <h2>Bug reports</h2>
+        <p>Bug reports are not shown in the public feed. They can be read at their exact database path by the submitting anonymous account and by site administrators. A name, contact method, and device are optional; the description, category, app version, creation time, and report status are stored. Never include passwords, API keys, private source code, or other secrets.</p>
+
+        <h2>Download counter</h2>
+        <p>The site attempts to increment a global counter after you confirm the APK download. It measures recorded link clicks, not completed downloads or installations. Cloudflare may separately process normal request logs when serving the site and R2 file.</p>
+
+        <h2>Local storage and retention</h2>
+        <p>The display name convenience field and Firebase anonymous session may persist in your browser. You can clear site data in browser settings. Public comments remain until moderated. Bug reports are retained while they are being reviewed and are deleted by the operator when no longer needed; the client does not perform automated retention.</p>
+
+        <h2>Service providers and requests</h2>
+        <p>Firebase processes authentication and database data; Cloudflare hosts the page and APK. To request correction or deletion, submit a bug report with category <strong>Other</strong>, include a way to contact you, and identify the relevant content. Because comments do not expose an owner ID, enough detail is needed to locate the item.</p>
+      </div>
+    </main>
+  </body>
+</html>

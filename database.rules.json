@@ -1,0 +1,80 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "stats": {
+      "download_count": {
+        ".read": true,
+        ".write": "auth != null && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.isNumber() && newData.val() === data.val() + 1))"
+      },
+      "$other": { ".validate": false }
+    },
+    "comments": {
+      ".read": true,
+      ".indexOn": ["createdAt"],
+      "$commentId": {
+        ".write": "auth != null && (auth.token.admin === true || (!data.exists() && newData.exists()))",
+        ".validate": "newData.hasChildren(['authorName', 'body', 'createdAt'])",
+        "authorName": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
+        },
+        "body": {
+          ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 1000"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && ((!data.exists() && newData.val() >= now - 60000 && newData.val() <= now + 1000) || (data.exists() && newData.val() === data.val()))"
+        },
+        "$other": { ".validate": false }
+      }
+    },
+    "commentReactions": {
+      ".read": true,
+      "$commentId": {
+        "$reaction": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && root.child('comments').child($commentId).exists() && ($reaction === 'upvote' || $reaction === 'like' || $reaction === 'heart') && (!newData.exists() || newData.val() === true)",
+            ".validate": "newData.val() === true"
+          }
+        }
+      }
+    },
+    "bugReports": {
+      ".read": "auth != null && auth.token.admin === true",
+      ".indexOn": ["createdAt", "status"],
+      "$reportId": {
+        ".read": "auth != null && (auth.token.admin === true || data.child('authorId').val() === auth.uid)",
+        ".write": "auth != null && (auth.token.admin === true || (!data.exists() && newData.exists() && newData.child('authorId').val() === auth.uid))",
+        ".validate": "newData.hasChildren(['authorId', 'name', 'category', 'description', 'appVersion', 'createdAt', 'status'])",
+        "authorId": {
+          ".validate": "newData.isString() && ((!data.exists() && newData.val() === auth.uid) || (data.exists() && newData.val() === data.val()))"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60"
+        },
+        "contact": {
+          ".validate": "newData.isString() && newData.val().length <= 160"
+        },
+        "category": {
+          ".validate": "newData.isString() && (newData.val() === 'Installation' || newData.val() === 'Compiler / Termux' || newData.val() === 'AI tools' || newData.val() === 'Learning content' || newData.val() === 'Other')"
+        },
+        "description": {
+          ".validate": "newData.isString() && newData.val().length >= 5 && newData.val().length <= 2000"
+        },
+        "device": {
+          ".validate": "newData.isString() && newData.val().length <= 120"
+        },
+        "appVersion": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && ((!data.exists() && newData.val() >= now - 60000 && newData.val() <= now + 1000) || (data.exists() && newData.val() === data.val()))"
+        },
+        "status": {
+          ".validate": "newData.isString() && ((!data.exists() && newData.val() === 'new') || (data.exists() && auth.token.admin === true && (newData.val() === 'new' || newData.val() === 'triaged' || newData.val() === 'resolved')))"
+        },
+        "$other": { ".validate": false }
+      }
+    },
+    "$other": { ".validate": false }
+  }
+}

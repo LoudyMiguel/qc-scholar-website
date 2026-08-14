@@ -165,8 +165,7 @@ section[id] {
 }
 
 .motion-running [data-scroll-depth],
-.motion-running [data-terminal-grid],
-.motion-running [data-terminal-card],
+.motion-running [data-hero-scene],
 .motion-running [data-hero-copy],
 .motion-running [data-hero-glow] {
   will-change: transform, opacity;

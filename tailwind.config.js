@@ -16,11 +16,15 @@ export default {
           600: '#7c3aed',
         },
         electric: '#22d3ee',
-        scholar: '#fbbf24',
+        certificate: '#fbbf24',
       },
       fontFamily: {
         display: ['Sora', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // The technical register (readouts, tags, platform metadata) carries a
+        // real monospace rather than falling through to whatever the OS picks,
+        // which on Windows is Courier New and undoes the whole aesthetic.
+        mono: ['"JetBrains Mono"', 'SFMono-Regular', 'Consolas', 'monospace'],
       },
       maxWidth: {
         site: '1160px',

@@ -57,8 +57,8 @@ import {
           <img
             src="/assets/feature-lab.webp"
             alt=""
-            width="1448"
-            height="1086"
+            width="1200"
+            height="900"
             loading="lazy"
             decoding="async"
             class="product-art absolute inset-0 h-full w-full object-cover object-center"
@@ -74,7 +74,7 @@ import {
             </div>
             <div class="mx-auto flex items-center gap-2 rounded-md border border-white/[0.06] bg-slate-950/60 px-4 py-1.5 text-[10px] font-semibold text-slate-400">
               <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_9px_#34d399]" />
-              QC Scholar · Project Studio
+              GenXYZ Lab · Project Studio
             </div>
           </div>
 
@@ -114,8 +114,8 @@ import {
               </span>
             </div>
             <div class="grid grid-cols-[1fr_auto] items-end gap-4 p-4">
-              <pre class="overflow-hidden font-mono text-[9px] leading-5 text-slate-400 sm:text-[10px]"><code><span class="text-violet-300">final</span> project = ScholarProject(
-  idea: <span class="text-amber-200">'build on Android'</span>,
+              <pre class="overflow-hidden font-mono text-[9px] leading-5 text-slate-400 sm:text-[10px]"><code><span class="text-violet-300">final</span> project = LabProject(
+  idea: <span class="text-amber-200">'build anywhere'</span>,
 );
 project.<span class="text-cyan-300">run</span>();</code></pre>
               <span class="hidden items-center gap-2 rounded-full bg-emerald-400/10 px-3 py-1.5 text-[9px] font-bold text-emerald-300 sm:inline-flex">

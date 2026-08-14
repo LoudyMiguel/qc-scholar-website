@@ -1,4 +1,4 @@
-# QC Scholar image-generation prompts
+# GenXYZ Lab image-generation prompts
 
 Generate these as standalone artwork—not website screenshots—and export them as optimized WebP files into this directory. The hero is now a responsive HTML/CSS terminal grid, so it does not require generated artwork.
 

@@ -16,7 +16,7 @@ const props = defineProps({
 defineEmits(['react'])
 
 const initials = computed(() => {
-  const words = String(props.comment.authorName || 'Anonymous scholar')
+  const words = String(props.comment.authorName || 'Anonymous builder')
     .trim()
     .split(/\s+/)
     .slice(0, 2)

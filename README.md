@@ -1,36 +1,41 @@
-# QC Scholar website
+# GenXYZ Lab website
 
-A production-ready Vue 3/Vite landing page for QC Scholar. It includes a lazy-loaded procedural Three.js hero, an accessible download-intercept modal, Firebase Realtime Database interactions, anonymous reactions, private bug reports, and Cloudflare Pages deployment headers.
+The marketing and download site for GenXYZ Lab, an offline-first learning and
+coding studio. Vue 3 + Vite + Tailwind, with a lazy procedural Three.js hero,
+multi-platform release downloads (Android APK and Windows), Firebase Realtime
+Database community features, and Cloudflare Pages deployment headers.
 
-Everything in this project lives under `quizy/website`; it does not modify the Flutter application.
+Everything lives under `quizy/website`; nothing here modifies the Flutter
+application.
+
+- Release process: [`RELEASE_RUNBOOK.md`](RELEASE_RUNBOOK.md)
+- First-time deployment and domain setup: [`DEPLOYMENT.md`](DEPLOYMENT.md)
 
 ## Project structure
 
 ```text
 website/
+├─ assets-source/            # full-resolution originals, never shipped
+├─ scripts/optimize-assets.mjs
 ├─ public/
-│  ├─ assets/IMAGE_PROMPTS.md
-│  ├─ _headers
-│  ├─ _redirects
-│  └─ favicon.svg
+│  ├─ assets/                # generated, web-sized images only
+│  ├─ _headers               # CSP and cache policy
+│  ├─ _redirects             # SPA fallback
+│  └─ privacy.html
 ├─ src/
 │  ├─ assets/main.css
 │  ├─ components/
-│  │  ├─ BrandLogo.vue
-│  │  ├─ CommentCard.vue
-│  │  ├─ CommunitySection.vue
-│  │  ├─ DownloadModal.vue
-│  │  ├─ FeatureBento.vue
-│  │  ├─ HeroSection.vue
-│  │  ├─ ImpactStrip.vue
-│  │  ├─ ProductShowcase.vue
-│  │  ├─ ScholarScene.vue
-│  │  ├─ SetupGuide.vue
-│  │  ├─ SiteFooter.vue
+│  │  ├─ BrandLogo.vue          CommentCard.vue
+│  │  ├─ CommunitySection.vue   DownloadModal.vue
+│  │  ├─ FeatureBento.vue       HeroSection.vue
+│  │  ├─ ImpactStrip.vue        LabScene.vue
+│  │  ├─ PlatformDownloads.vue  ProductShowcase.vue
+│  │  ├─ SetupGuide.vue         SiteFooter.vue
 │  │  └─ SiteHeader.vue
-│  ├─ composables/useCommunity.js
-│  ├─ config/site.js
+│  ├─ composables/{useCommunity,useScrollExperience}.js
+│  ├─ config/site.js         # releases, platform detection, site origin
 │  ├─ services/firebase.js
+│  ├─ three/labScene.js      # WebGL scene, dynamically imported
 │  ├─ App.vue
 │  └─ main.js
 ├─ .env.example
@@ -44,7 +49,7 @@ website/
 
 ## Run locally
 
-Use Node 20 or newer.
+Node 20 or newer.
 
 ```bash
 cd "C:\flutter project\quizy\website"
@@ -53,22 +58,97 @@ copy .env.example .env.local
 npm run dev
 ```
 
-The marketing page works without Firebase credentials. Until they are configured, the community UI shows a clear preview state and its write controls remain disabled.
-
-Create a production bundle with:
+The page works without Firebase credentials. Until they are configured, the
+community UI shows a preview state and its write controls stay disabled.
 
 ```bash
-npm run build
-npm run preview
+npm run lint      # ESLint — catches undefined references
+npm run build     # production bundle into dist/
+npm run check     # lint, then build (run this before deploying)
+npm run preview   # serve the built bundle
+npm run assets    # regenerate public/assets from assets-source/
 ```
+
+**Run `npm run lint` before deploying.** A clean `vite build` does not mean the
+page works: a bundler resolves imports, it does not check that every identifier
+exists. A stale `terminalCards.forEach(...)` once built perfectly and then threw
+a `ReferenceError` inside a GSAP setup callback at runtime, which aborted the
+reveal-animation setup and left every section below the hero stuck at
+`visibility: hidden`. The page shipped as a hero and a footer with nothing in
+between. ESLint's `no-undef` flags that in about a second; that is the entire
+reason the config exists.
+
+Two defences were added alongside it, in `useScrollExperience.js` and
+`main.js`: each motion setup step is isolated so one failure cannot cascade,
+and the `js-motion` class that performs the initial hide is dropped once setup
+finishes (plus a 4-second timeout in `main.js` for the case where the app never
+mounts at all). The worst case is now a site without entrance animations rather
+than a site with no visible content.
+
+## Releases and platform downloads
+
+`src/config/site.js` builds a `releases` array from environment variables. Each
+entry carries its own URL, size, requirement line, and install note.
+
+```env
+VITE_APK_DOWNLOAD_URL=https://downloads.example.com/genxyz-lab-latest.apk
+VITE_APK_SIZE=~100 MB
+VITE_WINDOWS_DOWNLOAD_URL=https://downloads.example.com/genxyz-lab-latest-windows.zip
+VITE_WINDOWS_SIZE=~120 MB
+VITE_APP_VERSION=1.0.0
+VITE_RELEASE_DATE=2026-08-07
+```
+
+A URL still pointing at `downloads.example.com` is treated as **not published
+yet**: that platform renders as *Coming soon* with a disabled button rather
+than a dead link. This is the mechanism that lets Android ship before Windows
+without any code change.
+
+`detectPlatform()` reads the user agent to preselect a build and badge it
+"Your device". It only reorders and preselects — user-agent detection is a
+hint, never a fact, so every platform stays one click away.
+
+Release binaries are never committed. Upload them to Cloudflare R2 with:
+
+- `Content-Type: application/vnd.android.package-archive` (APK) or
+  `application/zip` (Windows)
+- `Content-Disposition: attachment; filename="…"`
+- Long cache lifetimes only on versioned object names, never on a mutable
+  `latest` object.
+
+## The Three.js hero
+
+`src/three/labScene.js` builds a faceted core inside three tilted orbits
+carrying toolchain nodes, each tethered to the centre. It uses only core
+Three.js primitives with unlit materials — no loaders, no post-processing, no
+lights — so it tree-shakes small and costs no lighting passes.
+
+It is gated hard, because the library is ~180 kB gzipped and this product is
+Android-first:
+
+| Condition | Result |
+|---|---|
+| Viewport under 768 px | CSS fallback, Three.js never fetched |
+| `navigator.connection.saveData` | CSS fallback, Three.js never fetched |
+| WebGL unavailable or blocked | CSS fallback, canvas stays hidden |
+| `prefers-reduced-motion: reduce` | One static composed frame, no RAF loop |
+| Scrolled offscreen, or tab hidden | Loop paused |
+
+The CSS fallback in `LabScene.vue` is a finished visual in its own right, not a
+blank state. On teardown every geometry, material, and the renderer are
+disposed and the WebGL context is explicitly released — browsers cap live
+contexts per page.
 
 ## Connect Firebase
 
 1. Create a Firebase project and register a Web app.
-2. Create a Realtime Database. Choose a region near the primary audience.
-3. In **Authentication → Sign-in method**, enable **Anonymous** authentication. Visitors receive an invisible anonymous UID; no login screen is shown.
-4. Copy `.env.example` to `.env.local` and replace every `VITE_FIREBASE_*` value with the Web app configuration. Firebase Web API keys are intentionally public; never put a service-account key in this site.
-5. Install the Firebase CLI and deploy the included default-deny rules:
+2. Create a Realtime Database in a region near the primary audience.
+3. In **Authentication → Sign-in method**, enable **Anonymous**. Visitors get an
+   invisible anonymous UID; no login screen is shown.
+4. Copy `.env.example` to `.env.local` and fill in every `VITE_FIREBASE_*`
+   value. Firebase Web API keys are intentionally public; never put a
+   service-account key in this site.
+5. Deploy the included default-deny rules:
 
    ```bash
    npm install --global firebase-tools
@@ -77,82 +157,101 @@ npm run preview
    firebase deploy --only database
    ```
 
-6. Add the final Cloudflare Pages domain to **Authentication → Settings → Authorized domains**.
-7. Recommended: register a reCAPTCHA Enterprise app in Firebase App Check for the production domain, place its site key in `VITE_FIREBASE_APPCHECK_SITE_KEY`, monitor valid traffic, then enforce App Check for Realtime Database.
+6. Add the production domain to **Authentication → Settings → Authorized
+   domains**.
+7. Recommended: register a reCAPTCHA Enterprise app in Firebase App Check, put
+   its site key in `VITE_FIREBASE_APPCHECK_SITE_KEY`, watch valid traffic, then
+   enforce App Check for Realtime Database.
 
-The data layout is:
+Data layout:
 
 ```text
 stats/download_count
+stats/platform_downloads/{android|windows}
 comments/{commentId}
 commentReactions/{commentId}/{upvote|like|heart}/{anonymousUid}
 bugReports/{reportId}
 ```
 
-Comments and reaction totals are public and update through live listeners. Public comment records deliberately omit Firebase author UIDs. Reaction listeners are scoped to the 50 visible comments instead of downloading the entire reaction tree. Bug reports are not public; the included rules let only the submitting anonymous user or an account with an `admin: true` custom claim read the exact report. Public visitors cannot edit or delete comments after submission. Administrators can moderate through the Firebase console/Admin SDK.
+Comments and reaction totals are public and update through live listeners.
+Public comment records deliberately omit Firebase author UIDs. Reaction
+listeners are scoped to the 50 visible comments rather than the whole tree. Bug
+reports are not public: the rules let only the submitting anonymous user or an
+account with an `admin: true` custom claim read a report. Public visitors
+cannot edit or delete comments after submission; moderate through the Firebase
+console or Admin SDK.
 
-### What the counter means
+`stats/platform_downloads` needs the updated rules deployed. Its client
+increment is deliberately best-effort and never rethrows, so a project still on
+the older rules keeps working instead of failing every download click.
 
-`download_count` is an atomic, best-effort count of confirmation-link clicks, not completed APK installations. A direct public client counter can never be authoritative: scripted anonymous accounts can click repeatedly, navigation can interrupt an in-flight client request, and direct R2 links bypass the page. Use Cloudflare R2/Analytics logs as the source of truth for file requests. For stronger abuse controls later, place comment/download writes behind a rate-limited Cloudflare Worker or Firebase callable function.
+### What the counters mean
 
-Public reaction membership is keyed by random Firebase anonymous UIDs so one anonymous account can toggle only its own reaction. Those pseudonymous keys are readable under the public reaction path even though the UI never displays them. At larger scale, replace this MVP model with private vote membership plus trusted server-maintained aggregate counts.
+They count confirmation-link clicks, not completed installations. A public
+client counter can never be authoritative: scripted anonymous accounts can
+click repeatedly, navigation can interrupt an in-flight request, and direct R2
+links bypass the page entirely. Use Cloudflare R2 and Analytics logs as the
+source of truth for file requests. For stronger abuse controls, move
+comment and download writes behind a rate-limited Cloudflare Worker or a
+Firebase callable function.
 
-## Configure the R2 APK
+## Images
 
-The APK should not be committed to Git. Upload it to a public Cloudflare R2 bucket or a bucket served through a custom download domain.
+`assets-source/` holds the full-resolution artwork originals and is never
+copied into the bundle — see [`assets-source/README.md`](assets-source/README.md).
 
-Set object metadata when uploading:
+**The app icon is read directly from the Flutter project**
+(`../assets/images/app_ic.png`), not from a copy. A duplicated copy previously
+went stale through an entire rebrand: the app moved to the GenXYZ "G" mark
+while the site kept generating its favicon, logo, and social card from the old
+"Q". The script also measures the icon's own corner radius and cuts the
+painted-black corners to real transparency, since the source PNG has no alpha.
 
-- `Content-Type: application/vnd.android.package-archive`
-- `Content-Disposition: attachment; filename="qc-scholar-latest.apk"`
-- A long cache lifetime only if the object name is versioned. Do not long-cache a mutable `latest` object.
+`npm run assets` regenerates everything in `public/assets`:
 
-Then set this Cloudflare Pages environment variable:
+| Output | Purpose |
+|---|---|
+| `logo.png` (256²) | Header and footer mark |
+| `apple-touch-icon.png` (180²) | iOS home screen |
+| `favicon.png` (48²) | Browser tab |
+| `og-cover.png` (1200×630) | Social link previews |
+| `feature-lab.webp`, `community-constellation.webp` | Section artwork |
 
-```text
-VITE_APK_DOWNLOAD_URL=https://downloads.your-domain.com/qc-scholar-v1.0.0.apk
-```
+This pass took shipped image weight from about 5.1 MB to 422 kB. The previous
+`app_ic.png` was a 1.45 MB, 1254² file used as both the favicon and a 40 px
+header logo.
 
-Optional release presentation variables:
-
-```text
-VITE_APP_VERSION=1.0.0
-VITE_APK_SIZE=~100 MB
-VITE_RELEASE_DATE=2026-08-02
-```
-
-The final modal link always proceeds to the APK even if Firebase tracking is unavailable.
+Regeneration prompts for the artwork are in
+[`assets-source/IMAGE_PROMPTS.md`](assets-source/IMAGE_PROMPTS.md).
 
 ## Deploy to Cloudflare Pages
-
-For a repository whose root is the Flutter project, use:
 
 - **Root directory:** `website`
 - **Build command:** `npm run build`
 - **Build output directory:** `dist`
 - **Node version:** `20`
 
-Add every production `VITE_*` value under **Workers & Pages → your project → Settings → Variables and Secrets**, then redeploy. Vite substitutes these values at build time.
+Add every production `VITE_*` value under **Workers & Pages → your project →
+Settings → Variables and Secrets**, then redeploy. Vite substitutes them at
+build time, so a variable change always needs a fresh deployment.
 
-The files in `public/_headers` provide a restrictive security policy and `public/_redirects` provides an SPA fallback. If Firebase, reCAPTCHA, or the R2 hostname changes, update the `connect-src`, `frame-src`, or download navigation policy as needed and test the deployed browser console.
+`public/_headers` carries a restrictive CSP and cache policy; `public/_redirects`
+provides the SPA fallback. `robots.txt` and `sitemap.xml` are generated at build
+time from `VITE_SITE_URL` — do not add static copies, or the domain ends up
+defined in three places.
 
-## Add generated artwork
-
-The three detailed generation prompts are in [`public/assets/IMAGE_PROMPTS.md`](public/assets/IMAGE_PROMPTS.md). Save optimized results with these exact names:
-
-```text
-public/assets/hero-scholar.webp
-public/assets/feature-lab.webp
-public/assets/community-constellation.webp
-```
-
-No image is required for the first run. The live Three.js scene and CSS surfaces provide graceful fallbacks, and the generated art is decorative rather than a container for essential text.
+If Firebase, reCAPTCHA, or the download hostname changes, update `connect-src`,
+`frame-src`, or the navigation policy in `_headers` and check the deployed
+browser console.
 
 ## Accessibility and performance decisions
 
-- The modal traps keyboard focus, closes with Escape/backdrop/secondary action, and restores focus.
-- Visitor text is rendered as plain Vue interpolation; the site never uses `v-html` for Firebase content.
-- All important information remains readable without WebGL or generated assets.
-- Three.js is loaded as a separate lazy chunk, pauses offscreen, caps device pixel ratio, and disposes GPU resources on unmount.
-- `prefers-reduced-motion` disables continuous scene movement and CSS animation.
-- Controls use visible focus rings and minimum 44–48 px targets.
+- The download modal traps focus, closes on Escape/backdrop/secondary action,
+  and restores focus to the trigger.
+- Visitor text renders as plain Vue interpolation; the site never uses `v-html`
+  for Firebase content.
+- All important information stays readable without WebGL or generated artwork.
+- `prefers-reduced-motion` disables scroll smoothing, entrance motion, and
+  continuous scene movement.
+- Controls use visible focus rings and 44–48 px minimum targets.
+- Platform detection changes presentation only; it never hides a download.

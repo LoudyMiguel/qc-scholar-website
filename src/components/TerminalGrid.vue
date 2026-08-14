@@ -16,7 +16,7 @@ const panels = [
     ],
   },
   {
-    command: 'qc compiler sync --android',
+    command: 'gl compiler sync --android',
     label: 'COMPILER MANAGER // SYNC',
     status: 'connected',
     tone: 'green',
@@ -29,7 +29,7 @@ const panels = [
     ],
   },
   {
-    command: 'qc learn cache kotlin-foundations',
+    command: 'gl learn cache kotlin-foundations',
     label: 'LEARNING // OFFLINE CACHE',
     status: 'indexed',
     tone: 'violet',
@@ -42,7 +42,7 @@ const panels = [
     ],
   },
   {
-    command: 'qc build ./hello-android',
+    command: 'gl build ./hello-android',
     label: 'PROJECT STUDIO // BUILD',
     status: 'building',
     tone: 'cyan',
@@ -55,7 +55,7 @@ const panels = [
     ],
   },
   {
-    command: 'qc ai diagnose --project current',
+    command: 'gl ai diagnose --project current',
     label: 'ASSISTANT // DIAGNOSTICS',
     status: 'analyzing',
     tone: 'violet',
@@ -81,7 +81,7 @@ const panels = [
     ],
   },
   {
-    command: 'qc test --course exercises',
+    command: 'gl test --course exercises',
     label: 'PRACTICE // TEST RUNNER',
     status: 'passing',
     tone: 'green',
@@ -94,7 +94,7 @@ const panels = [
     ],
   },
   {
-    command: 'qc release verify --latest',
+    command: 'gl release verify --latest',
     label: 'RELEASE // INTEGRITY',
     status: 'verified',
     tone: 'violet',
@@ -107,7 +107,7 @@ const panels = [
     ],
   },
   {
-    command: 'qc progress export --certificate',
+    command: 'gl progress export --certificate',
     label: 'PROGRESS // EVENT LOG',
     status: 'complete',
     tone: 'cyan',
@@ -153,7 +153,8 @@ onMounted(() => {
     },
     { rootMargin: '180px 0px' },
   )
-  observer.observe(document.querySelector('[data-terminal-grid]'))
+  const wall = document.querySelector('[data-terminal-grid]')
+  if (wall) observer.observe(wall)
 
   timer = window.setInterval(() => {
     if (inView.value) tick.value += 1
@@ -212,31 +213,38 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* Texture, not a panel. The wall fills its section as a backdrop and is masked
+   away at every edge so it dissolves into the page instead of ending on a hard
+   rectangle. Foreground copy always sits above it, so the opacity here is
+   chosen to stay legible-as-atmosphere without competing for attention. */
 .terminal-wall {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  transform-origin: 72% 42%;
-  will-change: transform, opacity;
+  perspective: 1700px;
+  opacity: 0.3;
+  mask-image:
+    linear-gradient(to bottom, transparent, #000 18%, #000 76%, transparent),
+    linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent, #000 18%, #000 76%, transparent),
+    linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+  -webkit-mask-composite: source-in;
+  will-change: transform;
 }
 
 .terminal-stage {
-  position: absolute;
-  top: 5.75rem;
-  right: -7.5rem;
   display: grid;
-  width: min(80vw, 1120px);
-  height: 690px;
+  width: 100%;
+  height: 100%;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(3, minmax(0, 1fr));
-  border-top: 1px solid rgba(148, 163, 184, 0.12);
-  border-left: 1px solid rgba(148, 163, 184, 0.12);
-  background: rgba(1, 4, 10, 0.44);
-  box-shadow: 0 0 120px rgba(34, 211, 238, 0.08);
-  opacity: 0.82;
-  transform: perspective(1450px) rotateX(3deg) rotateY(-5deg) rotateZ(-0.55deg);
-  transform-origin: 64% 42%;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  border-left: 1px solid rgba(148, 163, 184, 0.1);
+  transform: rotateX(4deg) rotateZ(-0.4deg) scale(1.06);
+  transform-origin: 50% 50%;
 }
 
 .terminal-panel {
@@ -275,8 +283,8 @@ onBeforeUnmount(() => {
   gap: 0.45rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.075);
   padding: 0 1rem;
-  color: rgba(226, 232, 240, 0.66);
-  font-size: 10px;
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 11px;
   letter-spacing: -0.015em;
   white-space: nowrap;
 }
@@ -306,7 +314,7 @@ onBeforeUnmount(() => {
   gap: 0.5rem;
   opacity: 0;
   filter: blur(2px);
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.35;
   transform: translateY(5px);
   transition:
@@ -316,7 +324,7 @@ onBeforeUnmount(() => {
 }
 
 .terminal-line.is-printed {
-  opacity: 0.72;
+  opacity: 0.85;
   filter: blur(0);
   transform: translateY(0);
 }
@@ -355,8 +363,8 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   border-top: 1px solid rgba(148, 163, 184, 0.075);
   padding: 0 0.8rem;
-  color: rgba(100, 116, 139, 0.58);
-  font-size: 7px;
+  color: rgba(100, 116, 139, 0.72);
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -426,49 +434,54 @@ onBeforeUnmount(() => {
   }
 }
 
+/* Fewer, larger cells as the width drops. Nine columns of monospace on a phone
+   compresses into unreadable specks that read as dirt rather than texture. */
 @media (max-width: 1023px) {
   .terminal-stage {
-    right: -16rem;
-    width: 960px;
-    opacity: 0.62;
-    transform: perspective(1300px) rotateX(2deg) rotateY(-4deg) rotateZ(-0.4deg);
-  }
-}
-
-@media (max-width: 639px) {
-  .terminal-stage {
-    top: 28rem;
-    left: 50%;
-    right: auto;
-    width: 720px;
-    height: 620px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: repeat(3, minmax(0, 1fr));
-    opacity: 0.62;
-    transform: translateX(-47%) perspective(1100px) rotateX(1.5deg) rotateY(-3deg) scale(0.88);
-    transform-origin: top center;
   }
 
   .terminal-panel:nth-child(n + 7) {
     display: none;
   }
+}
 
-  .terminal-command {
-    padding-inline: 0.8rem;
-    font-size: 9px;
+@media (max-width: 639px) {
+  .terminal-wall {
+    opacity: 0.2;
   }
 
-  .terminal-output {
-    padding-inline: 0.8rem;
+  .terminal-stage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    transform: none;
   }
 
-  .terminal-line {
-    font-size: 8px;
+  .terminal-panel:nth-child(n + 4) {
+    display: none;
   }
 
   .terminal-scan {
     left: 10%;
     opacity: 0.22;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-scan,
+  .terminal-caret,
+  .is-active .terminal-state i {
+    animation: none;
+  }
+
+  /* The typewriter reveal is driven by a JS tick, so with motion reduced every
+     line is simply shown at rest rather than animating in. */
+  .terminal-line {
+    opacity: 0.85;
+    filter: none;
+    transform: none;
+    transition: none;
   }
 }
 

@@ -48,7 +48,7 @@ const bugForm = reactive({
 
 onMounted(() => {
   try {
-    const savedName = localStorage.getItem('qc-scholar-display-name')
+    const savedName = localStorage.getItem('genxyz-lab-display-name')
     if (savedName) {
       commentForm.authorName = savedName
       bugForm.name = savedName
@@ -68,7 +68,7 @@ async function submitComment() {
     rememberName(commentForm.authorName)
     bugForm.name = commentForm.authorName
     commentForm.body = ''
-    showStatus('Your comment is live. Thank you for helping shape QC Scholar.')
+    showStatus('Your comment is live. Thank you for helping shape GenXYZ Lab.')
   } catch (submitError) {
     showStatus(submitError?.message || 'The comment could not be posted.', 'error')
   } finally {
@@ -107,7 +107,7 @@ async function handleReaction(commentId, type) {
 function rememberName(name) {
   try {
     localStorage.setItem(
-      'qc-scholar-display-name',
+      'genxyz-lab-display-name',
       String(name || '').trim().slice(0, 40),
     )
   } catch {
@@ -138,8 +138,8 @@ async function handleTabKeydown(event) {
     <img
       src="/assets/community-constellation.webp"
       alt=""
-      width="1915"
-      height="821"
+      width="1600"
+      height="686"
       loading="lazy"
       decoding="async"
       class="community-art pointer-events-none absolute left-1/2 top-8 h-[430px] w-[min(1400px,120vw)] max-w-none -translate-x-1/2 object-cover object-center opacity-30"
@@ -218,7 +218,7 @@ async function handleTabKeydown(event) {
                 class="field-control"
                 maxlength="40"
                 autocomplete="nickname"
-                placeholder="Anonymous scholar"
+                placeholder="Anonymous builder"
                 :disabled="!firebaseReady || submitting"
               />
             </div>
@@ -234,7 +234,7 @@ async function handleTabKeydown(event) {
                 minlength="3"
                 maxlength="1000"
                 required
-                placeholder="What would make QC Scholar more useful for you?"
+                placeholder="What would make GenXYZ Lab more useful for you?"
                 :disabled="!firebaseReady || submitting"
               />
             </div>
@@ -259,7 +259,7 @@ async function handleTabKeydown(event) {
             <div class="grid gap-4 sm:grid-cols-2">
               <div>
                 <label for="bug-name" class="field-label">Your name <span class="normal-case tracking-normal text-slate-600">(optional)</span></label>
-                <input id="bug-name" v-model="bugForm.name" class="field-control" maxlength="60" autocomplete="name" placeholder="Anonymous scholar" :disabled="!firebaseReady || submitting" />
+                <input id="bug-name" v-model="bugForm.name" class="field-control" maxlength="60" autocomplete="name" placeholder="Anonymous builder" :disabled="!firebaseReady || submitting" />
               </div>
               <div>
                 <label for="bug-contact" class="field-label">Contact <span class="normal-case tracking-normal text-slate-600">(optional)</span></label>
@@ -277,7 +277,7 @@ async function handleTabKeydown(event) {
               </div>
               <div>
                 <label for="bug-device" class="field-label">Device <span class="normal-case tracking-normal text-slate-600">(optional)</span></label>
-                <input id="bug-device" v-model="bugForm.device" class="field-control" maxlength="120" placeholder="e.g. Pixel 8, Android 15" :disabled="!firebaseReady || submitting" />
+                <input id="bug-device" v-model="bugForm.device" class="field-control" maxlength="120" placeholder="e.g. Pixel 8 (Android 15) or Windows 11" :disabled="!firebaseReady || submitting" />
               </div>
             </div>
             <div class="mt-4">
@@ -319,7 +319,7 @@ async function handleTabKeydown(event) {
           <div class="flex items-center justify-between gap-4 border-b border-slate-800 pb-5">
             <div>
               <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Live community</p>
-              <h3 class="mt-2 font-display text-xl font-semibold text-white">Ideas from fellow scholars</h3>
+              <h3 class="mt-2 font-display text-xl font-semibold text-white">Ideas from fellow builders</h3>
             </div>
             <span class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em]" :class="firebaseReady ? 'border-emerald-400/15 bg-emerald-400/[0.06] text-emerald-300' : 'border-slate-700 bg-slate-900 text-slate-500'">
               <span class="h-1.5 w-1.5 rounded-full" :class="firebaseReady ? 'bg-emerald-400' : 'bg-slate-600'" />

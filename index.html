@@ -4,26 +4,77 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#020617" />
+
+    <title>GenXYZ Lab — Learn to code and build real projects on Android &amp; Windows</title>
     <meta
       name="description"
-      content="QC Scholar turns Android into an offline-first learning, coding, and project-building studio."
+      content="Free offline-first coding studio for Android and Windows. 50+ free offline courses, 7 built-in tools including an API tester, Arduino uploader and web-app builder, 20+ app frameworks, 30+ open-source games, and 20+ system templates."
     />
-    <meta property="og:title" content="QC Scholar — Learn. Code. Build." />
+    <link rel="canonical" href="%VITE_SITE_URL%/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="author" content="GenXYZ Lab" />
+
+    <meta property="og:site_name" content="GenXYZ Lab" />
+    <meta property="og:title" content="GenXYZ Lab — Learn. Code. Build." />
     <meta
       property="og:description"
-      content="Guided learning, real code practice, compiler setup, and project tools in one Android workspace."
+      content="50+ free offline courses, 7 developer tools, 20+ app frameworks, 30+ open-source games and 20+ system templates. Free for Android and Windows."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/assets/app_ic.png" />
-    <link rel="icon" href="/assets/app_ic.png" type="image/png" />
-    <link rel="apple-touch-icon" href="/assets/app_ic.png" />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <!-- Absolute URL on purpose: crawlers and chat previews discard a relative
+         og:image, which is how a link ends up sharing with no thumbnail. -->
+    <meta property="og:image" content="%VITE_SITE_URL%/assets/og-cover.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="GenXYZ Lab — Learn. Code. Build." />
+    <meta
+      name="twitter:description"
+      content="50+ free offline courses, 7 developer tools, 20+ frameworks, 30+ open-source games and 20+ system templates. Android and Windows."
+    />
+    <meta name="twitter:image" content="%VITE_SITE_URL%/assets/og-cover.png" />
+
+    <link rel="icon" href="/assets/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
-    <title>QC Scholar — Learn. Code. Build.</title>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "GenXYZ Lab",
+        "url": "%VITE_SITE_URL%/",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Android 8.0+, Windows 10, Windows 11",
+        "softwareVersion": "%VITE_APP_VERSION%",
+        "description": "An offline-first learning and coding studio with 50+ free offline courses, 7 built-in developer tools, 20+ app development frameworks, 30+ open-source games, and 20+ open-source system templates.",
+        "image": "%VITE_SITE_URL%/assets/og-cover.png",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "50+ free offline courses with quizzes and certificates",
+          "7 built-in developer tools including an API tester, an Arduino uploader, and a web app builder that converts a website into a mobile app",
+          "20+ supported frameworks for mobile and app development",
+          "30+ open-source games with readable, runnable source",
+          "20+ open-source system templates including a Business Inventory System and a File Management System",
+          "Code practice across ten language toolchains",
+          "Compiler Manager for local toolchain setup",
+          "Project-aware AI assistance"
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

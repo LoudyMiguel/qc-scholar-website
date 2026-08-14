@@ -107,23 +107,44 @@ export function subscribeToDownloadCount(onData, onError = console.error) {
   )
 }
 
-export async function recordDownloadClick() {
+function incrementCounter(path) {
+  return runTransaction(ref(database, path), (current) => {
+    if (current === null) return 1
+    if (!Number.isSafeInteger(current) || current < 0) return
+    return current + 1
+  })
+}
+
+export async function recordDownloadClick(platform = '') {
   await ensureAnonymousUser()
 
-  const result = await runTransaction(
-    ref(database, 'stats/download_count'),
-    (current) => {
-      if (current === null) return 1
-      if (!Number.isSafeInteger(current) || current < 0) return
-      return current + 1
-    },
-  )
+  const result = await incrementCounter('stats/download_count')
 
   if (!result.committed) {
     throw new Error('The download counter transaction was not committed.')
   }
 
+  // Per-platform breakdown is deliberately best-effort and never rethrows: it
+  // needs a rules deploy the aggregate counter does not, so a project still on
+  // the older rules keeps working instead of failing every download click.
+  if (platform === 'android' || platform === 'windows') {
+    incrementCounter(`stats/platform_downloads/${platform}`).catch(() => {})
+  }
+
   return result.snapshot.val()
+}
+
+export function subscribeToPlatformDownloads(onData, onError = console.error) {
+  if (!isFirebaseConfigured) {
+    onData({})
+    return () => {}
+  }
+
+  return onValue(
+    ref(database, 'stats/platform_downloads'),
+    (snapshot) => onData(snapshot.val() || {}),
+    onError,
+  )
 }
 
 export function subscribeToComments(onData, onError = console.error) {
@@ -171,7 +192,7 @@ export function subscribeToCommentReactions(
 
 export async function createComment({ authorName, body }) {
   await ensureAnonymousUser()
-  const name = normalizeText(authorName, 40) || 'Anonymous scholar'
+  const name = normalizeText(authorName, 40) || 'Anonymous builder'
   const message = normalizeText(body, 1000)
 
   if (message.length < 3) {
@@ -226,7 +247,7 @@ export async function createBugReport({
 
   const payload = {
     authorId: user.uid,
-    name: normalizeText(name, 60) || 'Anonymous scholar',
+    name: normalizeText(name, 60) || 'Anonymous builder',
     category: normalizeText(category, 32) || 'Other',
     description: details,
     appVersion: normalizeText(appVersion, 40) || 'Unknown',
@@ -246,6 +267,10 @@ export async function createBugReport({
 
 function normalizeText(value, maxLength) {
   return String(value || '')
+    // Control characters are the point of this expression, not an accident:
+    // visitor-supplied names and comments are stripped of them before they
+    // reach the database.
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
     .trim()
     .slice(0, maxLength)

@@ -15,7 +15,7 @@ const year = new Date().getFullYear()
         <div>
           <BrandLogo />
           <p class="mt-5 max-w-md text-sm leading-7 text-slate-500">
-            Guided learning, on-device coding, developer tools, and proof of progress in one Android workspace.
+            Guided learning, on-device coding, developer tools, and proof of progress in one workspace — on Android and Windows.
           </p>
           <p class="mt-4 inline-flex items-center gap-2 text-[11px] font-semibold text-slate-600">
             Built independently with
@@ -28,10 +28,11 @@ const year = new Date().getFullYear()
           <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">Explore</p>
           <div class="mt-4 flex flex-col items-start gap-1">
             <a href="#features" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Features</a>
-            <a href="#setup" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Android setup</a>
+            <a href="#download" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Download</a>
+            <a href="#setup" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Setup</a>
             <a href="#community" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Community</a>
             <a href="/privacy.html" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Privacy</a>
-            <button type="button" class="inline-flex min-h-10 items-center text-xs font-semibold text-indigo-300 transition hover:text-indigo-200" @click="$emit('download')">Download APK</button>
+            <button type="button" class="inline-flex min-h-10 items-center text-xs font-semibold text-indigo-300 transition hover:text-indigo-200" @click="$emit('download')">Get GenXYZ Lab</button>
           </div>
         </nav>
 
@@ -53,9 +54,9 @@ const year = new Date().getFullYear()
       </div>
 
       <div class="flex flex-col gap-3 pt-6 text-[10px] leading-5 text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-        <p>© {{ year }} QC Scholar. All rights reserved.</p>
+        <p>© {{ year }} GenXYZ Lab. All rights reserved.</p>
         <p class="max-w-xl sm:text-right">
-          Termux is a separate open-source project. QC Scholar is not affiliated with or endorsed by the Termux maintainers or F-Droid.
+          Termux is a separate open-source project. GenXYZ Lab is not affiliated with or endorsed by the Termux maintainers or F-Droid.
         </p>
       </div>
     </div>

@@ -11,10 +11,10 @@ defineProps({
   <a
     href="#top"
     class="group inline-flex min-h-11 items-center gap-3 rounded-xl"
-    aria-label="QC Scholar home"
+    aria-label="GenXYZ Lab home"
   >
     <img
-      src="/assets/app_ic.png"
+      src="/assets/logo.png"
       alt=""
       width="40"
       height="40"
@@ -23,7 +23,7 @@ defineProps({
     />
     <span v-if="!compact" class="leading-none">
       <span class="block font-display text-[15px] font-semibold text-white">
-        QC Scholar
+        GenXYZ Lab
       </span>
       <span class="mt-1.5 block text-[9px] font-bold uppercase tracking-[0.19em] text-slate-500">
         Learn · Create · Grow

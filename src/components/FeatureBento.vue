@@ -79,7 +79,7 @@ const learningFlow = [
         <span class="eyebrow">One connected workspace</span>
         <h2 class="section-heading mt-6">From first concept to a project you can run.</h2>
         <p class="section-copy mt-5">
-          QC Scholar closes the gap between learning a concept and doing something real with it.
+          GenXYZ Lab closes the gap between learning a concept and doing something real with it.
         </p>
       </div>
 

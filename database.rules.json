@@ -7,6 +7,13 @@
         ".read": true,
         ".write": "auth != null && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.isNumber() && newData.val() === data.val() + 1))"
       },
+      "platform_downloads": {
+        ".read": true,
+        "$platform": {
+          ".write": "auth != null && ($platform === 'android' || $platform === 'windows') && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.isNumber() && newData.val() === data.val() + 1))",
+          ".validate": "newData.isNumber()"
+        }
+      },
       "$other": { ".validate": false }
     },
     "comments": {

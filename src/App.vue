@@ -5,7 +5,9 @@ import CommunitySection from './components/CommunitySection.vue'
 import DownloadModal from './components/DownloadModal.vue'
 import FeatureBento from './components/FeatureBento.vue'
 import HeroSection from './components/HeroSection.vue'
+import CapabilitiesSection from './components/CapabilitiesSection.vue'
 import ImpactStrip from './components/ImpactStrip.vue'
+import PlatformDownloads from './components/PlatformDownloads.vue'
 import ProductShowcase from './components/ProductShowcase.vue'
 import SetupGuide from './components/SetupGuide.vue'
 import SiteFooter from './components/SiteFooter.vue'
@@ -17,6 +19,7 @@ import {
 } from './services/firebase'
 
 const downloadModalOpen = ref(false)
+const requestedPlatform = ref('')
 const downloadCount = ref(0)
 const countReady = ref(false)
 const notice = ref('')
@@ -64,7 +67,10 @@ onBeforeUnmount(() => {
   window.clearTimeout(noticeTimer)
 })
 
-function openDownload() {
+// A platform card passes its own id; the header, hero, and footer buttons pass
+// nothing and let the dialog fall back to user-agent detection.
+function openDownload(platformId = '') {
+  requestedPlatform.value = typeof platformId === 'string' ? platformId : ''
   downloadModalOpen.value = true
 }
 
@@ -98,7 +104,9 @@ function updateMobileDownload() {
       <HeroSection @download="openDownload" />
       <ImpactStrip :download-count="downloadCount" :count-ready="countReady" />
       <ProductShowcase />
+      <CapabilitiesSection />
       <FeatureBento />
+      <PlatformDownloads @download="openDownload" />
       <SetupGuide @download="openDownload" />
       <CommunitySection />
     </main>
@@ -112,7 +120,7 @@ function updateMobileDownload() {
       >
         <button type="button" class="button-primary w-full" @click="openDownload">
           <Download :size="17" aria-hidden="true" />
-          Download QC Scholar APK
+          Download GenXYZ Lab
         </button>
       </div>
     </Transition>
@@ -136,6 +144,7 @@ function updateMobileDownload() {
       :open="downloadModalOpen"
       :download-count="downloadCount"
       :count-ready="countReady"
+      :requested-platform="requestedPlatform"
       @close="downloadModalOpen = false"
       @notice="showNotice"
     />

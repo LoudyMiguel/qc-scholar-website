@@ -149,17 +149,17 @@ export function useScrollExperience() {
 
   function setupHeroMotion() {
     const hero = document.querySelector('#top')
-    const terminalGrid = hero?.querySelector('[data-terminal-grid]')
-    const terminalCards = hero
-      ? gsap.utils.toArray('[data-terminal-card]', hero)
-      : []
+    // The WebGL stage is optional: it mounts lazily and never exists at all on
+    // a device without WebGL, so the hero's own entrance and parallax must not
+    // depend on finding it.
+    const heroScene = hero?.querySelector('[data-hero-scene]')
     const heroCopy = hero?.querySelector('[data-hero-copy]')
     const heroGlow = hero?.querySelector('[data-hero-glow]')
     const heroElements = hero
       ? gsap.utils.toArray('[data-hero-element]', hero)
       : []
 
-    if (!hero || !terminalGrid || !heroCopy) return
+    if (!hero || !heroCopy) return
 
     gsap.fromTo(
       heroElements,
@@ -191,33 +191,32 @@ export function useScrollExperience() {
       },
     })
 
-    heroTimeline
-      .fromTo(
-        terminalGrid,
+    heroTimeline.to(
+      heroCopy,
+      {
+        y: desktop ? -118 : -52,
+        scale: desktop ? 0.9 : 0.94,
+        autoAlpha: desktop ? 0.16 : 0.38,
+        transformOrigin: '0% 30%',
+        ease: 'none',
+      },
+      0,
+    )
+
+    if (heroScene) {
+      // Only y/scale are animated here. The scene element already carries a
+      // translateX from its own stylesheet for the right-weighted composition,
+      // and animating x from GSAP would overwrite it.
+      heroTimeline.to(
+        heroScene,
         {
-          yPercent: desktop ? -6 : -2,
-          scale: desktop ? 0.965 : 0.985,
-          rotationZ: desktop ? -0.6 : 0,
-        },
-        {
-          yPercent: desktop ? 23 : 11,
-          scale: desktop ? 1.13 : 1.06,
-          rotationZ: desktop ? 1.5 : 0.25,
+          yPercent: desktop ? 14 : 7,
+          scale: desktop ? 1.1 : 1.04,
           ease: 'none',
         },
         0,
       )
-      .to(
-        heroCopy,
-        {
-          y: desktop ? -118 : -52,
-          scale: desktop ? 0.9 : 0.94,
-          autoAlpha: desktop ? 0.16 : 0.38,
-          transformOrigin: '0% 30%',
-          ease: 'none',
-        },
-        0,
-      )
+    }
 
     if (heroGlow) {
       heroTimeline.to(
@@ -232,20 +231,72 @@ export function useScrollExperience() {
       )
     }
 
-    terminalCards.forEach((card, index) => {
+  }
+
+  /**
+   * The console wall is decorative texture behind the capabilities section, and
+   * scroll is what makes it feel alive rather than pasted on: the whole wall
+   * drifts while individual panels counter-drift against it, so the grid
+   * gently shears as the section passes. Alternating direction by row is what
+   * produces the shear — moving every panel the same way would just look like
+   * a second parallax layer.
+   */
+  function setupConsoleBackdrop() {
+    const wall = document.querySelector('[data-terminal-grid]')
+    if (!wall) return
+
+    const section = wall.closest('section') || wall
+    const cards = gsap.utils.toArray('[data-terminal-card]', wall)
+    const desktop = window.matchMedia('(min-width: 768px)').matches
+
+    const timeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: desktop ? 1.1 : 0.7,
+        invalidateOnRefresh: true,
+      },
+    })
+
+    timeline.fromTo(
+      wall,
+      { yPercent: desktop ? -5 : -2 },
+      { yPercent: desktop ? 5 : 2, ease: 'none' },
+      0,
+    )
+
+    cards.forEach((card, index) => {
       const row = Math.floor(index / 3)
       const direction = (index + row) % 2 === 0 ? -1 : 1
-      heroTimeline.to(
+      const distance = desktop ? 22 + row * 6 : 8
+      timeline.fromTo(
         card,
-        {
-          y: direction * (desktop ? 92 + row * 22 : 34),
-          x: direction * (desktop ? 18 : 7),
-          scale: desktop ? (direction > 0 ? 1.06 : 0.94) : 1.025,
-          ease: 'none',
-        },
+        { y: direction * distance },
+        { y: direction * -distance, ease: 'none' },
         0,
       )
     })
+  }
+
+  /**
+   * `.js-motion [data-reveal]` starts every section at `visibility: hidden`, so
+   * GSAP is the only thing that can show it. That means a single runtime error
+   * in ANY setup step used to blank the whole page below the hero — which is
+   * exactly what happened when a stale element reference threw before the
+   * reveal triggers were built.
+   *
+   * Two defences: each step is isolated so one failure cannot cascade, and the
+   * initial-hide class is dropped once setup is over. Elements GSAP really is
+   * animating already carry their own inline `visibility`, so lifting the class
+   * changes nothing for them and un-hides anything that was missed.
+   */
+  function safely(label, fn) {
+    try {
+      fn()
+    } catch (error) {
+      console.error(`[motion] ${label} failed; content stays visible.`, error)
+    }
   }
 
   onMounted(async () => {
@@ -255,9 +306,10 @@ export function useScrollExperience() {
     cleanupLenis = setupLenis()
 
     motionContext = gsap.context(() => {
-      setupHeroMotion()
-      setupRevealMotion()
-      setupParallaxMotion()
+      safely('hero', setupHeroMotion)
+      safely('reveal', setupRevealMotion)
+      safely('parallax', setupParallaxMotion)
+      safely('console', setupConsoleBackdrop)
 
       ScrollTrigger.create({
         start: 0,
@@ -270,6 +322,10 @@ export function useScrollExperience() {
         },
       })
     }, document.body)
+
+    // Setup is done: nothing else needs the blanket hide. Anything GSAP is
+    // genuinely driving keeps its own inline visibility from here on.
+    document.documentElement.classList.remove('js-motion')
 
     fontsReady = true
     Promise.resolve(document.fonts?.ready).then(() => {

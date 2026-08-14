@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#020617" />
-    <meta name="description" content="How the QC Scholar website handles community and download data." />
-    <link rel="icon" href="/assets/app_ic.png" type="image/png" />
-    <title>Privacy · QC Scholar</title>
+    <meta name="description" content="How the GenXYZ Lab website handles community and download data." />
+    <link rel="icon" href="/assets/favicon.png" type="image/png" />
+    <title>Privacy · GenXYZ Lab</title>
     <style>
       :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
       * { box-sizing: border-box; }
@@ -28,15 +28,15 @@
   </head>
   <body>
     <main class="wrap">
-      <a class="back" href="/">← Back to QC Scholar</a>
-      <img class="mark" src="/assets/app_ic.png" alt="" width="48" height="48" />
+      <a class="back" href="/">← Back to GenXYZ Lab</a>
+      <img class="mark" src="/assets/logo.png" alt="" width="48" height="48" />
       <h1>Website privacy</h1>
       <p class="updated">Effective 2 August 2026</p>
-      <p>This page describes data handled by the QC Scholar landing page. It does not replace the privacy information shipped with the Android application.</p>
+      <p>This page describes data handled by the GenXYZ Lab landing page. It does not replace the privacy information shipped with the application itself.</p>
 
       <div class="panel">
         <h2>Anonymous community identity</h2>
-        <p>Firebase Anonymous Authentication creates a random account identifier in your browser so reactions can be toggled and writes can be protected by database rules. QC Scholar does not ask for a social login on this page.</p>
+        <p>Firebase Anonymous Authentication creates a random account identifier in your browser so reactions can be toggled and writes can be protected by database rules. GenXYZ Lab does not ask for a social login on this page.</p>
 
         <h2>Public comments and reactions</h2>
         <p>Your chosen display name and comment are public. Public comment records do not contain your Firebase author identifier. Reaction membership is stored under random anonymous Firebase identifiers so each account can manage its own vote. Those pseudonymous keys are technically readable with the public reaction data, although the interface displays only totals.</p>
@@ -45,7 +45,8 @@
         <p>Bug reports are not shown in the public feed. They can be read at their exact database path by the submitting anonymous account and by site administrators. A name, contact method, and device are optional; the description, category, app version, creation time, and report status are stored. Never include passwords, API keys, private source code, or other secrets.</p>
 
         <h2>Download counter</h2>
-        <p>The site attempts to increment a global counter after you confirm the APK download. It measures recorded link clicks, not completed downloads or installations. Cloudflare may separately process normal request logs when serving the site and R2 file.</p>
+        <p>The site attempts to increment a global counter after you confirm a download, plus a second counter for the platform you chose (Android or Windows). Both are plain totals; neither is linked to your anonymous identifier, and no device fingerprint is stored. They measure recorded link clicks, not completed downloads or installations. Cloudflare may separately process normal request logs when serving the site and the release file.</p>
+        <p>Your browser's reported platform is read once in your own browser so the download button can lead with the build you most likely want. That reading is never transmitted or stored.</p>
 
         <h2>Local storage and retention</h2>
         <p>The display name convenience field and Firebase anonymous session may persist in your browser. You can clear site data in browser settings. Public comments remain until moderated. Bug reports are retained while they are being reviewed and are deleted by the operator when no longer needed; the client does not perform automated retention.</p>

@@ -5,6 +5,7 @@ import {
   BookOpenCheck,
   Download,
   ExternalLink,
+  Monitor,
   Play,
   Terminal,
 } from '@lucide/vue'
@@ -24,13 +25,13 @@ const steps = [
   {
     number: '02',
     title: 'Open Termux once',
-    body: 'Launch Termux and let its initial environment finish preparing before you return to QC Scholar.',
+    body: 'Launch Termux and let its initial environment finish preparing before you return to GenXYZ Lab.',
     icon: Terminal,
   },
   {
     number: '03',
     title: 'Open Compiler Manager',
-    body: 'In QC Scholar, go to Code Practice → Compilers → Compiler Manager.',
+    body: 'In GenXYZ Lab, go to Code Practice → Compilers → Compiler Manager.',
     icon: Play,
   },
   {
@@ -47,14 +48,40 @@ const steps = [
     <div class="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-indigo-400/20 to-transparent" aria-hidden="true" />
     <div class="site-container relative">
       <div class="mx-auto max-w-3xl text-center" data-reveal>
-        <span class="eyebrow">Android onboarding</span>
+        <span class="eyebrow">Onboarding</span>
         <h2 class="section-heading mt-6">Real compilers, without the guesswork.</h2>
         <p class="section-copy mt-5">
-          Four deliberate steps connect QC Scholar to the local toolchains running through Termux.
+          On Windows the app uses the toolchains already on your PATH, so there is
+          nothing extra to wire up. Android needs four deliberate steps to reach
+          local toolchains through Termux.
         </p>
       </div>
 
-      <div class="relative mt-14">
+      <div
+        class="mx-auto mt-10 flex max-w-2xl items-start gap-3.5 rounded-2xl border border-slate-700/60 bg-slate-950/50 p-5"
+        data-reveal
+      >
+        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-indigo-400/10 text-indigo-300">
+          <Monitor :size="20" aria-hidden="true" />
+        </span>
+        <div>
+          <h3 class="text-sm font-bold text-white">On Windows: unzip and run</h3>
+          <p class="mt-2 text-xs leading-6 text-slate-400">
+            No Termux, no bridge. Compiler Manager detects Python, Node, JDK, GCC,
+            Go, Rust, and the Dart SDK on your PATH, and links you to the official
+            installer for anything missing.
+          </p>
+        </div>
+      </div>
+
+      <p
+        class="mt-12 text-center font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"
+        data-reveal
+      >
+        Android · four steps
+      </p>
+
+      <div class="relative mt-8">
         <div class="pointer-events-none absolute left-[12.5%] right-[12.5%] top-8 hidden h-px bg-gradient-to-r from-indigo-400/20 via-cyan-300/50 to-violet-400/20 lg:block" aria-hidden="true" />
         <ol class="grid gap-4 lg:grid-cols-4">
           <li
@@ -97,7 +124,7 @@ const steps = [
           <div class="mt-3 sm:mt-0">
             <h3 class="text-sm font-bold text-amber-100">Install order matters</h3>
             <p class="mt-2 text-xs leading-6 text-amber-100/65">
-              Planning to compile offline? Install Termux before QC Scholar so Android can expose the command permission that connects the two apps.
+              Planning to compile offline? Install Termux before GenXYZ Lab so Android can expose the command permission that connects the two apps.
             </p>
           </div>
         </div>
@@ -116,12 +143,12 @@ const steps = [
 
       <div class="mt-8 flex flex-col items-center justify-between gap-5 rounded-3xl border border-indigo-400/15 bg-gradient-to-r from-indigo-500/10 via-slate-900/70 to-violet-500/10 p-7 sm:flex-row sm:p-9" data-reveal>
         <div>
-          <p class="font-display text-xl font-semibold text-white">Ready to build on Android?</p>
-          <p class="mt-2 text-sm text-slate-400">Get the latest release, then let Compiler Manager guide the setup.</p>
+          <p class="font-display text-xl font-semibold text-white">Ready to start building?</p>
+          <p class="mt-2 text-sm text-slate-400">Get the Android or Windows release, then let Compiler Manager guide the setup.</p>
         </div>
         <div class="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
           <button type="button" class="button-primary w-full sm:w-auto" @click="$emit('download')">
-            Download QC Scholar
+            Download GenXYZ Lab
             <ArrowUpRight :size="17" aria-hidden="true" />
           </button>
           <a

@@ -10,7 +10,8 @@ const menuButton = ref(null)
 const links = [
   { label: 'Experience', href: '#experience' },
   { label: 'Features', href: '#features' },
-  { label: 'Android setup', href: '#setup' },
+  { label: 'Download', href: '#download' },
+  { label: 'Setup', href: '#setup' },
   { label: 'Community', href: '#community' },
 ]
 
@@ -63,7 +64,7 @@ async function handleMenuKeydown(event) {
         </span>
         <button type="button" class="button-primary hidden md:inline-flex" @click="requestDownload">
           <Download :size="17" aria-hidden="true" />
-          Download APK
+          Download
         </button>
         <button
           ref="menuButton"
@@ -98,7 +99,7 @@ async function handleMenuKeydown(event) {
         </a>
         <button type="button" class="button-primary mt-4 w-full" @click="requestDownload">
           <Download :size="17" aria-hidden="true" />
-          Download APK
+          Download GenXYZ Lab
         </button>
       </nav>
     </Transition>

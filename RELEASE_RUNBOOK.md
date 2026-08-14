@@ -303,7 +303,7 @@ Open:
 ```text
 Cloudflare dashboard
   -> Workers & Pages
-  -> qc-scholar-website
+  -> <your Pages project name>
   -> Settings
   -> Variables and Secrets
 ```
@@ -361,7 +361,7 @@ After saving the Production variables:
 ```text
 Cloudflare dashboard
   -> Workers & Pages
-  -> qc-scholar-website
+  -> <your Pages project name>
   -> Deployments
   -> Latest production deployment
   -> Retry deployment

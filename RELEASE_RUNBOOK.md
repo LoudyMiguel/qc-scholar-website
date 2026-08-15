@@ -354,6 +354,53 @@ VITE_RELEASE_DATE=2026-09-01
 
 Never commit `.env.local`.
 
+## Step 9b: update `public/version.json` (drives in-app update checks)
+
+**Unlike the Cloudflare variables above, this file needs a real commit and
+push — it is not an env var, it's a tracked file the app itself fetches over
+the network at `https://<your-domain>/version.json`.**
+
+```json
+{
+  "android": {
+    "version": "1.1.0",
+    "url": "https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v1.1.0.apk",
+    "size": "81.2 MB",
+    "releaseDate": "2026-09-01",
+    "notes": ""
+  },
+  "windows": {
+    "version": "0.0.0",
+    "url": "https://downloads.example.com/genxyz-lab-latest-windows.zip",
+    "size": "",
+    "releaseDate": "",
+    "notes": ""
+  }
+}
+```
+
+Every value here should match Step 9's Cloudflare variables exactly — same
+version, same URL, same size. `notes` is optional free text shown in the
+in-app update banner (e.g. "Fixes offline course sync"); leave it `""` for a
+routine release.
+
+**A platform not yet released stays at `"version": "0.0.0"`.** The app treats
+that as "nothing to offer" — 0.0.0 never compares as newer than whatever a
+user has installed, so it can never trigger an update prompt toward a
+placeholder link. Only bump a platform's version here once its real URL from
+Step 7 (or the Windows release section) is live and returns `200`.
+
+```bash
+cd "C:\flutter project\quizy\website"
+# edit public/version.json with the new values
+git add public/version.json
+git commit -m "Bump version.json for v1.1.0"
+git push origin main
+```
+
+Cloudflare rebuilds from this push automatically (same as any other commit);
+no separate "retry deployment" click is needed for this file specifically.
+
 ## Step 10: rebuild Cloudflare Pages
 
 After saving the Production variables:

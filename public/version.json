@@ -1,16 +1,16 @@
 {
   "android": {
-    "version": "1.1.1",
-    "url": "https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v1.1.1.apk",
-    "size": "41.7 MB",
-    "releaseDate": "2026-08-07",
-    "notes": ""
+    "version": "2.0.0",
+    "url": "https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v2.0.0.apk",
+    "size": "42.5 MB",
+    "releaseDate": "2026-08-15",
+    "notes": "Major release with Templates, Flutter Studio, Flutter Web-to-APK, and open-source games."
   },
   "windows": {
-    "version": "0.0.0",
-    "url": "https://downloads.example.com/genxyz-lab-latest-windows.zip",
-    "size": "",
-    "releaseDate": "",
-    "notes": ""
+    "version": "2.0.0",
+    "url": "https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/genxyz-lab-v2.0.0-windows.zip",
+    "size": "27.1 MB",
+    "releaseDate": "2026-08-15",
+    "notes": "First Windows release with Templates, Flutter Studio, Flutter Web-to-APK, and open-source games. (Data Base Connection not AVAILABLE in this version, try manually configuring to your prefered database.)"
   }
 }

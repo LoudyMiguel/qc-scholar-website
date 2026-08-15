@@ -6,9 +6,10 @@ It covers:
 
 - Flutter and Android version numbering
 - Release signing and update compatibility
-- Building and testing the APK
+- Building and testing the APK, with R8 shrinking + Dart obfuscation enabled
 - Uploading a versioned APK to Cloudflare R2
 - Updating Cloudflare Pages release variables
+- Keeping public/version.json in sync so the in-app update checker works
 - Production validation and rollback
 
 The APK must never be committed to this website repository. The website repository contains only the landing page and deployment configuration.
@@ -152,6 +153,20 @@ Resolve release-blocking analyzer errors and failed tests before building. Revie
 - Downloads and network access
 - Any minimum or target SDK changes
 
+**R8 code shrinking is enabled on the Android release build**
+(`android/app/build.gradle.kts`, `isMinifyEnabled`/`isShrinkResources`), with
+hand-written keep rules in `android/app/proguard-rules.pro` for the plugins
+known to need them. Those rules were verified against each plugin's real
+Android package name, but never against actual runtime behavior — nothing in
+this repo can run R8-shrunk code on a device. **The first release built after
+minification was turned on needs a full manual pass on a real device, not
+just the update-path check above** — specifically: local notifications (the
+server/tunnel ongoing notification), QR scanning (course import, certificate
+verification), the in-app WebView (media player, Web Playground), any stored
+AI provider key surviving a restart, Arduino Studio's USB device list, and
+voice dictation. A plugin broken by over-aggressive shrinking fails silently
+at runtime, not at build time — there's no compiler error to catch it here.
+
 `flutter clean` is not required for every release. Use it when build output appears stale or after native Gradle/plugin changes:
 
 ```powershell
@@ -161,11 +176,17 @@ flutter pub get
 
 ## Step 4: build the signed release APK
 
-Build from the Flutter project root:
+Build from the Flutter project root, WITH Dart obfuscation:
 
 ```powershell
 cd "C:\flutter project\quizy"
-flutter build apk --release
+$releaseVersion = "1.1.0"   # match Step 1's chosen version
+
+flutter build apk --release `
+  --obfuscate `
+  --split-debug-info="build\debug-symbols\$releaseVersion" `
+  --dart-define=DRIVE_API_KEY=YOUR_KEY `
+  --dart-define=SERVER_BASE_URL=YOUR_SERVER
 ```
 
 Expected output:
@@ -175,6 +196,35 @@ C:\flutter project\quizy\build\app\outputs\flutter-apk\app-release.apk
 ```
 
 The release build must use the existing signing configuration from `android/key.properties`. Treat a missing signing file, missing keystore, or changed certificate as a release blocker.
+
+### About `--obfuscate --split-debug-info`
+
+`--obfuscate` renames Dart class/method/field symbols in the compiled AOT
+snapshot (`libapp.so`) — this is the layer R8 (above) cannot touch, since R8
+only processes JVM bytecode and the actual application logic (courses,
+grading, the AI orchestrator, everything under `lib/`) compiles straight to
+native code, not Java/Kotlin. Skipping this flag leaves the entire Dart
+codebase's real class and method names readable in the shipped binary
+regardless of what R8 does on the Android side.
+
+**`--split-debug-info` writes the symbol map used to de-obfuscate a crash
+stack trace back into readable Dart — this directory is exactly as sensitive
+as source code and must NEVER be committed, uploaded to R2, or bundled into
+any release artifact.** `build\` is already outside anything the website or
+R2 upload steps touch, so the path above is safe by construction, but the
+habit matters more than the specific path: keep every release's symbol map
+(e.g. in a private backup location, one folder per version) or a future crash
+report is permanently unreadable, and never let it travel anywhere near a
+public download.
+
+**One honest limit worth knowing:** obfuscation renames symbols, not string
+literals. `--dart-define` values like `DRIVE_API_KEY` and `SERVER_BASE_URL`
+are embedded as plain Dart string constants and remain fully readable by
+anyone who runs `strings` on the binary — obfuscation was never going to hide
+those regardless. That key is meant to be restricted by Google's API console
+(package name + signing certificate), not kept secret client-side; the actual
+secrets (AI provider keys, OAuth tokens) never reach a `--dart-define` at all —
+they live only in `flutter_secure_storage` at runtime, entered by the student.
 
 ## Step 5: create a versioned release artifact
 
@@ -445,13 +495,23 @@ blocks an Android release.
 
 ```powershell
 cd "C:\flutter project\quizy"
+$releaseVersion = "1.1.0"   # match Step 1's chosen version
+
 flutter config --enable-windows-desktop
 flutter clean
 flutter pub get
 flutter build windows --release `
+  --obfuscate `
+  --split-debug-info="build\debug-symbols\windows-$releaseVersion" `
   --dart-define=DRIVE_API_KEY=YOUR_KEY `
   --dart-define=SERVER_BASE_URL=YOUR_SERVER
 ```
+
+Same `--obfuscate`/`--split-debug-info` reasoning as the Android build above —
+never commit or ship that symbols folder. **Windows has no R8 equivalent**
+(that's an Android/JVM-specific tool), so Dart obfuscation is the only code
+hardening layer available on this platform; there is no build-config change
+that adds a second one the way `proguard-rules.pro` does for Android.
 
 The output is a **folder**, not a single file:
 
@@ -616,11 +676,17 @@ Do not put signing passwords, private keys, Firebase service-account credentials
 [ ] pubspec.yaml updated
 [ ] flutter analyze passed
 [ ] flutter test passed
-[ ] Signed release APK built
+[ ] Signed release APK built WITH --obfuscate --split-debug-info
+[ ] Symbol map saved somewhere private (never committed, never uploaded to R2)
 [ ] APK renamed with version
 [ ] SHA-256 and size recorded
 [ ] Update-over-old-version installation passed
 [ ] Clean installation passed
+[ ] Full feature pass on a real device (required after any proguard-rules.pro
+    change — R8 breakage is silent at runtime, not a build error): local
+    notification, QR scan, in-app WebView, stored AI key, Arduino USB list,
+    voice dictation
+[ ] public/version.json bumped, committed, pushed (Step 9b)
 [ ] New versioned R2 object uploaded
 [ ] R2 URL returns 200
 [ ] Cloudflare Production variables updated

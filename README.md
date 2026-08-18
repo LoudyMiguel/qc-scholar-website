@@ -8,7 +8,8 @@ Database community features, and Cloudflare Pages deployment headers.
 Everything lives under `quizy/website`; nothing here modifies the Flutter
 application.
 
-- Release process: [`RELEASE_RUNBOOK.md`](RELEASE_RUNBOOK.md)
+- Quick deployment checklist: [`DEPLOYMENT_QUICKSTART.md`](DEPLOYMENT_QUICKSTART.md)
+- Complete release process: [`RELEASE_RUNBOOK.md`](RELEASE_RUNBOOK.md)
 - First-time deployment and domain setup: [`DEPLOYMENT.md`](DEPLOYMENT.md)
 
 ## Project structure
@@ -92,8 +93,10 @@ entry carries its own URL, size, requirement line, and install note.
 
 ```env
 VITE_APK_DOWNLOAD_URL=https://downloads.example.com/genxyz-lab-latest.apk
+VITE_APK_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/APK_FILE_ID/view?usp=sharing
 VITE_APK_SIZE=~100 MB
 VITE_WINDOWS_DOWNLOAD_URL=https://downloads.example.com/genxyz-lab-latest-windows.zip
+VITE_WINDOWS_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/WINDOWS_FILE_ID/view?usp=sharing
 VITE_WINDOWS_SIZE=~120 MB
 VITE_APP_VERSION=1.0.0
 VITE_RELEASE_DATE=2026-08-07
@@ -103,6 +106,19 @@ A URL still pointing at `downloads.example.com` is treated as **not published
 yet**: that platform renders as *Coming soon* with a disabled button rather
 than a dead link. This is the mechanism that lets Android ship before Windows
 without any code change.
+
+The two optional `*_GOOGLE_DRIVE_URL` values add a public mirror for each
+platform. Before opening an R2 URL, the download button makes a five-second
+`HEAD` availability check. A network error, timeout, rate-limit response, or
+other non-success status automatically sends the visitor to that platform's
+Google Drive link instead. The manual mirror link remains visible in the
+dialog as a safety net. The Drive files must be shared as **Anyone with the
+link**; leave a mirror variable empty until its file is publicly accessible.
+
+The R2 bucket must allow `HEAD` requests from the production site origin in
+its CORS policy. If the browser cannot read the check because CORS is missing,
+the safe behavior is to use Google Drive. Changing either URL requires a new
+Pages build because Vite embeds these values at build time.
 
 `detectPlatform()` reads the user agent to preselect a build and badge it
 "Your device". It only reorders and preselects — user-agent detection is a

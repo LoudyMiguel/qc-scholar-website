@@ -363,12 +363,20 @@ Update the **Production** environment values:
 ```text
 VITE_SITE_URL=https://your-final-domain.com
 VITE_APK_DOWNLOAD_URL=https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v1.1.0.apk
+VITE_APK_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/YOUR_APK_FILE_ID/view?usp=sharing
 VITE_APP_VERSION=1.1.0
 VITE_APK_SIZE=THE_CALCULATED_SIZE
 VITE_RELEASE_DATE=YYYY-MM-DD
 VITE_WINDOWS_DOWNLOAD_URL=https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/genxyz-lab-v1.1.0-windows.zip
+VITE_WINDOWS_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/YOUR_WINDOWS_FILE_ID/view?usp=sharing
 VITE_WINDOWS_SIZE=THE_CALCULATED_SIZE
 ```
+
+Share both Drive files as **Anyone with the link** and test the links in a
+signed-out/private browser window. The website checks R2 first and opens the
+matching Drive URL automatically on a timeout, rate limit, network error, or
+non-success response. Keep the Android and Windows mirror variables paired
+with their matching release files.
 
 `VITE_SITE_URL` has no per-release meaning but must be correct: the canonical
 link, the Open Graph image URL, `robots.txt`, and `sitemap.xml` are all built
@@ -696,4 +704,3 @@ Do not put signing passwords, private keys, Firebase service-account credentials
 [ ] Firebase functionality verified
 [ ] Previous known-good R2 object retained for rollback
 ```
-

@@ -22,7 +22,19 @@ export const siteConfig = Object.freeze({
 // platform is announced honestly rather than handing out a dead link.
 const PLACEHOLDER_HOST = 'downloads.example.com'
 
-function buildRelease({ id, name, shortName, fileKind, urlKey, sizeKey, fallbackUrl, fallbackSize, requirement, note }) {
+function buildRelease({
+  id,
+  name,
+  shortName,
+  fileKind,
+  urlKey,
+  mirrorUrlKey,
+  sizeKey,
+  fallbackUrl,
+  fallbackSize,
+  requirement,
+  note,
+}) {
   const url = readEnv(urlKey, fallbackUrl)
   return Object.freeze({
     id,
@@ -30,6 +42,7 @@ function buildRelease({ id, name, shortName, fileKind, urlKey, sizeKey, fallback
     shortName,
     fileKind,
     url,
+    mirrorUrl: readEnv(mirrorUrlKey),
     size: readEnv(sizeKey, fallbackSize),
     requirement,
     note,
@@ -44,6 +57,7 @@ export const releases = Object.freeze([
     shortName: 'Android',
     fileKind: 'APK',
     urlKey: 'VITE_APK_DOWNLOAD_URL',
+    mirrorUrlKey: 'VITE_APK_GOOGLE_DRIVE_URL',
     sizeKey: 'VITE_APK_SIZE',
     fallbackUrl: `https://${PLACEHOLDER_HOST}/genxyz-lab-latest.apk`,
     fallbackSize: '~100 MB',
@@ -56,6 +70,7 @@ export const releases = Object.freeze([
     shortName: 'Windows',
     fileKind: 'ZIP',
     urlKey: 'VITE_WINDOWS_DOWNLOAD_URL',
+    mirrorUrlKey: 'VITE_WINDOWS_GOOGLE_DRIVE_URL',
     sizeKey: 'VITE_WINDOWS_SIZE',
     fallbackUrl: `https://${PLACEHOLDER_HOST}/genxyz-lab-latest-windows.zip`,
     fallbackSize: '~120 MB',

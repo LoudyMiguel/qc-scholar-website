@@ -17,10 +17,20 @@ export const siteConfig = Object.freeze({
   termuxDocsUrl: 'https://github.com/termux/termux-app#installation',
 })
 
-// A release that has not been uploaded yet keeps this hostname. Every surface
-// checks `isPlaceholder` instead of testing the URL again, so an unfinished
-// platform is announced honestly rather than handing out a dead link.
-const PLACEHOLDER_HOST = 'downloads.example.com'
+function isGoogleDriveUrl(value) {
+  if (!value) return false
+
+  try {
+    const parsedUrl = new URL(value)
+    const hostname = parsedUrl.hostname.toLowerCase()
+    return (
+      parsedUrl.protocol === 'https:' &&
+      (hostname === 'drive.google.com' || hostname === 'drive.usercontent.google.com')
+    )
+  } catch {
+    return false
+  }
+}
 
 function buildRelease({
   id,
@@ -28,25 +38,25 @@ function buildRelease({
   shortName,
   fileKind,
   urlKey,
-  mirrorUrlKey,
   sizeKey,
-  fallbackUrl,
   fallbackSize,
   requirement,
   note,
 }) {
-  const url = readEnv(urlKey, fallbackUrl)
+  const url = readEnv(urlKey)
   return Object.freeze({
     id,
     name,
     shortName,
     fileKind,
     url,
-    mirrorUrl: readEnv(mirrorUrlKey),
     size: readEnv(sizeKey, fallbackSize),
     requirement,
     note,
-    isPlaceholder: url.includes(PLACEHOLDER_HOST),
+    // Only Google Drive is accepted as a release source. A missing, malformed,
+    // or stale non-Drive value disables the button instead of leaking users
+    // back to an obsolete host.
+    isPlaceholder: !isGoogleDriveUrl(url),
   })
 }
 
@@ -56,10 +66,8 @@ export const releases = Object.freeze([
     name: 'Android',
     shortName: 'Android',
     fileKind: 'APK',
-    urlKey: 'VITE_APK_DOWNLOAD_URL',
-    mirrorUrlKey: 'VITE_APK_GOOGLE_DRIVE_URL',
+    urlKey: 'VITE_APK_GOOGLE_DRIVE_URL',
     sizeKey: 'VITE_APK_SIZE',
-    fallbackUrl: `https://${PLACEHOLDER_HOST}/genxyz-lab-latest.apk`,
     fallbackSize: '~100 MB',
     requirement: 'Android 8.0 or newer · arm64',
     note: 'Install Termux first if you want on-device compilers.',
@@ -69,10 +77,8 @@ export const releases = Object.freeze([
     name: 'Windows',
     shortName: 'Windows',
     fileKind: 'ZIP',
-    urlKey: 'VITE_WINDOWS_DOWNLOAD_URL',
-    mirrorUrlKey: 'VITE_WINDOWS_GOOGLE_DRIVE_URL',
+    urlKey: 'VITE_WINDOWS_GOOGLE_DRIVE_URL',
     sizeKey: 'VITE_WINDOWS_SIZE',
-    fallbackUrl: `https://${PLACEHOLDER_HOST}/genxyz-lab-latest-windows.zip`,
     fallbackSize: '~120 MB',
     requirement: 'Windows 10 or 11 · 64-bit',
     note: 'Uses the compilers already installed on your PC.',

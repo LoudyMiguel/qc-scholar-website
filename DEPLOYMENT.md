@@ -137,14 +137,12 @@ content problem, not a technical one.
 
 ## Two things this repo can't do for you
 
-**The APK and Windows zip.** The download buttons need real files uploaded to
-R2 — same bucket, same process as before, nothing about this domain move
-changes it. [`RELEASE_RUNBOOK.md`](RELEASE_RUNBOOK.md) has the exact upload
-commands (Step 7 for the APK, the **Windows release** section for the zip).
-Once uploaded, set `VITE_APK_DOWNLOAD_URL`/`VITE_WINDOWS_DOWNLOAD_URL` (and
-their `*_SIZE` companions) in the same Variables screen as Step 3, redeploy.
-A platform still on the `downloads.example.com` placeholder shows as *Coming
-soon* rather than a dead link, so it's safe to do these on separate days.
+**The APK and Windows zip.** Upload both files to Google Drive, share them as
+**Anyone with the link**, and set `VITE_APK_GOOGLE_DRIVE_URL` and
+`VITE_WINDOWS_GOOGLE_DRIVE_URL` (plus their `*_SIZE` companions) in the same
+Variables screen as Step 3. [`RELEASE_RUNBOOK.md`](RELEASE_RUNBOOK.md) has the
+complete release procedure. A missing or non-Drive URL shows as *Coming soon*
+rather than opening a stale download host.
 
 **Ads.** Every network has a traffic floor a new domain doesn't have yet —
 AdSense wants a real content library, EthicalAds and Carbon Ads both want
@@ -174,4 +172,4 @@ something to do today; just noting the door isn't closed.
 - [ ] `VITE_SITE_URL` updated, redeployed, sitemap/robots confirmed
 - [ ] Domain authorized in Firebase
 - [ ] Sitemap submitted to Search Console and Bing
-- [ ] APK and Windows zip uploaded to R2 (can be done later, independently)
+- [ ] APK and Windows zip uploaded to Google Drive and publicly shared

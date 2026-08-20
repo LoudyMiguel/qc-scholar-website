@@ -1,5 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 /**
  * robots.txt and sitemap.xml both have to carry the absolute production origin,
@@ -52,12 +54,66 @@ function seoFiles(siteUrl) {
   }
 }
 
+function readGoogleDriveUrl(value) {
+  if (!value) return ''
+
+  try {
+    const normalizedValue = value.trim()
+    const parsedUrl = new URL(normalizedValue)
+    const hostname = parsedUrl.hostname.toLowerCase()
+    return parsedUrl.protocol === 'https:' &&
+      (hostname === 'drive.google.com' || hostname === 'drive.usercontent.google.com')
+      ? normalizedValue
+      : ''
+  } catch {
+    return ''
+  }
+}
+
+function releaseManifest(env) {
+  const metadata = JSON.parse(
+    readFileSync(resolve(process.cwd(), 'release-manifest.json'), 'utf8'),
+  )
+
+  function buildEntry(platform, urlKey, sizeKey) {
+    const url = readGoogleDriveUrl(env[urlKey])
+    const entry = metadata[platform]
+    return {
+      ...entry,
+      version: url ? env.VITE_APP_VERSION || entry.version : '0.0.0',
+      url,
+      size: env[sizeKey] || entry.size,
+      releaseDate: env.VITE_RELEASE_DATE || entry.releaseDate,
+    }
+  }
+
+  return {
+    name: 'genxyz-release-manifest',
+    apply: 'build',
+    generateBundle() {
+      const manifest = {
+        android: buildEntry('android', 'VITE_APK_GOOGLE_DRIVE_URL', 'VITE_APK_SIZE'),
+        windows: buildEntry(
+          'windows',
+          'VITE_WINDOWS_GOOGLE_DRIVE_URL',
+          'VITE_WINDOWS_SIZE',
+        ),
+      }
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.json',
+        source: `${JSON.stringify(manifest, null, 2)}\n`,
+      })
+    },
+  }
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   const siteUrl = env.VITE_SITE_URL || 'https://genxyzlab.com'
 
   return {
-    plugins: [vue(), seoFiles(siteUrl)],
+    plugins: [vue(), seoFiles(siteUrl), releaseManifest(env)],
     build: {
       target: 'es2020',
       cssCodeSplit: true,

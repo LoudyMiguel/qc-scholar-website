@@ -1,5 +1,5 @@
 <script setup>
-import { Clock, Download, ExternalLink, Monitor, ShieldCheck, Smartphone, X } from '@lucide/vue'
+import { Clock, Download, Monitor, ShieldCheck, Smartphone, X } from '@lucide/vue'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { detectPlatform, releases, releasesById, siteConfig } from '../config/site'
 import { recordDownloadClick } from '../services/firebase'
@@ -33,8 +33,6 @@ const downloading = ref(false)
 const selectedId = ref(releases[0].id)
 let previousFocus = null
 let appRoot = null
-
-const DOWNLOAD_CHECK_TIMEOUT_MS = 5000
 
 const platformIcons = { android: Smartphone, windows: Monitor }
 
@@ -127,118 +125,35 @@ function handleKeydown(event) {
   }
 }
 
-async function primaryDownloadIsAvailable(url) {
-  const controller = new AbortController()
-  const timeout = window.setTimeout(() => controller.abort(), DOWNLOAD_CHECK_TIMEOUT_MS)
-
-  try {
-    const response = await fetch(url, {
-      method: 'HEAD',
-      cache: 'no-store',
-      redirect: 'follow',
-      signal: controller.signal,
-    })
-    return response.ok
-  } catch (error) {
-    console.warn('The primary download could not be reached.', error)
-    return false
-  } finally {
-    window.clearTimeout(timeout)
-  }
-}
-
-// Reserve the new tab during the trusted click. Waiting for the availability
-// check before calling window.open() would cause popup blockers to reject it.
-function reserveDownloadWindow() {
-  const downloadWindow = window.open('', '_blank')
-  if (!downloadWindow) return null
-
-  downloadWindow.opener = null
-  downloadWindow.document.title = 'Preparing downloadâ€¦'
-  const message = downloadWindow.document.createElement('p')
-  message.textContent = 'Checking the primary downloadâ€¦'
-  message.style.cssText =
-    'font: 16px/1.5 system-ui, sans-serif; color: #cbd5e1; background: #020617; margin: 0; min-height: 100vh; display: grid; place-items: center;'
-  downloadWindow.document.body.style.margin = '0'
-  downloadWindow.document.body.style.background = '#020617'
-  downloadWindow.document.body.append(message)
-  return downloadWindow
-}
-
-function navigateToDownload(url, downloadWindow) {
-  if (downloadWindow && !downloadWindow.closed) {
-    downloadWindow.location.replace(url)
-    return
-  }
-
-  // A strict popup blocker may reject the reserved tab. Falling back in the
-  // current tab still honours the visitor's click and starts the download.
-  window.location.assign(url)
-}
-
 async function confirmDownload(event) {
-  event.preventDefault()
   const release = activeRelease.value
   if (downloading.value || release.isPlaceholder) {
+    event.preventDefault()
     return
   }
   downloading.value = true
 
-  const downloadWindow = reserveDownloadWindow()
-  let trackingError = null
-  const trackingPromise = Promise.race([
-    recordDownloadClick(release.id).then(() => true),
-    // The download must never wait on analytics. If the counter is slow or
-    // blocked, the file still starts on time.
-    new Promise((resolve) => window.setTimeout(() => resolve(false), 1800)),
-  ]).catch((error) => {
-    trackingError = error
-    return false
-  })
-
   let tracked = false
-  let usedMirror = false
   try {
-    if (release.mirrorUrl) {
-      const primaryAvailable = await primaryDownloadIsAvailable(release.url)
-      usedMirror = !primaryAvailable
-    }
-
-    navigateToDownload(usedMirror ? release.mirrorUrl : release.url, downloadWindow)
-
-    if (usedMirror) {
-      emit(
-        'notice',
-        `R2 was unavailable, so the ${release.name} download opened from Google Drive instead.`,
-      )
-    }
+    tracked = await Promise.race([
+      recordDownloadClick(release.id).then(() => true),
+      // The Drive link opens immediately; analytics is always best effort.
+      new Promise((resolve) => window.setTimeout(() => resolve(false), 1800)),
+    ])
   } catch (error) {
-    console.error('The download could not be opened.', error)
-    if (downloadWindow && !downloadWindow.closed) downloadWindow.close()
+    console.warn('Download tracking was unavailable.', error)
     emit(
       'notice',
-      'The download could not be opened. Use the Google Drive mirror link and try again.',
+      'Your Google Drive download is continuing. The public counter could not be updated this time.',
     )
+  } finally {
     downloading.value = false
-    return
   }
-
-  tracked = await trackingPromise
-  if (trackingError) {
-    console.warn('Download tracking was unavailable.', trackingError)
-    if (!usedMirror) {
-      emit(
-        'notice',
-        'Your download is continuing. The public counter could not be updated this time.',
-      )
-    }
-  }
-  downloading.value = false
 
   emit('download', {
     tracked,
     platform: release.id,
-    source: usedMirror ? 'google-drive' : 'primary',
+    source: 'google-drive',
   })
 }
 </script>
@@ -362,24 +277,6 @@ async function confirmDownload(event) {
                 {{ step }}
               </li>
             </ol>
-
-            <div
-              v-if="!activeRelease.isPlaceholder && activeRelease.mirrorUrl"
-              class="mt-4 rounded-xl border border-sky-300/15 bg-sky-300/[0.06] p-3.5"
-            >
-              <p class="text-[11px] leading-5 text-sky-100/75">
-                R2 download did not start or returned an error?
-                <a
-                  :href="activeRelease.mirrorUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="ml-1 inline-flex items-center gap-1 font-bold text-sky-300 underline decoration-sky-300/40 underline-offset-4 transition hover:text-sky-200"
-                >
-                  Use the Google Drive mirror
-                  <ExternalLink :size="12" aria-hidden="true" />
-                </a>
-              </p>
-            </div>
 
             <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button

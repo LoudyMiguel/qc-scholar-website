@@ -7,9 +7,9 @@ It covers:
 - Flutter and Android version numbering
 - Release signing and update compatibility
 - Building and testing the APK, with R8 shrinking + Dart obfuscation enabled
-- Uploading a versioned APK to Cloudflare R2
+- Uploading versioned release files to Google Drive
 - Updating Cloudflare Pages release variables
-- Keeping public/version.json in sync so the in-app update checker works
+- Generating `version.json` so the in-app update checker uses the same links
 - Production validation and rollback
 
 The APK must never be committed to this website repository. The website repository contains only the landing page and deployment configuration.
@@ -29,17 +29,9 @@ Android version source
 Release APK output
   C:\flutter project\quizy\build\app\outputs\flutter-apk\app-release.apk
 
-R2 bucket
-  qc-scholar-releases
-
-R2 object prefix
-  releases/
-
-Current public R2 development hostname
-  https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev
+Release file hosting
+  Google Drive files shared as "Anyone with the link"
 ```
-
-The R2 development hostname can be replaced later with a custom download domain. Do not change the release procedure when that happens; only replace the public base URL.
 
 ## Version-number rules
 
@@ -92,7 +84,7 @@ Never commit any of these files or values:
 - Release keystore files
 - `android/key.properties`
 - Keystore passwords
-- R2 API tokens
+- Google account credentials or private sharing invitations
 - Firebase service-account keys
 
 ## Step 1: choose and record the next version
@@ -209,9 +201,9 @@ regardless of what R8 does on the Android side.
 
 **`--split-debug-info` writes the symbol map used to de-obfuscate a crash
 stack trace back into readable Dart — this directory is exactly as sensitive
-as source code and must NEVER be committed, uploaded to R2, or bundled into
-any release artifact.** `build\` is already outside anything the website or
-R2 upload steps touch, so the path above is safe by construction, but the
+as source code and must NEVER be committed, uploaded to Google Drive, or
+bundled into any release artifact.** `build\` is already outside anything the
+website upload steps touch, so the path above is safe by construction, but the
 habit matters more than the specific path: keep every release's symbol map
 (e.g. in a private backup location, one folder per version) or a future crash
 report is permanently unreadable, and never let it travel anywhere near a
@@ -279,72 +271,24 @@ Common ADB update failures:
 
 Never solve a signing mismatch by telling existing users to uninstall unless losing local app data and breaking the update path is an explicitly accepted outcome.
 
-## Step 7: upload a new object to Cloudflare R2
+## Step 7: upload the APK to Google Drive
 
-Every release must use a new object key:
-
-```text
-releases/qc-scholar-v1.1.0.apk
-```
-
-Do not overwrite an older versioned object. Existing objects use long-lived immutable caching, so reusing a filename can leave users receiving an old APK.
-
-Authenticate Wrangler when needed:
-
-```powershell
-npx wrangler login
-```
-
-Upload the new APK:
-
-```powershell
-npx wrangler r2 object put "qc-scholar-releases/releases/qc-scholar-v1.1.0.apk" `
-  --file="C:\flutter project\quizy\build\app\outputs\flutter-apk\qc-scholar-v1.1.0.apk" `
-  --content-type="application/vnd.android.package-archive" `
-  --content-disposition='attachment; filename="qc-scholar-v1.1.0.apk"' `
-  --cache-control="public, max-age=31536000, immutable" `
-  --remote
-```
-
-The resulting URL for the current public R2 development hostname is:
+Upload the versioned APK without overwriting the previous release. Choose
+**Share**, set General access to **Anyone with the link**, and copy the public
+share URL.
 
 ```text
-https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v1.1.0.apk
+qc-scholar-v1.1.0.apk
+https://drive.google.com/file/d/YOUR_APK_FILE_ID/view?usp=sharing
 ```
 
-Alternatively, upload through the Cloudflare dashboard:
+Keep symbol maps, signing files, and credentials out of the shared folder.
 
-```text
-Cloudflare dashboard
-  -> R2 Object Storage
-  -> qc-scholar-releases
-  -> releases
-  -> Upload
-```
+## Step 8: verify the Drive file before updating the website
 
-Ensure the object keeps its exact versioned filename.
-
-## Step 8: verify the R2 object before updating the website
-
-Check the response headers:
-
-```powershell
-$downloadUrl = "https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v1.1.0.apk"
-curl.exe -I $downloadUrl
-```
-
-Expected properties:
-
-```text
-HTTP 200
-Content-Type: application/vnd.android.package-archive
-Content-Disposition: attachment; filename=qc-scholar-v1.1.0.apk
-Content-Length: a non-zero value matching the local file size
-```
-
-Download the object once and compare its checksum with the locally tested artifact when the release is especially important.
-
-Do not update the website link until the new R2 URL returns `200 OK`.
+Open the share URL in a signed-out/private browser window, download the APK,
+and verify its size and SHA-256 checksum against the locally tested artifact.
+Do not update the website variable until this test succeeds.
 
 ## Step 9: update Cloudflare Pages release variables
 
@@ -362,36 +306,30 @@ Update the **Production** environment values:
 
 ```text
 VITE_SITE_URL=https://your-final-domain.com
-VITE_APK_DOWNLOAD_URL=https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v1.1.0.apk
 VITE_APK_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/YOUR_APK_FILE_ID/view?usp=sharing
 VITE_APP_VERSION=1.1.0
 VITE_APK_SIZE=THE_CALCULATED_SIZE
 VITE_RELEASE_DATE=YYYY-MM-DD
-VITE_WINDOWS_DOWNLOAD_URL=https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/genxyz-lab-v1.1.0-windows.zip
 VITE_WINDOWS_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/YOUR_WINDOWS_FILE_ID/view?usp=sharing
 VITE_WINDOWS_SIZE=THE_CALCULATED_SIZE
 ```
 
 Share both Drive files as **Anyone with the link** and test the links in a
-signed-out/private browser window. The website checks R2 first and opens the
-matching Drive URL automatically on a timeout, rate limit, network error, or
-non-success response. Keep the Android and Windows mirror variables paired
-with their matching release files.
+signed-out/private browser window. The website accepts only Google Drive URLs;
+a missing, malformed, or non-Drive value disables that platform's button.
 
 `VITE_SITE_URL` has no per-release meaning but must be correct: the canonical
 link, the Open Graph image URL, `robots.txt`, and `sitemap.xml` are all built
 from it. A wrong value here makes every shared link preview and every indexed
 URL point at the wrong origin.
 
-Leave `VITE_WINDOWS_DOWNLOAD_URL` on its `downloads.example.com` placeholder
-until a desktop build is actually uploaded. The site reads that hostname as
-"not published yet" and renders Windows as *Coming soon* with a disabled
-button, instead of handing visitors a dead link.
+Leave `VITE_WINDOWS_GOOGLE_DRIVE_URL` empty until a desktop build is uploaded.
+The site renders Windows as *Coming soon* with a disabled button.
 
 Example:
 
 ```text
-VITE_APK_DOWNLOAD_URL=https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v1.1.0.apk
+VITE_APK_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/YOUR_APK_FILE_ID/view?usp=sharing
 VITE_APP_VERSION=1.1.0
 VITE_APK_SIZE=81.2 MB
 VITE_RELEASE_DATE=2026-09-01
@@ -404,7 +342,7 @@ The website repository does not need a new commit when only these Cloudflare var
 For matching local development behavior, update the ignored `website/.env.local` file as well:
 
 ```env
-VITE_APK_DOWNLOAD_URL=https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v1.1.0.apk
+VITE_APK_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/YOUR_APK_FILE_ID/view?usp=sharing
 VITE_APP_VERSION=1.1.0
 VITE_APK_SIZE=81.2 MB
 VITE_RELEASE_DATE=2026-09-01
@@ -412,24 +350,24 @@ VITE_RELEASE_DATE=2026-09-01
 
 Never commit `.env.local`.
 
-## Step 9b: update `public/version.json` (drives in-app update checks)
+## Step 9b: review the generated update manifest
 
-**Unlike the Cloudflare variables above, this file needs a real commit and
-push — it is not an env var, it's a tracked file the app itself fetches over
-the network at `https://<your-domain>/version.json`.**
+The Pages build generates `version.json` from the Drive variables and the
+tracked `release-manifest.json` metadata. The installed app fetches it from
+`https://<your-domain>/version.json`.
 
 ```json
 {
   "android": {
     "version": "1.1.0",
-    "url": "https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v1.1.0.apk",
+    "url": "https://drive.google.com/file/d/YOUR_APK_FILE_ID/view?usp=sharing",
     "size": "81.2 MB",
     "releaseDate": "2026-09-01",
     "notes": ""
   },
   "windows": {
     "version": "0.0.0",
-    "url": "https://downloads.example.com/genxyz-lab-latest-windows.zip",
+    "url": "",
     "size": "",
     "releaseDate": "",
     "notes": ""
@@ -437,27 +375,25 @@ the network at `https://<your-domain>/version.json`.**
 }
 ```
 
-Every value here should match Step 9's Cloudflare variables exactly — same
-version, same URL, same size. `notes` is optional free text shown in the
-in-app update banner (e.g. "Fixes offline course sync"); leave it `""` for a
-routine release.
+The generated values match Step 9's Cloudflare variables. `notes` comes from
+`release-manifest.json` and is optional free text shown in the update banner.
 
 **A platform not yet released stays at `"version": "0.0.0"`.** The app treats
 that as "nothing to offer" — 0.0.0 never compares as newer than whatever a
 user has installed, so it can never trigger an update prompt toward a
-placeholder link. Only bump a platform's version here once its real URL from
-Step 7 (or the Windows release section) is live and returns `200`.
+placeholder link. Only publish a platform's Drive variable once its file has
+passed the signed-out download test.
 
 ```bash
 cd "C:\flutter project\quizy\website"
-# edit public/version.json with the new values
-git add public/version.json
-git commit -m "Bump version.json for v1.1.0"
+# edit release-manifest.json only when its metadata changes
+git add release-manifest.json
+git commit -m "Update release metadata for v1.1.0"
 git push origin main
 ```
 
-Cloudflare rebuilds from this push automatically (same as any other commit);
-no separate "retry deployment" click is needed for this file specifically.
+Cloudflare rebuilds from this push automatically. A variable-only change still
+requires retrying the latest deployment so the manifest is regenerated.
 
 ## Step 10: rebuild Cloudflare Pages
 
@@ -483,7 +419,7 @@ Hard-refresh the live website, then verify:
 1. The modal shows the new version.
 2. The displayed APK size matches the artifact.
 3. The displayed release date is correct.
-4. The final confirmation link points to the new versioned R2 URL.
+4. The final confirmation link points directly to the Google Drive file.
 5. The downloaded file has the expected filename.
 6. The downloaded file size and checksum match the tested release.
 7. The APK installs as an update over the prior release.
@@ -550,22 +486,14 @@ user profile) and run the executable from there. Testing the original
 Flutter dependency, so a packaging mistake stays invisible until a visitor
 hits it.
 
-### W4. Upload to R2
+### W4. Upload to Google Drive
 
-```powershell
-npx wrangler r2 object put "qc-scholar-releases/releases/genxyz-lab-v1.1.0-windows.zip" `
-  --file="C:\flutter project\quizy\build\genxyz-lab-v1.1.0-windows.zip" `
-  --content-type="application/zip" `
-  --content-disposition='attachment; filename="genxyz-lab-v1.1.0-windows.zip"' `
-  --remote
-```
-
-The bucket keeps its original name on purpose — renaming it would invalidate
-every published link for no user-visible gain.
+Upload the versioned ZIP, share it as **Anyone with the link**, and test the
+download from a signed-out/private browser window.
 
 ### W5. Point the website at it
 
-Set `VITE_WINDOWS_DOWNLOAD_URL` and `VITE_WINDOWS_SIZE` in Step 9, then
+Set `VITE_WINDOWS_GOOGLE_DRIVE_URL` and `VITE_WINDOWS_SIZE` in Step 9, then
 redeploy. Windows switches from *Coming soon* to a live download on the next
 build.
 
@@ -580,12 +508,12 @@ separate commercial decision, not a release blocker.
 
 ## Rollback procedure
 
-Keep at least the previous known-good APK in R2. Do not delete it immediately after a new release.
+Keep at least the previous known-good APK in Drive. Do not delete it immediately after a new release.
 
 If the website points to a broken release:
 
 1. Open Cloudflare Pages Production variables.
-2. Restore `VITE_APK_DOWNLOAD_URL` to the previous known-good R2 object.
+2. Restore `VITE_APK_GOOGLE_DRIVE_URL` to the previous known-good Drive file.
 3. Restore `VITE_APP_VERSION`, `VITE_APK_SIZE`, and `VITE_RELEASE_DATE` to match it.
 4. Retry the latest Pages production deployment.
 5. Verify the restored download URL.
@@ -614,9 +542,11 @@ Do not manually reset the production counter as part of the standard release pro
 
 ## Troubleshooting
 
-### Website downloads `downloads.example.com`
+### Website shows a platform as Coming soon
 
-`VITE_APK_DOWNLOAD_URL` was missing during the Pages build. Add it to the **Production** environment and retry the deployment.
+Its `*_GOOGLE_DRIVE_URL` variable was missing, malformed, or did not use a
+Google Drive hostname during the Pages build. Correct the **Production**
+variable and retry the deployment.
 
 ### Website still downloads the previous APK
 
@@ -624,12 +554,13 @@ Check that:
 
 - The Production variable contains the new URL.
 - A deployment was started after saving the variable.
-- The R2 object key has the new versioned filename.
+- The Drive share link points to the new versioned file.
 - The browser was hard-refreshed.
 
-### New R2 URL returns `404`
+### Drive asks the visitor to request access
 
-Check the bucket name, `releases/` prefix, filename spelling, capitalization, and whether Public Development URL access is still enabled.
+Open the file's Share dialog, set General access to **Anyone with the link**,
+then verify it again in a signed-out/private browser window.
 
 ### APK installs as a separate app
 
@@ -643,9 +574,10 @@ Compare the signing certificate and application ID with the previous public APK.
 
 Increase the build number after `+` in `pubspec.yaml`, rebuild, retest, and upload under the appropriate release filename.
 
-### R2 serves an old file under the same URL
+### Drive link opens the wrong release
 
-Never replace a long-cached versioned object. Upload a new key and update the website URL.
+Upload each release with a versioned filename and update the Pages variable to
+the new file's share URL. Do not rename an old file and reuse its link.
 
 ## Release record template
 
@@ -661,8 +593,8 @@ Application ID:
 APK filename:
 APK size:
 SHA-256:
-R2 bucket:
-R2 object key:
+Drive filename:
+Drive file ID:
 Public download URL:
 Flutter revision/commit:
 Signing certificate fingerprint:
@@ -685,7 +617,7 @@ Do not put signing passwords, private keys, Firebase service-account credentials
 [ ] flutter analyze passed
 [ ] flutter test passed
 [ ] Signed release APK built WITH --obfuscate --split-debug-info
-[ ] Symbol map saved somewhere private (never committed, never uploaded to R2)
+[ ] Symbol map saved somewhere private (never committed or publicly shared)
 [ ] APK renamed with version
 [ ] SHA-256 and size recorded
 [ ] Update-over-old-version installation passed
@@ -694,13 +626,13 @@ Do not put signing passwords, private keys, Firebase service-account credentials
     change — R8 breakage is silent at runtime, not a build error): local
     notification, QR scan, in-app WebView, stored AI key, Arduino USB list,
     voice dictation
-[ ] public/version.json bumped, committed, pushed (Step 9b)
-[ ] New versioned R2 object uploaded
-[ ] R2 URL returns 200
+[ ] release-manifest.json metadata reviewed (Step 9b)
+[ ] New versioned Drive file uploaded and publicly shared
+[ ] Drive URL works while signed out
 [ ] Cloudflare Production variables updated
 [ ] Cloudflare Pages rebuilt successfully
 [ ] Website modal shows correct release metadata
 [ ] Production download tested on Android
 [ ] Firebase functionality verified
-[ ] Previous known-good R2 object retained for rollback
+[ ] Previous known-good Drive file retained for rollback
 ```

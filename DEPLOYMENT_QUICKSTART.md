@@ -96,39 +96,18 @@ Extract the ZIP into a separate directory and run the executable from the
 extracted copy. The complete Windows `Release` folder must be in the ZIP; the
 executable cannot run by itself.
 
-## 5. Upload both files to Cloudflare R2
+## 5. Upload both files to Google Drive
 
-In Cloudflare, open:
-
-```text
-R2 Object Storage
--> qc-scholar-releases
--> releases
--> Upload
-```
-
-Upload:
+Upload the versioned APK and ZIP created in Step 4:
 
 ```text
 qc-scholar-v2.0.0.apk
 genxyz-lab-v2.0.0-windows.zip
 ```
 
-Always use a new versioned filename. Do not overwrite an older release.
-
-The public URLs follow this format:
-
-```text
-https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v<VERSION>.apk
-https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/genxyz-lab-v<VERSION>-windows.zip
-```
-
-Confirm that both URLs return `200` before changing the website:
-
-```powershell
-curl.exe -I "APK_URL"
-curl.exe -I "WINDOWS_URL"
-```
+For each file, choose **Share**, set General access to **Anyone with the
+link**, and copy the share URL. Test both URLs in a signed-out/private browser
+window before changing the website. Keep older versioned files for rollback.
 
 ## 6. Update Cloudflare Pages variables
 
@@ -148,46 +127,23 @@ Set these values as `plain_text`:
 | --- | --- |
 | `VITE_APP_VERSION` | New public version, such as `2.0.0` |
 | `VITE_RELEASE_DATE` | Release date in `YYYY-MM-DD` format |
-| `VITE_APK_DOWNLOAD_URL` | New versioned APK URL |
-| `VITE_APK_GOOGLE_DRIVE_URL` | Public APK Drive share link used automatically if R2 fails |
+| `VITE_APK_GOOGLE_DRIVE_URL` | Public APK Google Drive share link |
 | `VITE_APK_SIZE` | `$apkSize` from Step 4 |
-| `VITE_WINDOWS_DOWNLOAD_URL` | New versioned Windows ZIP URL |
-| `VITE_WINDOWS_GOOGLE_DRIVE_URL` | Public Windows ZIP Drive share link used automatically if R2 fails |
+| `VITE_WINDOWS_GOOGLE_DRIVE_URL` | Public Windows ZIP Google Drive share link |
 | `VITE_WINDOWS_SIZE` | `$windowsSize` from Step 4 |
 | `VITE_SITE_URL` | `https://genxyzlab.org` |
 
 Leave the existing `VITE_FIREBASE_*` values unchanged. Every `VITE_*` value is
 included in the public browser bundle, so never put passwords, signing keys,
-R2 credentials, or service-account credentials in one.
+storage credentials, or service-account credentials in one.
 
-## 7. Update `public/version.json`
+## 7. Update release notes when needed
 
-This file is manual. It is not generated from `pubspec.yaml` or Cloudflare
-variables. Update `website/public/version.json` so both platform entries match
-the Pages variables exactly:
-
-```json
-{
-  "android": {
-    "version": "2.0.0",
-    "url": "https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/qc-scholar-v2.0.0.apk",
-    "size": "42.5 MB",
-    "releaseDate": "2026-08-15",
-    "notes": "Major release notes."
-  },
-  "windows": {
-    "version": "2.0.0",
-    "url": "https://pub-16c29a592e56470b9f52d21fec59f97b.r2.dev/releases/genxyz-lab-v2.0.0-windows.zip",
-    "size": "27.1 MB",
-    "releaseDate": "2026-08-15",
-    "notes": "Windows release notes."
-  }
-}
-```
-
-Use the real version, sizes, date, URLs, and notes for each release. The
-installed application reads the deployed file from
-`https://genxyzlab.org/version.json` to check for updates.
+Edit `release-manifest.json` only when the release notes or fallback metadata
+change. The build generates `version.json` automatically from this metadata
+and the Google Drive Pages variables. If a Drive variable is missing or does
+not point to Google Drive, that platform is emitted as version `0.0.0` and no
+update prompt is shown.
 
 ## 8. Check and deploy the website
 
@@ -196,7 +152,7 @@ cd "C:\flutter project\quizy\website"
 npm install
 npm run check
 
-git add public/version.json DEPLOYMENT_QUICKSTART.md README.md
+git add release-manifest.json DEPLOYMENT_QUICKSTART.md README.md
 git commit -m "Publish GenXYZ Lab v2.0.0"
 git push origin main
 ```
@@ -215,4 +171,4 @@ parent repository.
 - Install the APK over the previous Android version and confirm user data stays.
 - Extract the Windows ZIP and launch it; confirm the custom icon is displayed.
 - Confirm Firebase comments, reactions, bug reports, and download counters work.
-- Keep the previous R2 release files available for rollback.
+- Keep the previous Drive release files available for rollback.

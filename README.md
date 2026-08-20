@@ -92,45 +92,30 @@ than a site with no visible content.
 entry carries its own URL, size, requirement line, and install note.
 
 ```env
-VITE_APK_DOWNLOAD_URL=https://downloads.example.com/genxyz-lab-latest.apk
 VITE_APK_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/APK_FILE_ID/view?usp=sharing
 VITE_APK_SIZE=~100 MB
-VITE_WINDOWS_DOWNLOAD_URL=https://downloads.example.com/genxyz-lab-latest-windows.zip
 VITE_WINDOWS_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/WINDOWS_FILE_ID/view?usp=sharing
 VITE_WINDOWS_SIZE=~120 MB
 VITE_APP_VERSION=1.0.0
 VITE_RELEASE_DATE=2026-08-07
 ```
 
-A URL still pointing at `downloads.example.com` is treated as **not published
-yet**: that platform renders as *Coming soon* with a disabled button rather
-than a dead link. This is the mechanism that lets Android ship before Windows
-without any code change.
+A missing URL, malformed URL, or URL outside Google Drive is treated as **not
+published yet**: that platform renders as *Coming soon* with a disabled button
+rather than opening a stale download host. The Drive files must be shared as
+**Anyone with the link** and tested in a signed-out browser window.
 
-The two optional `*_GOOGLE_DRIVE_URL` values add a public mirror for each
-platform. Before opening an R2 URL, the download button makes a five-second
-`HEAD` availability check. A network error, timeout, rate-limit response, or
-other non-success status automatically sends the visitor to that platform's
-Google Drive link instead. The manual mirror link remains visible in the
-dialog as a safety net. The Drive files must be shared as **Anyone with the
-link**; leave a mirror variable empty until its file is publicly accessible.
-
-The R2 bucket must allow `HEAD` requests from the production site origin in
-its CORS policy. If the browser cannot read the check because CORS is missing,
-the safe behavior is to use Google Drive. Changing either URL requires a new
-Pages build because Vite embeds these values at build time.
+The same Drive variables generate the deployed `version.json`, so both the
+website and the installed app use one download source. Changing either URL
+requires a new Pages build because Vite embeds the values at build time.
 
 `detectPlatform()` reads the user agent to preselect a build and badge it
 "Your device". It only reorders and preselects — user-agent detection is a
 hint, never a fact, so every platform stays one click away.
 
-Release binaries are never committed. Upload them to Cloudflare R2 with:
-
-- `Content-Type: application/vnd.android.package-archive` (APK) or
-  `application/zip` (Windows)
-- `Content-Disposition: attachment; filename="…"`
-- Long cache lifetimes only on versioned object names, never on a mutable
-  `latest` object.
+Release binaries are never committed. Upload the APK and Windows ZIP to Google
+Drive with versioned filenames, share each as **Anyone with the link**, and
+put the two public share URLs in the Pages variables above.
 
 ## The Three.js hero
 
@@ -205,9 +190,10 @@ the older rules keeps working instead of failing every download click.
 
 They count confirmation-link clicks, not completed installations. A public
 client counter can never be authoritative: scripted anonymous accounts can
-click repeatedly, navigation can interrupt an in-flight request, and direct R2
-links bypass the page entirely. Use Cloudflare R2 and Analytics logs as the
-source of truth for file requests. For stronger abuse controls, move
+click repeatedly, navigation can interrupt an in-flight request, and direct
+Drive links bypass the page entirely. Use Google Drive activity and site
+analytics as supporting evidence rather than treating the counter as an
+installation total. For stronger abuse controls, move
 comment and download writes behind a rate-limited Cloudflare Worker or a
 Firebase callable function.
 

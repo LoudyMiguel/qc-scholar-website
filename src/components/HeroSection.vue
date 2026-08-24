@@ -34,7 +34,7 @@ const availability = computed(() =>
 )
 
 const readout = [
-  { key: 'Courses', value: '50+ free' },
+  { key: 'Courses', value: '70 free' },
   { key: 'Tools', value: '7 built in' },
   { key: 'Network', value: 'optional' },
 ]
@@ -78,8 +78,8 @@ const readout = [
           class="mt-7 max-w-[560px] text-base leading-8 text-slate-300 sm:text-lg sm:leading-9"
           data-hero-element
         >
-          50+ free offline courses, 7 built-in developer tools, and 20+ open-source
-          systems and games to take apart — on your Android phone or your Windows PC.
+          70 free offline courses, 129 working templates, and a growing collection
+          of open-source 2D and 3D games — on your Android phone or Windows PC.
         </p>
 
         <div class="mt-9 flex flex-col gap-3 sm:flex-row" data-hero-element>
@@ -148,7 +148,7 @@ const readout = [
             </span>
             <span class="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.13em] text-slate-500 sm:hidden">
               <Braces :size="12" class="text-cyan-300" aria-hidden="true" />
-              50+ courses · 7 tools
+              70 courses · 129 templates
             </span>
           </div>
         </div>

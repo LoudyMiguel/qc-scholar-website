@@ -8,7 +8,7 @@ It covers:
 - Release signing and update compatibility
 - Building and testing the APK, with R8 shrinking + Dart obfuscation enabled
 - Uploading versioned release files to Google Drive
-- Updating Cloudflare Pages release variables
+- Updating the tracked release manifest
 - Generating `version.json` so the in-app update checker uses the same links
 - Production validation and rollback
 
@@ -172,19 +172,22 @@ Build from the Flutter project root, WITH Dart obfuscation:
 
 ```powershell
 cd "C:\flutter project\quizy"
-$releaseVersion = "1.1.0"   # match Step 1's chosen version
+$releaseVersion = "2.1.0"   # match Step 1's chosen version
 
-flutter build apk --release `
+flutter build apk --release --split-per-abi `
   --obfuscate `
-  --split-debug-info="build\debug-symbols\$releaseVersion" `
-  --dart-define=DRIVE_API_KEY=YOUR_KEY `
-  --dart-define=SERVER_BASE_URL=YOUR_SERVER
+  --split-debug-info="build\debug-info\android-$releaseVersion" `
+  --dart-define="DRIVE_CATALOG_URL=https://drive.google.com/drive/folders/1yNocz5yIk0bFbiP1UxHO4TfBRvSi6ofz?usp=drive_link" `
+  --dart-define="TEMPLATE_CATALOG_URL=https://drive.google.com/drive/folders/1DmQCO_4Tfxb3263QBWxxchTfFthZlg56?usp=sharing" `
+  --dart-define="GOOGLE_OAUTH_CLIENT_ID=1006856056001-ts667c1buq4sdhs429fbqn7osust7l53.apps.googleusercontent.com" `
+  --dart-define="GOOGLE_CLOUD_PROJECT_ID=qc-scholar-504213" `
+  --dart-define="ENABLE_TESTING_MODE_QUIZ_BYPASS=false"
 ```
 
 Expected output:
 
 ```text
-C:\flutter project\quizy\build\app\outputs\flutter-apk\app-release.apk
+C:\flutter project\quizy\build\app\outputs\flutter-apk\app-arm64-v8a-release.apk
 ```
 
 The release build must use the existing signing configuration from `android/key.properties`. Treat a missing signing file, missing keystore, or changed certificate as a release blocker.
@@ -223,9 +226,9 @@ they live only in `flutter_secure_storage` at runtime, entered by the student.
 Do not distribute a generic `app-release.apk` filename. Copy it to a versioned filename:
 
 ```powershell
-$releaseVersion = "1.1.0"
-$sourceApk = "C:\flutter project\quizy\build\app\outputs\flutter-apk\app-release.apk"
-$releaseApk = "C:\flutter project\quizy\build\app\outputs\flutter-apk\qc-scholar-v$releaseVersion.apk"
+$releaseVersion = "2.1.0"
+$sourceApk = "C:\flutter project\quizy\build\app\outputs\flutter-apk\app-arm64-v8a-release.apk"
+$releaseApk = "C:\flutter project\quizy\build\app\outputs\flutter-apk\genxyz-lab-v$releaseVersion-arm64.apk"
 
 Copy-Item -LiteralPath $sourceApk -Destination $releaseApk
 ```
@@ -290,7 +293,13 @@ Open the share URL in a signed-out/private browser window, download the APK,
 and verify its size and SHA-256 checksum against the locally tested artifact.
 Do not update the website variable until this test succeeds.
 
-## Step 9: update Cloudflare Pages release variables
+## Step 9: update the tracked release manifest
+
+Edit `release-manifest.json` with the tested Google Drive URL, version, size,
+release date, and notes for each published platform. This tracked file is
+authoritative for the website download buttons and generated `version.json`.
+Cloudflare release variables remain optional fallbacks only when a manifest URL
+is empty.
 
 Open:
 
@@ -302,16 +311,10 @@ Cloudflare dashboard
   -> Variables and Secrets
 ```
 
-Update the **Production** environment values:
+Keep the **Production** site origin correct:
 
 ```text
-VITE_SITE_URL=https://your-final-domain.com
-VITE_APK_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/YOUR_APK_FILE_ID/view?usp=sharing
-VITE_APP_VERSION=1.1.0
-VITE_APK_SIZE=THE_CALCULATED_SIZE
-VITE_RELEASE_DATE=YYYY-MM-DD
-VITE_WINDOWS_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/YOUR_WINDOWS_FILE_ID/view?usp=sharing
-VITE_WINDOWS_SIZE=THE_CALCULATED_SIZE
+VITE_SITE_URL=https://genxyzlab.org
 ```
 
 Share both Drive files as **Anyone with the link** and test the links in a
@@ -323,23 +326,12 @@ link, the Open Graph image URL, `robots.txt`, and `sitemap.xml` are all built
 from it. A wrong value here makes every shared link preview and every indexed
 URL point at the wrong origin.
 
-Leave `VITE_WINDOWS_GOOGLE_DRIVE_URL` empty until a desktop build is uploaded.
-The site renders Windows as *Coming soon* with a disabled button.
+Leave a platform's manifest URL empty until its artifact is uploaded and tested.
+The build then emits version `0.0.0` for that platform and the site renders it
+as *Coming soon* with a disabled button.
 
-Example:
-
-```text
-VITE_APK_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/YOUR_APK_FILE_ID/view?usp=sharing
-VITE_APP_VERSION=1.1.0
-VITE_APK_SIZE=81.2 MB
-VITE_RELEASE_DATE=2026-09-01
-```
-
-In Cloudflare, enter the variable name and value in separate fields. Do not put `NAME=value` in the name field, and do not wrap values in quotation marks.
-
-The website repository does not need a new commit when only these Cloudflare variables change. Vite reads them at build time, so a new Pages deployment is still required.
-
-For matching local development behavior, update the ignored `website/.env.local` file as well:
+For testing a URL before recording it in the manifest, the ignored
+`website/.env.local` values remain available as optional fallbacks:
 
 ```env
 VITE_APK_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/YOUR_APK_FILE_ID/view?usp=sharing
@@ -352,8 +344,8 @@ Never commit `.env.local`.
 
 ## Step 9b: review the generated update manifest
 
-The Pages build generates `version.json` from the Drive variables and the
-tracked `release-manifest.json` metadata. The installed app fetches it from
+The Pages build generates `version.json` from the tracked
+`release-manifest.json`. The installed app fetches it from
 `https://<your-domain>/version.json`.
 
 ```json
@@ -375,8 +367,8 @@ tracked `release-manifest.json` metadata. The installed app fetches it from
 }
 ```
 
-The generated values match Step 9's Cloudflare variables. `notes` comes from
-`release-manifest.json` and is optional free text shown in the update banner.
+The generated values match Step 9's tracked manifest. `notes` is optional free
+text shown in the update banner.
 
 **A platform not yet released stays at `"version": "0.0.0"`.** The app treats
 that as "nothing to offer" — 0.0.0 never compares as newer than whatever a
@@ -392,8 +384,7 @@ git commit -m "Update release metadata for v1.1.0"
 git push origin main
 ```
 
-Cloudflare rebuilds from this push automatically. A variable-only change still
-requires retrying the latest deployment so the manifest is regenerated.
+Cloudflare rebuilds from this push automatically.
 
 ## Step 10: rebuild Cloudflare Pages
 
@@ -439,16 +430,19 @@ blocks an Android release.
 
 ```powershell
 cd "C:\flutter project\quizy"
-$releaseVersion = "1.1.0"   # match Step 1's chosen version
+$releaseVersion = "2.1.0"   # match Step 1's chosen version
 
 flutter config --enable-windows-desktop
 flutter clean
 flutter pub get
 flutter build windows --release `
   --obfuscate `
-  --split-debug-info="build\debug-symbols\windows-$releaseVersion" `
-  --dart-define=DRIVE_API_KEY=YOUR_KEY `
-  --dart-define=SERVER_BASE_URL=YOUR_SERVER
+  --split-debug-info="build\debug-info\windows-$releaseVersion" `
+  --dart-define="DRIVE_CATALOG_URL=https://drive.google.com/drive/folders/1yNocz5yIk0bFbiP1UxHO4TfBRvSi6ofz?usp=drive_link" `
+  --dart-define="TEMPLATE_CATALOG_URL=https://drive.google.com/drive/folders/1DmQCO_4Tfxb3263QBWxxchTfFthZlg56?usp=sharing" `
+  --dart-define="GOOGLE_OAUTH_CLIENT_ID=1006856056001-ts667c1buq4sdhs429fbqn7osust7l53.apps.googleusercontent.com" `
+  --dart-define="GOOGLE_CLOUD_PROJECT_ID=qc-scholar-504213" `
+  --dart-define="ENABLE_TESTING_MODE_QUIZ_BYPASS=false"
 ```
 
 Same `--obfuscate`/`--split-debug-info` reasoning as the Android build above —
@@ -493,9 +487,9 @@ download from a signed-out/private browser window.
 
 ### W5. Point the website at it
 
-Set `VITE_WINDOWS_GOOGLE_DRIVE_URL` and `VITE_WINDOWS_SIZE` in Step 9, then
-redeploy. Windows switches from *Coming soon* to a live download on the next
-build.
+Set the Windows `url`, `size`, version, and date in `release-manifest.json`,
+then commit and push. Windows switches from *Coming soon* to a live download on
+the next build.
 
 ### Code signing
 
@@ -512,11 +506,11 @@ Keep at least the previous known-good APK in Drive. Do not delete it immediately
 
 If the website points to a broken release:
 
-1. Open Cloudflare Pages Production variables.
-2. Restore `VITE_APK_GOOGLE_DRIVE_URL` to the previous known-good Drive file.
-3. Restore `VITE_APP_VERSION`, `VITE_APK_SIZE`, and `VITE_RELEASE_DATE` to match it.
-4. Retry the latest Pages production deployment.
-5. Verify the restored download URL.
+1. Restore the previous known-good Drive URL and matching metadata in
+   `release-manifest.json`.
+2. Commit and push the rollback.
+3. Wait for the Pages production deployment.
+4. Verify the restored download URL.
 
 Important: Android normally refuses a lower `versionCode` over a newer installed build. A website-link rollback helps users who have not installed the bad release. Users who already installed it need a corrected APK with a new, higher build number.
 
@@ -629,7 +623,7 @@ Do not put signing passwords, private keys, Firebase service-account credentials
 [ ] release-manifest.json metadata reviewed (Step 9b)
 [ ] New versioned Drive file uploaded and publicly shared
 [ ] Drive URL works while signed out
-[ ] Cloudflare Production variables updated
+[ ] release-manifest.json contains both tested public Drive URLs and sizes
 [ ] Cloudflare Pages rebuilt successfully
 [ ] Website modal shows correct release metadata
 [ ] Production download tested on Android

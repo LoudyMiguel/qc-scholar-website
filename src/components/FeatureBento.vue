@@ -11,7 +11,7 @@ import {
 const features = [
   {
     title: 'Learn without losing momentum',
-    body: 'Move through guided courses, checkpoints, quizzes, and downloadable material—even when your connection is unreliable.',
+    body: 'Move through 70 guided courses, checkpoints, quizzes, and downloadable material—even when your connection is unreliable.',
     icon: WifiOff,
     tone: 'cyan',
     size: 'large',
@@ -38,7 +38,7 @@ const features = [
   },
   {
     title: 'Build beyond snippets',
-    body: 'Work with project files, framework templates, live web previews, APIs, and databases.',
+    body: 'Start from 129 working templates, then use project files, live previews, APIs, and databases to make each build your own.',
     icon: Database,
     tone: 'cyan',
     size: 'compact',

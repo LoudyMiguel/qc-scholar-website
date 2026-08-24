@@ -22,13 +22,15 @@ import {
         <span class="eyebrow">Built for momentum</span>
         <h2 class="section-heading mt-6">Learning and building finally share the same space.</h2>
         <p class="section-copy mt-5">
-          Move from a guided explanation into hands-on code without changing devices or rebuilding your setup every time.
+          Move from a guided explanation into hands-on code through a cleaner,
+          more responsive interface without rebuilding your setup every time.
         </p>
 
         <div class="mt-8 space-y-3">
           <div
             v-for="item in [
               'Courses, quizzes, and project practice stay connected',
+              'Refined navigation keeps the next action clear',
               'Compiler guidance is visible before anything runs',
               'AI assistance works inside the project context',
             ]"

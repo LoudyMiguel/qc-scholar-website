@@ -25,7 +25,7 @@ const downloads = computed(() =>
         <div class="flex items-center gap-3.5 border-b border-slate-800/80 p-5 sm:border-r lg:border-b-0">
           <GraduationCap :size="21" class="text-cyan-300" aria-hidden="true" />
           <div>
-            <p class="text-sm font-bold text-white">50+ free courses</p>
+            <p class="text-sm font-bold text-white">70 free courses</p>
             <p class="mt-1 text-xs text-slate-500">Work offline, start to finish</p>
           </div>
         </div>
@@ -39,7 +39,7 @@ const downloads = computed(() =>
         <div class="flex items-center gap-3.5 border-b border-slate-800/80 p-5 sm:border-b-0 sm:border-r">
           <Layers3 :size="21" class="text-violet-300" aria-hidden="true" />
           <div>
-            <p class="text-sm font-bold text-white">20+ frameworks</p>
+            <p class="text-sm font-bold text-white">129 working templates</p>
             <p class="mt-1 text-xs text-slate-500">Plus 30+ open-source games</p>
           </div>
         </div>

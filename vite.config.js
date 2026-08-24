@@ -76,14 +76,14 @@ function releaseManifest(env) {
   )
 
   function buildEntry(platform, urlKey, sizeKey) {
-    const url = readGoogleDriveUrl(env[urlKey])
     const entry = metadata[platform]
+    const url = readGoogleDriveUrl(entry.url) || readGoogleDriveUrl(env[urlKey])
     return {
       ...entry,
-      version: url ? env.VITE_APP_VERSION || entry.version : '0.0.0',
+      version: url ? entry.version || env.VITE_APP_VERSION : '0.0.0',
       url,
-      size: env[sizeKey] || entry.size,
-      releaseDate: env.VITE_RELEASE_DATE || entry.releaseDate,
+      size: entry.size || env[sizeKey],
+      releaseDate: entry.releaseDate || env.VITE_RELEASE_DATE,
     }
   }
 
@@ -110,7 +110,7 @@ function releaseManifest(env) {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
-  const siteUrl = env.VITE_SITE_URL || 'https://genxyzlab.com'
+  const siteUrl = env.VITE_SITE_URL || 'https://genxyzlab.org'
 
   return {
     plugins: [vue(), seoFiles(siteUrl), releaseManifest(env)],

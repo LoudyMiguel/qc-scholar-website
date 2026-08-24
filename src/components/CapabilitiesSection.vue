@@ -9,11 +9,10 @@ import {
 import TerminalGrid from './TerminalGrid.vue'
 
 // The headline numbers. Each one names concrete examples rather than stopping
-// at a count — "20+ system templates" is a claim, "including a Business
-// Inventory System and a File Management System" is evidence.
+// at a count — concrete examples make the release claims verifiable.
 const capabilities = [
   {
-    value: '50+',
+    value: '70',
     unit: 'courses',
     title: 'Free offline courses',
     detail:
@@ -45,17 +44,18 @@ const capabilities = [
     value: '30+',
     unit: 'games',
     title: 'Open-source games',
-    detail: 'Playable source you can read, run, and rebuild.',
+    detail:
+      'Playable source including 3D Subway Dash, billiards, bowling, and an interactive periodic table.',
     icon: Gamepad2,
     tone: 'amber',
     span: '',
   },
   {
-    value: '20+',
+    value: '129',
     unit: 'templates',
     title: 'Open-source system templates',
     detail:
-      'Business Inventory System, File Management System, and more — complete projects, not snippets.',
+      'Tested, ready-to-run projects across business, productivity, education, and developer workflows.',
     icon: LayoutTemplate,
     tone: 'cyan',
     span: 'lg:col-span-2',

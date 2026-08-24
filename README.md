@@ -88,16 +88,20 @@ than a site with no visible content.
 
 ## Releases and platform downloads
 
-`src/config/site.js` builds a `releases` array from environment variables. Each
-entry carries its own URL, size, requirement line, and install note.
+`src/config/site.js` builds a `releases` array from the tracked
+`release-manifest.json`. Each entry carries its own URL, size, requirement
+line, install note, and release metadata.
 
-```env
-VITE_APK_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/APK_FILE_ID/view?usp=sharing
-VITE_APK_SIZE=~100 MB
-VITE_WINDOWS_GOOGLE_DRIVE_URL=https://drive.google.com/file/d/WINDOWS_FILE_ID/view?usp=sharing
-VITE_WINDOWS_SIZE=~120 MB
-VITE_APP_VERSION=1.0.0
-VITE_RELEASE_DATE=2026-08-07
+```json
+{
+  "android": {
+    "version": "1.0.0",
+    "url": "https://drive.google.com/file/d/APK_FILE_ID/view?usp=sharing",
+    "size": "100 MB",
+    "releaseDate": "2026-08-07",
+    "notes": "Release summary"
+  }
+}
 ```
 
 A missing URL, malformed URL, or URL outside Google Drive is treated as **not
@@ -105,9 +109,9 @@ published yet**: that platform renders as *Coming soon* with a disabled button
 rather than opening a stale download host. The Drive files must be shared as
 **Anyone with the link** and tested in a signed-out browser window.
 
-The same Drive variables generate the deployed `version.json`, so both the
-website and the installed app use one download source. Changing either URL
-requires a new Pages build because Vite embeds the values at build time.
+The same manifest generates the deployed `version.json`, so both the website
+and the installed app use one download source. Changing either URL requires a
+commit and a new Pages build because Vite embeds the values at build time.
 
 `detectPlatform()` reads the user agent to preselect a build and badge it
 "Your device". It only reorders and preselects — user-agent detection is a
@@ -115,7 +119,7 @@ hint, never a fact, so every platform stays one click away.
 
 Release binaries are never committed. Upload the APK and Windows ZIP to Google
 Drive with versioned filenames, share each as **Anyone with the link**, and
-put the two public share URLs in the Pages variables above.
+put the two public share URLs in `release-manifest.json`.
 
 ## The Three.js hero
 

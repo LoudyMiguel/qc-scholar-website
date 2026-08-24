@@ -10,11 +10,11 @@ setup, see [`RELEASE_RUNBOOK.md`](RELEASE_RUNBOOK.md) and
 Edit `C:\flutter project\quizy\pubspec.yaml` before building:
 
 ```yaml
-version: 2.0.0+4
+version: 2.1.0+5
 ```
 
-- `2.0.0` is the public version.
-- `4` is the Android build number. It must be higher than every published
+- `2.1.0` is the public version.
+- `5` is the Android build number. It must be higher than every published
   build number.
 - Use a new build number for every rebuild that may be distributed.
 
@@ -22,7 +22,7 @@ Set the version once in PowerShell for the remaining commands:
 
 ```powershell
 cd "C:\flutter project\quizy"
-$releaseVersion = "2.0.0"
+$releaseVersion = "2.1.0"
 ```
 
 ## 2. Generate the Windows icon
@@ -56,27 +56,35 @@ flutter pub get
 flutter analyze
 flutter test
 
-flutter build apk --release `
+flutter build apk --release --split-per-abi `
   --obfuscate `
-  --split-debug-info="build\debug-symbols\$releaseVersion" `
-  --dart-define=DRIVE_API_KEY=YOUR_CURRENT_KEY `
-  --dart-define=SERVER_BASE_URL=YOUR_CURRENT_SERVER
+  --split-debug-info="build\debug-info\android-$releaseVersion" `
+  --dart-define="DRIVE_CATALOG_URL=https://drive.google.com/drive/folders/1yNocz5yIk0bFbiP1UxHO4TfBRvSi6ofz?usp=drive_link" `
+  --dart-define="TEMPLATE_CATALOG_URL=https://drive.google.com/drive/folders/1DmQCO_4Tfxb3263QBWxxchTfFthZlg56?usp=sharing" `
+  --dart-define="GOOGLE_OAUTH_CLIENT_ID=1006856056001-ts667c1buq4sdhs429fbqn7osust7l53.apps.googleusercontent.com" `
+  --dart-define="GOOGLE_CLOUD_PROJECT_ID=qc-scholar-504213" `
+  --dart-define="ENABLE_TESTING_MODE_QUIZ_BYPASS=false"
 
 flutter build windows --release `
   --obfuscate `
-  --split-debug-info="build\debug-symbols\windows-$releaseVersion" `
-  --dart-define=DRIVE_API_KEY=YOUR_CURRENT_KEY `
-  --dart-define=SERVER_BASE_URL=YOUR_CURRENT_SERVER
+  --split-debug-info="build\debug-info\windows-$releaseVersion" `
+  --dart-define="DRIVE_CATALOG_URL=https://drive.google.com/drive/folders/1yNocz5yIk0bFbiP1UxHO4TfBRvSi6ofz?usp=drive_link" `
+  --dart-define="TEMPLATE_CATALOG_URL=https://drive.google.com/drive/folders/1DmQCO_4Tfxb3263QBWxxchTfFthZlg56?usp=sharing" `
+  --dart-define="GOOGLE_OAUTH_CLIENT_ID=1006856056001-ts667c1buq4sdhs429fbqn7osust7l53.apps.googleusercontent.com" `
+  --dart-define="GOOGLE_CLOUD_PROJECT_ID=qc-scholar-504213" `
+  --dart-define="ENABLE_TESTING_MODE_QUIZ_BYPASS=false"
 ```
 
-Replace the two `YOUR_CURRENT_*` placeholders with the real values used by the
-application. Never publish or commit `build\debug-symbols`.
+The template URL above is a plain URL, not a Markdown link, and Dart define
+names do not contain backslashes. Never publish or commit `build\debug-info`.
+`--split-per-abi` creates three APKs; the public website's Android release is
+the `app-arm64-v8a-release.apk` artifact named in Step 4.
 
 ## 4. Create the release files
 
 ```powershell
-$sourceApk = "build\app\outputs\flutter-apk\app-release.apk"
-$releaseApk = "build\app\outputs\flutter-apk\qc-scholar-v$releaseVersion.apk"
+$sourceApk = "build\app\outputs\flutter-apk\app-arm64-v8a-release.apk"
+$releaseApk = "build\app\outputs\flutter-apk\genxyz-lab-v$releaseVersion-arm64.apk"
 $windowsSource = "build\windows\x64\runner\Release"
 $windowsZip = "build\genxyz-lab-v$releaseVersion-windows.zip"
 
@@ -101,15 +109,22 @@ executable cannot run by itself.
 Upload the versioned APK and ZIP created in Step 4:
 
 ```text
-qc-scholar-v2.0.0.apk
-genxyz-lab-v2.0.0-windows.zip
+genxyz-lab-v2.1.0-arm64.apk
+genxyz-lab-v2.1.0-windows.zip
 ```
 
 For each file, choose **Share**, set General access to **Anyone with the
 link**, and copy the share URL. Test both URLs in a signed-out/private browser
 window before changing the website. Keep older versioned files for rollback.
 
-## 6. Update Cloudflare Pages variables
+## 6. Update the tracked release manifest
+
+Edit `release-manifest.json` and set each platform's `version`, public Google
+Drive `url`, calculated `size`, `releaseDate`, and release `notes`. This tracked
+file is the release source of truth, so a stale Cloudflare release variable
+cannot silently send users to an older artifact.
+
+## 7. Check Cloudflare Pages variables
 
 Open:
 
@@ -121,29 +136,15 @@ Workers & Pages
 -> Production
 ```
 
-Set these values as `plain_text`:
+Keep this value set as `plain_text`:
 
 | Name | Value |
 | --- | --- |
-| `VITE_APP_VERSION` | New public version, such as `2.0.0` |
-| `VITE_RELEASE_DATE` | Release date in `YYYY-MM-DD` format |
-| `VITE_APK_GOOGLE_DRIVE_URL` | Public APK Google Drive share link |
-| `VITE_APK_SIZE` | `$apkSize` from Step 4 |
-| `VITE_WINDOWS_GOOGLE_DRIVE_URL` | Public Windows ZIP Google Drive share link |
-| `VITE_WINDOWS_SIZE` | `$windowsSize` from Step 4 |
 | `VITE_SITE_URL` | `https://genxyzlab.org` |
 
 Leave the existing `VITE_FIREBASE_*` values unchanged. Every `VITE_*` value is
 included in the public browser bundle, so never put passwords, signing keys,
 storage credentials, or service-account credentials in one.
-
-## 7. Update release notes when needed
-
-Edit `release-manifest.json` only when the release notes or fallback metadata
-change. The build generates `version.json` automatically from this metadata
-and the Google Drive Pages variables. If a Drive variable is missing or does
-not point to Google Drive, that platform is emitted as version `0.0.0` and no
-update prompt is shown.
 
 ## 8. Check and deploy the website
 
@@ -153,7 +154,7 @@ npm install
 npm run check
 
 git add release-manifest.json DEPLOYMENT_QUICKSTART.md README.md
-git commit -m "Publish GenXYZ Lab v2.0.0"
+git commit -m "Publish GenXYZ Lab v2.1.0"
 git push origin main
 ```
 

@@ -1,3 +1,5 @@
+import releaseManifest from '../../release-manifest.json'
+
 const env = import.meta.env
 
 function readEnv(key, fallback = '') {
@@ -8,11 +10,11 @@ function readEnv(key, fallback = '') {
 export const siteConfig = Object.freeze({
   name: 'GenXYZ Lab',
   tagline: 'Learn. Practice. Build. Get certified.',
-  version: readEnv('VITE_APP_VERSION', '1.0.0'),
-  releaseDate: readEnv('VITE_RELEASE_DATE'),
+  version: releaseManifest.android?.version || readEnv('VITE_APP_VERSION', '1.0.0'),
+  releaseDate: releaseManifest.android?.releaseDate || readEnv('VITE_RELEASE_DATE'),
   // Absolute origin. Canonical links, Open Graph images, and the sitemap all
   // need one; a relative og:image is ignored by most crawlers and scrapers.
-  siteUrl: readEnv('VITE_SITE_URL', 'https://genxyzlab.com').replace(/\/+$/, ''),
+  siteUrl: readEnv('VITE_SITE_URL', 'https://genxyzlab.org').replace(/\/+$/, ''),
   termuxUrl: 'https://f-droid.org/en/packages/com.termux/',
   termuxDocsUrl: 'https://github.com/termux/termux-app#installation',
 })
@@ -43,14 +45,15 @@ function buildRelease({
   requirement,
   note,
 }) {
-  const url = readEnv(urlKey)
+  const manifestEntry = releaseManifest[id] || {}
+  const url = manifestEntry.url || readEnv(urlKey)
   return Object.freeze({
     id,
     name,
     shortName,
     fileKind,
     url,
-    size: readEnv(sizeKey, fallbackSize),
+    size: manifestEntry.size || readEnv(sizeKey, fallbackSize),
     requirement,
     note,
     // Only Google Drive is accepted as a release source. A missing, malformed,

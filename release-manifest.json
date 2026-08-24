@@ -1,14 +1,16 @@
 {
   "android": {
-    "version": "2.0.0",
-    "size": "42.5 MB",
-    "releaseDate": "2026-08-15",
-    "notes": "Major release with Templates, Flutter Studio, Flutter Web-to-APK, and open-source games."
+    "version": "2.1.0",
+    "url": "https://drive.google.com/file/d/19ztPt8jjm3cZ8TLAdyJ-oSUx7XUm0eX9/view?usp=sharing",
+    "size": "42.4 MB",
+    "releaseDate": "2026-08-24",
+    "notes": "Adds 70 offline courses, 129 working templates, new 3D games, and a refined UI and UX."
   },
   "windows": {
-    "version": "2.0.0",
-    "size": "27.1 MB",
-    "releaseDate": "2026-08-15",
-    "notes": "First Windows release with Templates, Flutter Studio, Flutter Web-to-APK, and open-source games. Database connection is not available in this version; configure your preferred database manually."
+    "version": "2.1.0",
+    "url": "https://drive.google.com/file/d/1wi-9P7q9HQQIkMJKxjeVFlFR50angwYH/view?usp=sharing",
+    "size": "26.4 MB",
+    "releaseDate": "2026-08-24",
+    "notes": "Adds 70 offline courses, 129 working templates, new 3D games, and a refined UI and UX."
   }
 }

@@ -205,13 +205,11 @@ onBeforeUnmount(() => {
   object-fit: cover;
   object-position: center;
   filter: saturate(0.92) contrast(1.04);
-  transition: filter 260ms ease;
   -webkit-mask-image: linear-gradient(#000, #000);
   mask-image: linear-gradient(#000, #000);
 }
 
 .hero-reveal.is-revealing .hero-art {
-  filter: saturate(0.76) contrast(1.02) brightness(0.88);
   -webkit-mask-image: radial-gradient(
     circle var(--reveal-radius) at var(--reveal-x) var(--reveal-y),
     transparent 0%,

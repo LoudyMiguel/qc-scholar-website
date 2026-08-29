@@ -214,7 +214,7 @@ painted-black corners to real transparency, since the source PNG has no alpha.
 | `logo.png` (256²) | Header and footer mark |
 | `apple-touch-icon.png` (180²) | iOS home screen |
 | `favicon.png` (48²) | Browser tab |
-| `og-cover.png` (1200×630) | Social link previews |
+| `og-cover-v2.png` (1200×630) | Versioned social link preview with current course/template totals |
 | `feature-lab.webp`, `community-constellation.webp` | Section artwork |
 
 This pass took shipped image weight from about 5.1 MB to 422 kB. The previous

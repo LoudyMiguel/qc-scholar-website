@@ -198,7 +198,7 @@ async function ogCover(source, radiusRatio) {
   await sharp(Buffer.from(svg))
     .composite([{ input: logo, top: 52, left: 86 }])
     .png({ compressionLevel: 9 })
-    .toFile(join(OUT, 'og-cover.png'))
+    .toFile(join(OUT, 'og-cover-v2.png'))
 }
 
 async function artwork() {

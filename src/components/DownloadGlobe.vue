@@ -336,27 +336,8 @@ onBeforeUnmount(() => {
 .globe-stage {
   position: relative;
   min-height: 39rem;
-  overflow: hidden;
-  border: 1px solid rgba(129, 140, 248, 0.14);
-  border-radius: 2rem;
-  background:
-    radial-gradient(circle at 50% 45%, rgba(99, 102, 241, 0.13), transparent 42%),
-    rgba(2, 6, 23, 0.7);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.04), 0 40px 110px rgba(2, 6, 23, 0.5);
+  overflow: visible;
 }
-
-.globe-stage::before,
-.globe-stage::after {
-  position: absolute;
-  z-index: 4;
-  width: 1.1rem;
-  height: 1.1rem;
-  content: '';
-  pointer-events: none;
-}
-
-.globe-stage::before { top: -1px; left: -1px; border-top: 1px solid #22d3ee; border-left: 1px solid #22d3ee; }
-.globe-stage::after { right: -1px; bottom: -1px; border-right: 1px solid #6366f1; border-bottom: 1px solid #6366f1; }
 
 .globe-hud {
   position: absolute;
@@ -447,7 +428,7 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 639px) {
-  .globe-stage { min-height: 32rem; border-radius: 1.5rem; }
+  .globe-stage { min-height: 32rem; }
   .globe-shell { top: 3.25rem; width: 32rem; }
   .coordinate-feed { right: 0.9rem; bottom: 0.9rem; left: 0.9rem; max-width: none; }
   .coordinate-row:nth-child(n + 4) { display: none; }

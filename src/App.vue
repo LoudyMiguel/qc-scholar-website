@@ -11,6 +11,7 @@ import ImpactStrip from './components/ImpactStrip.vue'
 import PlatformDownloads from './components/PlatformDownloads.vue'
 import ProductShowcase from './components/ProductShowcase.vue'
 import SetupGuide from './components/SetupGuide.vue'
+import ScrollSpyNav from './components/ScrollSpyNav.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import SiteHeader from './components/SiteHeader.vue'
 import { useScrollExperience } from './composables/useScrollExperience'
@@ -112,6 +113,7 @@ function updateMobileDownload() {
     <div class="noise-overlay" aria-hidden="true" />
     <div class="page-progress" aria-hidden="true" />
     <SiteHeader @download="openDownload" />
+    <ScrollSpyNav />
 
     <main id="main-content" tabindex="-1">
       <HeroSection @download="openDownload" />

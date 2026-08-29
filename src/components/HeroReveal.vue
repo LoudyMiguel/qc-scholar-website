@@ -10,6 +10,7 @@ import {
   Wrench,
 } from '@lucide/vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import heroLearningStudio from '../assets/hero-learning-studio-v2.webp'
 
 const stage = ref(null)
 const revealing = ref(false)
@@ -84,7 +85,7 @@ onBeforeUnmount(() => {
 
     <img
       class="hero-art"
-      src="/assets/hero-learning-studio-v2.webp"
+      :src="heroLearningStudio"
       alt=""
       width="1600"
       height="914"

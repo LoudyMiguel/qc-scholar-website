@@ -206,7 +206,12 @@ async function artwork() {
     // AI-generated hero foreground. It sits above a real HTML feature grid and
     // is selectively masked away by the cursor reveal, so 1600 px stays crisp
     // on wide displays without shipping the full generation-sized PNG.
-    { file: 'hero-learning-studio-v2.png', out: 'hero-learning-studio-v2.webp', width: 1600, quality: 82 },
+    {
+      file: 'hero-learning-studio-v2.png',
+      output: join(root, 'src', 'assets', 'hero-learning-studio-v2.webp'),
+      width: 1600,
+      quality: 82,
+    },
     // Rendered at most ~700 CSS px wide inside the showcase frame; 1200 covers
     // a 2x display with room to spare.
     { file: 'feature-lab.webp', width: 1200, quality: 76 },
@@ -226,7 +231,7 @@ async function artwork() {
     await sharp(source)
       .resize({ width: job.width, withoutEnlargement: true })
       .webp({ quality: job.quality, effort: 6 })
-      .toFile(join(OUT, job.out || job.file))
+      .toFile(job.output || join(OUT, job.file))
   }
 }
 

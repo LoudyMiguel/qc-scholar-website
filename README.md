@@ -128,6 +128,8 @@ put the two public share URLs in `release-manifest.json`.
 over a real HTML feature matrix. Fine-pointer movement cuts a soft circular
 lens through the artwork to reveal the matrix. Coarse-pointer and reduced-motion
 devices get a stable partially revealed composition with no interaction tax.
+Vite fingerprints the shipped WebP so a replaced hero can never inherit a stale
+fixed-path CDN cache entry.
 
 `DownloadGlobe.vue` lazy-loads COBE only when its section nears the viewport.
 New download clicks call the same-origin Pages Function, which reads

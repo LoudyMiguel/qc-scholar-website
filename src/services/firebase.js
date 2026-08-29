@@ -134,6 +134,91 @@ export async function recordDownloadClick(platform = '') {
   return result.snapshot.val()
 }
 
+function downloadOriginKey(lat, lng) {
+  const encode = (value, positive, negative) =>
+    `${value >= 0 ? positive : negative}${Math.abs(value)}`
+  return `${encode(lat, 'n', 's')}_${encode(lng, 'e', 'w')}`
+}
+
+/**
+ * Cloudflare supplies approximate request coordinates to the same-origin Pages
+ * Function. That function snaps them to a coarse 5° cell before returning; the
+ * browser stores only an aggregate count for that cell. No IP, account id,
+ * timestamp, or precise coordinate reaches Firebase.
+ */
+export async function recordApproximateDownloadOrigin(platform = '') {
+  const response = await fetch('/api/download-origin', {
+    method: 'POST',
+    headers: { Accept: 'application/json' },
+  })
+  if (!response.ok) return false
+
+  const payload = await response.json()
+  const lat = Number(payload.lat)
+  const lng = Number(payload.lng)
+  if (
+    payload.available !== true ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng) ||
+    lat < -90 ||
+    lat > 90 ||
+    lng < -180 ||
+    lng > 180 ||
+    lat % 5 !== 0 ||
+    lng % 5 !== 0
+  ) {
+    return false
+  }
+
+  await ensureAnonymousUser()
+  const originRef = ref(database, `stats/download_origins/${downloadOriginKey(lat, lng)}`)
+  const result = await runTransaction(originRef, (current) => {
+    const previous = current && typeof current === 'object' ? current : {}
+    const android = Number.isSafeInteger(previous.android) ? previous.android : 0
+    const windows = Number.isSafeInteger(previous.windows) ? previous.windows : 0
+    const count = Number.isSafeInteger(previous.count) ? previous.count : 0
+    return {
+      lat,
+      lng,
+      count: count + 1,
+      android: android + (platform === 'android' ? 1 : 0),
+      windows: windows + (platform === 'windows' ? 1 : 0),
+    }
+  })
+  return result.committed
+}
+
+export function subscribeToDownloadOrigins(onData, onError = console.error) {
+  if (!isFirebaseConfigured) {
+    onData([])
+    return () => {}
+  }
+
+  return onValue(
+    ref(database, 'stats/download_origins'),
+    (snapshot) => {
+      const origins = []
+      snapshot.forEach((child) => {
+        const value = child.val() || {}
+        const lat = Number(value.lat)
+        const lng = Number(value.lng)
+        const count = Number(value.count)
+        if (
+          Number.isFinite(lat) &&
+          Number.isFinite(lng) &&
+          Number.isSafeInteger(count) &&
+          count > 0
+        ) {
+          origins.push({ id: child.key, ...value, lat, lng, count })
+        }
+      })
+      origins.sort((a, b) => b.count - a.count)
+      onData(origins.slice(0, 80))
+    },
+    onError,
+  )
+}
+
 export function subscribeToPlatformDownloads(onData, onError = console.error) {
   if (!isFirebaseConfigured) {
     onData({})

@@ -2,7 +2,10 @@
 import { Clock, Download, Monitor, ShieldCheck, Smartphone, X } from '@lucide/vue'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { detectPlatform, releases, releasesById, siteConfig } from '../config/site'
-import { recordDownloadClick } from '../services/firebase'
+import {
+  recordApproximateDownloadOrigin,
+  recordDownloadClick,
+} from '../services/firebase'
 
 const props = defineProps({
   open: {
@@ -132,6 +135,11 @@ async function confirmDownload(event) {
     return
   }
   downloading.value = true
+
+  // Location tracking is deliberately fire-and-forget: it never delays or
+  // blocks the Drive download, and the edge function returns only a coarse
+  // aggregate coordinate cell.
+  recordApproximateDownloadOrigin(release.id).catch(() => {})
 
   let tracked = false
   try {

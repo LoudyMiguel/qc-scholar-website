@@ -117,20 +117,11 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'es2020',
       cssCodeSplit: true,
-      // The three.js chunk is deliberately over the default 500 kB advisory: it
-      // is lazy, gated behind idle + viewport + screen-size checks, and never on
-      // the critical path. Raising the limit keeps a real regression visible
-      // instead of burying it under a warning we always ignore.
-      chunkSizeWarningLimit: 800,
       rollupOptions: {
         output: {
           manualChunks: {
             firebase: ['firebase/app', 'firebase/auth', 'firebase/database'],
             motion: ['gsap', 'lenis'],
-            // Three.js only ever loads behind a dynamic import in LabScene.vue.
-            // Naming it here keeps it out of the entry chunk on devices that
-            // never render the scene (reduced motion, no WebGL, small screens).
-            three: ['three'],
           },
         },
       },

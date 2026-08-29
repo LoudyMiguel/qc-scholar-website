@@ -8,7 +8,7 @@ import {
   WifiOff,
 } from '@lucide/vue'
 import { computed, onMounted, ref } from 'vue'
-import LabScene from './LabScene.vue'
+import HeroReveal from './HeroReveal.vue'
 import { detectPlatform, releases, releasesById } from '../config/site'
 
 defineEmits(['download'])
@@ -46,13 +46,13 @@ const readout = [
     class="hero-shell relative isolate overflow-hidden pb-24 pt-32 sm:pt-36 lg:pb-28 lg:pt-40"
   >
     <div class="hero-base-grid pointer-events-none absolute inset-0" aria-hidden="true" />
-    <LabScene data-hero-scene />
+    <HeroReveal />
     <div class="hero-glow pointer-events-none absolute inset-0" data-hero-glow aria-hidden="true" />
     <div class="hero-readability pointer-events-none absolute inset-0" aria-hidden="true" />
     <div class="hero-edge-fade pointer-events-none absolute inset-0" aria-hidden="true" />
 
     <div class="site-container relative z-10 flex min-h-[620px] items-center lg:min-h-[680px]">
-      <div class="hero-copy w-full max-w-[700px]" data-hero-copy>
+      <div class="hero-copy min-w-0 w-full max-w-[700px]" data-hero-copy>
         <!-- Measurement rail. Instrument language rather than ornament: it marks
              the copy block's extent the way a technical drawing would. -->
         <div class="hero-rail" aria-hidden="true" data-hero-element>
@@ -97,7 +97,7 @@ const readout = [
 
         <p
           v-if="availability.length"
-          class="mt-4 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500"
+          class="mt-4 hidden font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:block"
           data-hero-element
         >
           Available for {{ availability.join(' · ') }} — free, no subscription
@@ -125,7 +125,7 @@ const readout = [
         <!-- Instrument readout. Corner brackets instead of a rounded card keep
              the hero's technical register and stop it reading as one more
              glass panel. -->
-        <div class="hero-readout mt-10 max-w-fit" data-hero-element>
+        <div class="hero-readout mt-10 w-full max-w-[620px] overflow-hidden" data-hero-element>
           <span class="hero-readout-bracket hero-readout-bracket--tl" aria-hidden="true" />
           <span class="hero-readout-bracket hero-readout-bracket--br" aria-hidden="true" />
           <div class="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3.5">
@@ -187,9 +187,8 @@ const readout = [
   will-change: opacity, transform;
 }
 
-/* The scene lives behind the copy, so the left third is darkened hard and the
-   right is left almost clear. A uniform scrim would either wash out the 3D or
-   leave the headline unreadable. */
+/* The generated scene and reveal grid live behind the copy, so the left third
+   is darkened hard while the interactive right side remains legible. */
 .hero-readability {
   z-index: 2;
   background: linear-gradient(

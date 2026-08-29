@@ -1,9 +1,9 @@
 # GenXYZ Lab website
 
 The marketing and download site for GenXYZ Lab, an offline-first learning and
-coding studio. Vue 3 + Vite + Tailwind, with a lazy procedural Three.js hero,
-multi-platform release downloads (Android APK and Windows), Firebase Realtime
-Database community features, and Cloudflare Pages deployment headers.
+coding studio. Vue 3 + Vite + Tailwind, with a generated cursor-reveal hero, a
+lazy WebGL download globe, multi-platform release downloads (Android APK and
+Windows), Firebase Realtime Database community features, and Cloudflare Pages.
 
 Everything lives under `quizy/website`; nothing here modifies the Flutter
 application.
@@ -23,20 +23,21 @@ website/
 │  ├─ _headers               # CSP and cache policy
 │  ├─ _redirects             # SPA fallback
 │  └─ privacy.html
+├─ functions/api/download-origin.js # coarse Cloudflare coordinate endpoint
 ├─ src/
 │  ├─ assets/main.css
 │  ├─ components/
 │  │  ├─ BrandLogo.vue          CommentCard.vue
 │  │  ├─ CommunitySection.vue   DownloadModal.vue
 │  │  ├─ FeatureBento.vue       HeroSection.vue
-│  │  ├─ ImpactStrip.vue        LabScene.vue
-│  │  ├─ PlatformDownloads.vue  ProductShowcase.vue
+│  │  ├─ ImpactStrip.vue        HeroReveal.vue
+│  │  ├─ DownloadGlobe.vue      PlatformDownloads.vue
+│  │  ├─ ProductShowcase.vue    CapabilitiesSection.vue
 │  │  ├─ SetupGuide.vue         SiteFooter.vue
 │  │  └─ SiteHeader.vue
 │  ├─ composables/{useCommunity,useScrollExperience}.js
 │  ├─ config/site.js         # releases, platform detection, site origin
 │  ├─ services/firebase.js
-│  ├─ three/labScene.js      # WebGL scene, dynamically imported
 │  ├─ App.vue
 │  └─ main.js
 ├─ .env.example
@@ -121,28 +122,19 @@ Release binaries are never committed. Upload the APK and Windows ZIP to Google
 Drive with versioned filenames, share each as **Anyone with the link**, and
 put the two public share URLs in `release-manifest.json`.
 
-## The Three.js hero
+## Generated hero and download globe
 
-`src/three/labScene.js` builds a faceted core inside three tilted orbits
-carrying toolchain nodes, each tethered to the centre. It uses only core
-Three.js primitives with unlit materials — no loaders, no post-processing, no
-lights — so it tree-shakes small and costs no lighting passes.
+`HeroReveal.vue` layers the generated `hero-learning-studio-v2.webp` foreground
+over a real HTML feature matrix. Fine-pointer movement cuts a soft circular
+lens through the artwork to reveal the matrix. Coarse-pointer and reduced-motion
+devices get a stable partially revealed composition with no interaction tax.
 
-It is gated hard, because the library is ~180 kB gzipped and this product is
-Android-first:
-
-| Condition | Result |
-|---|---|
-| Viewport under 768 px | CSS fallback, Three.js never fetched |
-| `navigator.connection.saveData` | CSS fallback, Three.js never fetched |
-| WebGL unavailable or blocked | CSS fallback, canvas stays hidden |
-| `prefers-reduced-motion: reduce` | One static composed frame, no RAF loop |
-| Scrolled offscreen, or tab hidden | Loop paused |
-
-The CSS fallback in `LabScene.vue` is a finished visual in its own right, not a
-blank state. On teardown every geometry, material, and the renderer are
-disposed and the WebGL context is explicitly released — browsers cap live
-contexts per page.
+`DownloadGlobe.vue` lazy-loads COBE only when its section nears the viewport.
+New download clicks call the same-origin Pages Function, which reads
+Cloudflare's approximate request coordinates, snaps them to a 5-degree cell,
+and returns only that cell. Firebase stores an aggregate cell count—never an IP,
+precise coordinate, user id, timestamp, or device identifier. Existing historic
+downloads are intentionally not assigned fake locations.
 
 ## Connect Firebase
 

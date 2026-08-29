@@ -2,6 +2,7 @@
 import { Download, X } from '@lucide/vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import CommunitySection from './components/CommunitySection.vue'
+import DownloadGlobe from './components/DownloadGlobe.vue'
 import DownloadModal from './components/DownloadModal.vue'
 import FeatureBento from './components/FeatureBento.vue'
 import HeroSection from './components/HeroSection.vue'
@@ -16,17 +17,20 @@ import { useScrollExperience } from './composables/useScrollExperience'
 import {
   isFirebaseConfigured,
   subscribeToDownloadCount,
+  subscribeToDownloadOrigins,
 } from './services/firebase'
 
 const downloadModalOpen = ref(false)
 const requestedPlatform = ref('')
 const downloadCount = ref(0)
+const downloadOrigins = ref([])
 const countReady = ref(false)
 const notice = ref('')
 const mobileDownloadVisible = ref(false)
 const bottomContentInView = new Set()
 
 let unsubscribeDownloadCount = () => {}
+let unsubscribeDownloadOrigins = () => {}
 let noticeTimer = 0
 let bottomContentObserver = null
 
@@ -41,6 +45,14 @@ onMounted(() => {
       },
       () => {
         countReady.value = false
+      },
+    )
+    unsubscribeDownloadOrigins = subscribeToDownloadOrigins(
+      (origins) => {
+        downloadOrigins.value = origins
+      },
+      () => {
+        downloadOrigins.value = []
       },
     )
   }
@@ -62,6 +74,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   unsubscribeDownloadCount()
+  unsubscribeDownloadOrigins()
   window.removeEventListener('scroll', updateMobileDownload)
   bottomContentObserver?.disconnect()
   window.clearTimeout(noticeTimer)
@@ -107,6 +120,11 @@ function updateMobileDownload() {
       <CapabilitiesSection />
       <FeatureBento />
       <PlatformDownloads @download="openDownload" />
+      <DownloadGlobe
+        :origins="downloadOrigins"
+        :download-count="downloadCount"
+        :count-ready="countReady"
+      />
       <SetupGuide @download="openDownload" />
       <CommunitySection />
     </main>

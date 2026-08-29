@@ -160,7 +160,7 @@ async function ogCover(source, radiusRatio) {
   <rect width="1200" height="630" fill="url(#glowA)"/>
   <rect width="1200" height="630" fill="url(#glowB)"/>
 
-  <!-- Orbit motif, echoing the site's WebGL hero -->
+  <!-- Orbit motif, echoing the site's connected learning-system visual -->
   <g transform="translate(940 315)" fill="none" stroke-width="1.5">
     <ellipse rx="196" ry="74" stroke="${BRAND.indigo}" stroke-opacity="0.34" transform="rotate(-24)"/>
     <ellipse rx="248" ry="94" stroke="${BRAND.violet}" stroke-opacity="0.26" transform="rotate(18)"/>
@@ -181,8 +181,8 @@ async function ogCover(source, radiusRatio) {
        often the only impression someone gets, so it leads with substance
        rather than repeating the tagline in smaller type. -->
   <g font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
-    <text x="86" y="418" font-size="25" font-weight="700" fill="${BRAND.text}">50+ free offline courses</text>
-    <text x="86" y="454" font-size="21" font-weight="400" fill="${BRAND.muted}">7 developer tools · 20+ frameworks · 30+ games · 20+ templates</text>
+    <text x="86" y="418" font-size="25" font-weight="700" fill="${BRAND.text}">70 free offline courses</text>
+    <text x="86" y="454" font-size="21" font-weight="400" fill="${BRAND.muted}">129 templates · 7 developer tools · 20+ frameworks · 30+ games</text>
   </g>
 
   <g font-family="Consolas, Menlo, monospace" font-size="18" font-weight="700" letter-spacing="2.4">
@@ -203,6 +203,10 @@ async function ogCover(source, radiusRatio) {
 
 async function artwork() {
   const jobs = [
+    // AI-generated hero foreground. It sits above a real HTML feature grid and
+    // is selectively masked away by the cursor reveal, so 1600 px stays crisp
+    // on wide displays without shipping the full generation-sized PNG.
+    { file: 'hero-learning-studio-v2.png', out: 'hero-learning-studio-v2.webp', width: 1600, quality: 82 },
     // Rendered at most ~700 CSS px wide inside the showcase frame; 1200 covers
     // a 2x display with room to spare.
     { file: 'feature-lab.webp', width: 1200, quality: 76 },
@@ -222,7 +226,7 @@ async function artwork() {
     await sharp(source)
       .resize({ width: job.width, withoutEnlargement: true })
       .webp({ quality: job.quality, effort: 6 })
-      .toFile(join(OUT, job.file))
+      .toFile(join(OUT, job.out || job.file))
   }
 }
 

@@ -32,6 +32,8 @@ let pointerStart = 0
 let pointerOffset = 0
 let lastPointerOffset = 0
 let reducedMotion = false
+let userControlled = false
+let previousFrameTime = 0
 
 const mappedDownloads = computed(() =>
   props.origins.reduce((sum, origin) => sum + (Number(origin.count) || 0), 0),
@@ -90,9 +92,15 @@ function updateGlobe() {
   })
 }
 
-function animate() {
+function animate(frameTime = 0) {
   if (!globe) return
-  if (!reducedMotion && !dragging.value) phi += 0.0018
+  if (!reducedMotion && !dragging.value && !userControlled && previousFrameTime) {
+    // Time-based movement keeps the rotation equally smooth and equally fast
+    // on 60 Hz, 90 Hz, and 120 Hz displays.
+    const elapsed = Math.min(32, frameTime - previousFrameTime)
+    phi += elapsed * 0.000108
+  }
+  previousFrameTime = frameTime
   updateGlobe()
   animationFrame = window.requestAnimationFrame(animate)
 }
@@ -140,6 +148,9 @@ async function bootGlobe() {
 
 function startDrag(event) {
   if (!ready.value || (event.pointerType === 'touch' && event.isPrimary === false)) return
+  // Once a visitor takes control, leave the globe at their chosen angle rather
+  // than resuming automatic movement when they release it.
+  userControlled = true
   dragging.value = true
   pointerStart = event.clientX
   lastPointerOffset = pointerOffset

@@ -55,19 +55,6 @@ function updateScrollSpy() {
   )
 }
 
-function visitChapter(event, id) {
-  event.preventDefault()
-  const target = document.getElementById(id)
-  if (!target) return
-
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  target.scrollIntoView({
-    behavior: reduceMotion ? 'auto' : 'smooth',
-    block: 'start',
-  })
-  window.history.replaceState(null, '', `#${id}`)
-}
-
 onMounted(() => {
   window.addEventListener('scroll', requestUpdate, { passive: true })
   window.addEventListener('resize', requestUpdate, { passive: true })
@@ -101,7 +88,6 @@ onBeforeUnmount(() => {
         class="scrollspy-link"
         :class="{ 'is-active': activeIndex === index, 'is-passed': activeIndex > index }"
         :aria-current="activeIndex === index ? 'location' : undefined"
-        @click="visitChapter($event, chapter.id)"
       >
         <span class="scrollspy-index" aria-hidden="true">{{ formatIndex(index) }}</span>
         <span class="scrollspy-node" aria-hidden="true"><i /></span>
@@ -128,7 +114,6 @@ onBeforeUnmount(() => {
         :class="{ 'is-active': activeIndex === index, 'is-passed': activeIndex > index }"
         :aria-current="activeIndex === index ? 'location' : undefined"
         :aria-label="`Go to ${chapter.label}`"
-        @click="visitChapter($event, chapter.id)"
       >
         <span class="sr-only">{{ chapter.label }}</span>
       </a>
@@ -152,24 +137,48 @@ onBeforeUnmount(() => {
   padding: 0.6rem 0.4rem;
   box-shadow: 0 24px 70px rgb(2 6 23 / 0.38), inset 0 1px rgb(255 255 255 / 0.04);
   backdrop-filter: blur(18px);
+  overflow: hidden;
+  transition: width 320ms cubic-bezier(0.16, 1, 0.3, 1), padding 320ms cubic-bezier(0.16, 1, 0.3, 1), border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.scrollspy-desktop:hover,
+.scrollspy-desktop:focus-within {
+  width: 9.75rem;
+  padding: 0.85rem 0.75rem 0.75rem;
+  border-color: rgb(129 140 248 / 0.26);
+  box-shadow: 0 28px 80px rgb(2 6 23 / 0.48), inset 0 1px rgb(255 255 255 / 0.05);
 }
 
 .scrollspy-heading,
 .scrollspy-status {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 8.25rem;
+  max-height: 0;
+  overflow: hidden;
   color: rgb(100 116 139);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.5rem;
   font-weight: 700;
   letter-spacing: 0.12em;
+  opacity: 0;
   text-transform: uppercase;
+  visibility: hidden;
+  transition: max-height 220ms ease, padding 220ms ease, opacity 160ms ease, visibility 160ms ease;
 }
 
 .scrollspy-heading {
+  padding: 0 0.25rem;
+}
+
+.scrollspy-desktop:hover .scrollspy-heading,
+.scrollspy-desktop:focus-within .scrollspy-heading {
+  max-height: 2rem;
   padding: 0 0.25rem 0.65rem;
   border-bottom: 1px solid rgb(148 163 184 / 0.08);
+  opacity: 1;
+  visibility: visible;
 }
 
 .scrollspy-rail {
@@ -184,19 +193,33 @@ onBeforeUnmount(() => {
   left: 50%;
   width: 1px;
   background: linear-gradient(to bottom, transparent, var(--rail-color) 10%, var(--rail-color) 90%, transparent);
+  transition: left 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scrollspy-desktop:hover .scrollspy-beam,
+.scrollspy-desktop:focus-within .scrollspy-beam {
+  left: 2.38rem;
 }
 
 .scrollspy-link {
   position: relative;
   display: grid;
   min-height: 2.35rem;
-  grid-template-columns: 1fr;
+  width: 8.25rem;
+  grid-template-columns: 0 1.65rem 0;
   justify-items: center;
   align-items: center;
   gap: 0.35rem;
   border-radius: 0.65rem;
   color: rgb(100 116 139);
-  transition: color 220ms ease, background-color 220ms ease, transform 220ms ease;
+  transition: color 220ms ease, background-color 220ms ease, transform 220ms ease, grid-template-columns 320ms cubic-bezier(0.16, 1, 0.3, 1), gap 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scrollspy-desktop:hover .scrollspy-link,
+.scrollspy-desktop:focus-within .scrollspy-link {
+  grid-template-columns: 1.4rem 1rem 1fr;
+  justify-items: stretch;
+  gap: 0.35rem;
 }
 
 .scrollspy-link:hover,
@@ -206,12 +229,19 @@ onBeforeUnmount(() => {
 }
 
 .scrollspy-index {
-  display: none;
+  display: block;
+  overflow: hidden;
   text-align: right;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.48rem;
   letter-spacing: 0.04em;
+  opacity: 0;
   transition: color 220ms ease;
+}
+
+.scrollspy-desktop:hover .scrollspy-index,
+.scrollspy-desktop:focus-within .scrollspy-index {
+  opacity: 1;
 }
 
 .scrollspy-node {
@@ -243,30 +273,19 @@ onBeforeUnmount(() => {
 }
 
 .scrollspy-label {
-  position: absolute;
-  right: 2.75rem;
-  width: max-content;
+  width: 100%;
   overflow: hidden;
-  transform: translateX(0.35rem);
-  border: 1px solid rgb(129 140 248 / 0.15);
-  border-radius: 0.55rem;
-  background: rgb(2 6 23 / 0.9);
-  padding: 0.4rem 0.6rem;
   font-size: 0.67rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   text-overflow: ellipsis;
   opacity: 0;
-  pointer-events: none;
-  box-shadow: 0 10px 30px rgb(2 6 23 / 0.4);
-  transition: opacity 180ms ease, transform 220ms ease;
+  transition: opacity 180ms ease;
   white-space: nowrap;
 }
 
-.scrollspy-link:hover .scrollspy-label,
-.scrollspy-link:focus-visible .scrollspy-label,
-.scrollspy-link.is-active .scrollspy-label {
-  transform: translateX(0);
+.scrollspy-desktop:hover .scrollspy-label,
+.scrollspy-desktop:focus-within .scrollspy-label {
   opacity: 1;
 }
 
@@ -299,9 +318,17 @@ onBeforeUnmount(() => {
 
 .scrollspy-status {
   margin-top: 0.2rem;
+  padding: 0 0.25rem;
+  color: rgb(129 140 248);
+}
+
+.scrollspy-desktop:hover .scrollspy-status,
+.scrollspy-desktop:focus-within .scrollspy-status {
+  max-height: 2rem;
   padding: 0.65rem 0.25rem 0.05rem;
   border-top: 1px solid rgb(148 163 184 / 0.08);
-  color: rgb(129 140 248);
+  opacity: 1;
+  visibility: visible;
 }
 
 .scrollspy-mobile {

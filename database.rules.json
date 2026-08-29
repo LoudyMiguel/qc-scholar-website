@@ -18,7 +18,22 @@
         ".read": true,
         "$bucket": {
           ".write": "auth != null && newData.hasChildren(['lat', 'lng', 'count', 'android', 'windows']) && ((!data.exists() && newData.child('count').val() === 1) || (data.exists() && newData.child('count').val() === data.child('count').val() + 1))",
-          ".validate": "newData.child('lat').isNumber() && newData.child('lat').val() >= -90 && newData.child('lat').val() <= 90 && newData.child('lng').isNumber() && newData.child('lng').val() >= -180 && newData.child('lng').val() <= 180 && newData.child('count').isNumber() && newData.child('count').val() >= 1 && newData.child('android').isNumber() && newData.child('android').val() >= 0 && newData.child('windows').isNumber() && newData.child('windows').val() >= 0 && newData.child('android').val() + newData.child('windows').val() === newData.child('count').val() && ((!data.exists()) || (newData.child('lat').val() === data.child('lat').val() && newData.child('lng').val() === data.child('lng').val()))",
+          ".validate": "newData.child('android').val() + newData.child('windows').val() === newData.child('count').val() && ((!data.exists()) || (newData.child('lat').val() === data.child('lat').val() && newData.child('lng').val() === data.child('lng').val()))",
+          "lat": {
+            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90 && newData.val() % 5 === 0"
+          },
+          "lng": {
+            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180 && newData.val() % 5 === 0"
+          },
+          "count": {
+            ".validate": "newData.isNumber() && newData.val() >= 1"
+          },
+          "android": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "windows": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
           "$other": { ".validate": false }
         }
       },

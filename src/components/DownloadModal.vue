@@ -3,6 +3,7 @@ import { Clock, Download, Monitor, ShieldCheck, Smartphone, X } from '@lucide/vu
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { detectPlatform, releases, releasesById, siteConfig } from '../config/site'
 import {
+  prepareDownloadTracking,
   recordApproximateDownloadOrigin,
   recordDownloadClick,
 } from '../services/firebase'
@@ -59,6 +60,12 @@ watch(
   () => props.open,
   async (isOpen) => {
     if (isOpen) {
+      // Complete the anonymous sign-in and coarse-location lookup while the
+      // visitor reads the dialog. Mobile browsers may suspend this page as
+      // soon as the external Google Drive tab opens.
+      prepareDownloadTracking().catch((error) => {
+        console.warn('Download tracking could not be prepared.', error)
+      })
       // Re-resolve each time the dialog opens rather than once at module load:
       // a visitor can change to desktop mode, and this costs nothing.
       selectedId.value = releasesById[props.requestedPlatform]
@@ -129,25 +136,43 @@ function handleKeydown(event) {
 }
 
 async function confirmDownload(event) {
+  event.preventDefault()
   const release = activeRelease.value
   if (downloading.value || release.isPlaceholder) {
-    event.preventDefault()
     return
   }
   downloading.value = true
 
-  // Location tracking is deliberately fire-and-forget: it never delays or
-  // blocks the Drive download, and the edge function returns only a coarse
-  // aggregate coordinate cell.
-  recordApproximateDownloadOrigin(release.id).catch(() => {})
+  // Reserve the user-opened tab synchronously so popup blockers accept it.
+  // We navigate it after analytics finish (or time out), keeping the current
+  // page alive long enough for mobile Firebase writes to complete.
+  const downloadTab = openPendingDownloadTab()
 
   let tracked = false
+  let originTracked = false
   try {
-    tracked = await Promise.race([
-      recordDownloadClick(release.id).then(() => true),
-      // The Drive link opens immediately; analytics is always best effort.
-      new Promise((resolve) => window.setTimeout(() => resolve(false), 1800)),
+    const trackingResult = await Promise.race([
+      Promise.allSettled([
+        recordDownloadClick(release.id),
+        recordApproximateDownloadOrigin(release.id),
+      ]),
+      // Analytics remains best-effort and must never hold up a download for
+      // more than a short, visible "Preparing" state.
+      new Promise((resolve) => window.setTimeout(() => resolve(null), 2500)),
     ])
+
+    if (trackingResult) {
+      tracked = trackingResult[0].status === 'fulfilled'
+      originTracked =
+        trackingResult[1].status === 'fulfilled' &&
+        trackingResult[1].value === true
+
+      trackingResult.forEach((result) => {
+        if (result.status === 'rejected') {
+          console.warn('Download tracking was unavailable.', result.reason)
+        }
+      })
+    }
   } catch (error) {
     console.warn('Download tracking was unavailable.', error)
     emit(
@@ -158,11 +183,52 @@ async function confirmDownload(event) {
     downloading.value = false
   }
 
+  if (!originTracked) {
+    console.warn('The approximate download origin was not recorded.')
+  }
+
   emit('download', {
     tracked,
     platform: release.id,
     source: 'google-drive',
   })
+
+  continueDownload(downloadTab, release.url)
+}
+
+function openPendingDownloadTab() {
+  const pendingTab = window.open('', '_blank')
+  if (!pendingTab) return null
+
+  pendingTab.opener = null
+  try {
+    pendingTab.document.title = 'Preparing GenXYZ Lab download'
+    pendingTab.document.body.textContent = 'Preparing your secure Google Drive download\u2026'
+    Object.assign(pendingTab.document.body.style, {
+      margin: '0',
+      minHeight: '100vh',
+      display: 'grid',
+      placeItems: 'center',
+      background: '#020617',
+      color: '#c7d2fe',
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '16px',
+    })
+  } catch {
+    // Some browsers restrict access to the placeholder document. Navigation
+    // below still works, so no special handling is needed.
+  }
+  return pendingTab
+}
+
+function continueDownload(downloadTab, url) {
+  if (downloadTab && !downloadTab.closed) {
+    downloadTab.location.replace(url)
+    return
+  }
+
+  // Popup-blocked mobile browsers get a reliable same-tab fallback.
+  window.location.assign(url)
 }
 </script>
 
@@ -302,7 +368,7 @@ async function confirmDownload(event) {
                 rel="noopener noreferrer"
                 class="button-primary"
                 :aria-busy="downloading"
-                @click="confirmDownload"
+                @click.prevent="confirmDownload"
               >
                 <span
                   v-if="downloading"

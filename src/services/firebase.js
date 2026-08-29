@@ -48,6 +48,7 @@ let app = null
 let auth = null
 let database = null
 let signInPromise = null
+let approximateOriginPromise = null
 
 if (isFirebaseConfigured) {
   app = initializeApp(firebaseConfig)
@@ -140,6 +141,61 @@ function downloadOriginKey(lat, lng) {
   return `${encode(lat, 'n', 's')}_${encode(lng, 'e', 'w')}`
 }
 
+async function getApproximateDownloadOrigin() {
+  if (!approximateOriginPromise) {
+    approximateOriginPromise = fetch('/api/download-origin', {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      // Give the small edge request a chance to finish if a mobile browser
+      // briefly backgrounds this page while opening the download dialog.
+      keepalive: true,
+    })
+      .then(async (response) => {
+        if (!response.ok) return null
+
+        const payload = await response.json()
+        const lat = Number(payload.lat)
+        const lng = Number(payload.lng)
+        if (
+          payload.available !== true ||
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng) ||
+          lat < -90 ||
+          lat > 90 ||
+          lng < -180 ||
+          lng > 180 ||
+          lat % 5 !== 0 ||
+          lng % 5 !== 0
+        ) {
+          return null
+        }
+
+        return { lat, lng }
+      })
+      .catch((error) => {
+        // A failed request may be retried when the visitor confirms a
+        // download; do not permanently cache a transient network failure.
+        approximateOriginPromise = null
+        throw error
+      })
+  }
+
+  return approximateOriginPromise
+}
+
+/**
+ * Start the two network prerequisites while the visitor is reading the
+ * download dialog. This makes the eventual click transaction fast enough for
+ * mobile browsers, which often suspend the page as soon as Drive opens.
+ */
+export function prepareDownloadTracking() {
+  if (!isFirebaseConfigured) return Promise.resolve()
+  return Promise.allSettled([
+    ensureAnonymousUser(),
+    getApproximateDownloadOrigin(),
+  ])
+}
+
 /**
  * Cloudflare supplies approximate request coordinates to the same-origin Pages
  * Function. That function snaps them to a coarse 5° cell before returning; the
@@ -147,28 +203,9 @@ function downloadOriginKey(lat, lng) {
  * timestamp, or precise coordinate reaches Firebase.
  */
 export async function recordApproximateDownloadOrigin(platform = '') {
-  const response = await fetch('/api/download-origin', {
-    method: 'POST',
-    headers: { Accept: 'application/json' },
-  })
-  if (!response.ok) return false
-
-  const payload = await response.json()
-  const lat = Number(payload.lat)
-  const lng = Number(payload.lng)
-  if (
-    payload.available !== true ||
-    !Number.isFinite(lat) ||
-    !Number.isFinite(lng) ||
-    lat < -90 ||
-    lat > 90 ||
-    lng < -180 ||
-    lng > 180 ||
-    lat % 5 !== 0 ||
-    lng % 5 !== 0
-  ) {
-    return false
-  }
+  const origin = await getApproximateDownloadOrigin()
+  if (!origin) return false
+  const { lat, lng } = origin
 
   await ensureAnonymousUser()
   const originRef = ref(database, `stats/download_origins/${downloadOriginKey(lat, lng)}`)

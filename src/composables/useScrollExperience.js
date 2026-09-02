@@ -9,7 +9,6 @@ export function useScrollExperience() {
   let motionContext = null
   let lenis = null
   let ticker = null
-  let modalObserver = null
   let fontsReady = true
   let cleanupLenis = null
 
@@ -26,7 +25,8 @@ export function useScrollExperience() {
         offset: -96,
         duration: 1.15,
       },
-      prevent: (node) => Boolean(node.closest?.('[role="dialog"]')),
+      prevent: (node) =>
+        Boolean(node.closest?.('[role="dialog"], [data-modal-overlay]')),
     })
 
     const syncTrigger = () => ScrollTrigger.update()
@@ -36,19 +36,7 @@ export function useScrollExperience() {
     gsap.ticker.add(ticker)
     gsap.ticker.lagSmoothing(0)
 
-    modalObserver = new MutationObserver(() => {
-      if (!lenis) return
-      if (document.body.classList.contains('modal-open')) lenis.stop()
-      else lenis.start()
-    })
-    modalObserver.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['class'],
-    })
-
     return () => {
-      modalObserver?.disconnect()
-      modalObserver = null
       lenis?.off('scroll', syncTrigger)
       if (ticker) gsap.ticker.remove(ticker)
       ticker = null

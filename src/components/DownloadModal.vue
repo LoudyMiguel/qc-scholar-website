@@ -71,7 +71,6 @@ watch(
         ? props.requestedPlatform
         : detectPlatform()
       previousFocus = document.activeElement
-      document.body.classList.add('modal-open')
       document.addEventListener('keydown', handleKeydown)
       await nextTick()
       modal.value?.focus()
@@ -84,7 +83,6 @@ watch(
 onBeforeUnmount(restorePage)
 
 function restorePage() {
-  document.body.classList.remove('modal-open')
   document.removeEventListener('keydown', handleKeydown)
   if (props.open === false && previousFocus instanceof HTMLElement) {
     previousFocus.focus()
@@ -192,7 +190,9 @@ async function confirmDownload(event) {
   <Transition name="modal">
     <div
       v-if="open"
-      class="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-md sm:p-6"
+      data-modal-overlay
+      data-lenis-prevent
+      class="fixed inset-0 z-[100] grid place-items-center overflow-y-auto overscroll-contain bg-slate-950/80 p-4 backdrop-blur-md sm:p-6"
       @mousedown.self="!downloading && $emit('close')"
     >
         <section

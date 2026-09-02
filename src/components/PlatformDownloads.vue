@@ -11,6 +11,21 @@ import {
 const detected = ref('')
 const downloadingId = ref('')
 
+const props = defineProps({
+  downloadCount: {
+    type: Number,
+    default: 0,
+  },
+  countReady: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+const formattedDownloadCount = computed(() =>
+  props.downloadCount.toLocaleString(undefined, { maximumFractionDigits: 0 }),
+)
+
 onMounted(() => {
   detected.value = detectPlatform()
   prepareDownloadTracking().catch((error) => {
@@ -81,6 +96,18 @@ async function downloadRelease(event, card) {
           Free, with no account and no subscription. Pick the build that matches
           the device you learn on.
         </p>
+        <div class="download-proof mt-7" aria-live="polite">
+          <span class="download-proof__icon" aria-hidden="true">
+            <Download :size="17" />
+          </span>
+          <span v-if="countReady">
+            <strong>{{ formattedDownloadCount }}</strong>
+            download{{ downloadCount === 1 ? '' : 's' }} started
+          </span>
+          <span v-else>Connecting to the live download count…</span>
+          <span class="download-proof__status" aria-hidden="true" />
+          <small>Live public counter</small>
+        </div>
       </div>
 
       <div class="mt-14 grid gap-4 lg:grid-cols-2">
@@ -178,6 +205,63 @@ async function downloadRelease(event, card) {
 </template>
 
 <style scoped>
+.download-proof {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 1px solid rgb(52 211 153 / 0.2);
+  border-radius: 999px;
+  background: rgb(6 78 59 / 0.13);
+  padding: 0.6rem 0.9rem;
+  color: rgb(203 213 225);
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.download-proof strong {
+  margin-right: 0.22rem;
+  color: rgb(255 255 255);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+.download-proof__icon {
+  display: grid;
+  height: 1.8rem;
+  width: 1.8rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(52 211 153 / 0.12);
+  color: rgb(110 231 183);
+}
+
+.download-proof__status {
+  height: 0.38rem;
+  width: 0.38rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgb(52 211 153);
+  box-shadow: 0 0 0 3px rgb(52 211 153 / 0.1);
+}
+
+.download-proof small {
+  color: rgb(100 116 139);
+  font-size: 0.68rem;
+}
+
+@media (max-width: 420px) {
+  .download-proof {
+    flex-wrap: wrap;
+  }
+
+  .download-proof small {
+    width: 100%;
+  }
+}
+
 .platform-card {
   position: relative;
   overflow: hidden;

@@ -112,7 +112,7 @@ function updateMobileDownload() {
       <ProductShowcase />
       <CapabilitiesSection />
       <FeatureBento />
-      <PlatformDownloads />
+      <PlatformDownloads :download-count="downloadCount" :count-ready="countReady" />
       <DownloadGlobe
         :origins="downloadOrigins"
         :download-count="downloadCount"

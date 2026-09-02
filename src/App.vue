@@ -160,15 +160,16 @@ function updateMobileDownload() {
       </div>
     </Transition>
 
-    <DownloadModal
-      :open="downloadModalOpen"
-      :download-count="downloadCount"
-      :count-ready="countReady"
-      :requested-platform="requestedPlatform"
-      @close="downloadModalOpen = false"
-      @notice="showNotice"
-    />
   </div>
+
+  <DownloadModal
+    :open="downloadModalOpen"
+    :download-count="downloadCount"
+    :count-ready="countReady"
+    :requested-platform="requestedPlatform"
+    @close="downloadModalOpen = false"
+    @notice="showNotice"
+  />
 </template>
 
 <style scoped>

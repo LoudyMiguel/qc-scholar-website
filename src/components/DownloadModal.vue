@@ -36,7 +36,6 @@ const modal = ref(null)
 const downloading = ref(false)
 const selectedId = ref(releases[0].id)
 let previousFocus = null
-let appRoot = null
 
 const platformIcons = { android: Smartphone, windows: Monitor }
 
@@ -72,8 +71,6 @@ watch(
         ? props.requestedPlatform
         : detectPlatform()
       previousFocus = document.activeElement
-      appRoot = document.getElementById('app')
-      if (appRoot) appRoot.inert = true
       document.body.classList.add('modal-open')
       document.addEventListener('keydown', handleKeydown)
       await nextTick()
@@ -89,10 +86,6 @@ onBeforeUnmount(restorePage)
 function restorePage() {
   document.body.classList.remove('modal-open')
   document.removeEventListener('keydown', handleKeydown)
-  if (appRoot) {
-    appRoot.inert = false
-    appRoot = null
-  }
   if (props.open === false && previousFocus instanceof HTMLElement) {
     previousFocus.focus()
     previousFocus = null
@@ -196,13 +189,12 @@ async function confirmDownload(event) {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="modal">
-      <div
-        v-if="open"
-        class="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-md sm:p-6"
-        @mousedown.self="!downloading && $emit('close')"
-      >
+  <Transition name="modal">
+    <div
+      v-if="open"
+      class="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-md sm:p-6"
+      @mousedown.self="!downloading && $emit('close')"
+    >
         <section
           ref="modal"
           role="dialog"
@@ -351,9 +343,8 @@ async function confirmDownload(event) {
             </p>
           </div>
         </section>
-      </div>
-    </Transition>
-  </Teleport>
+    </div>
+  </Transition>
 </template>
 
 <style scoped>

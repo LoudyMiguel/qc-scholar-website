@@ -143,11 +143,6 @@ async function confirmDownload(event) {
   }
   downloading.value = true
 
-  // Reserve the user-opened tab synchronously so popup blockers accept it.
-  // We navigate it after analytics finish (or time out), keeping the current
-  // page alive long enough for mobile Firebase writes to complete.
-  const downloadTab = openPendingDownloadTab()
-
   let tracked = false
   let originTracked = false
   try {
@@ -193,42 +188,10 @@ async function confirmDownload(event) {
     source: 'google-drive',
   })
 
-  continueDownload(downloadTab, release.url)
-}
-
-function openPendingDownloadTab() {
-  const pendingTab = window.open('', '_blank')
-  if (!pendingTab) return null
-
-  pendingTab.opener = null
-  try {
-    pendingTab.document.title = 'Preparing GenXYZ Lab download'
-    pendingTab.document.body.textContent = 'Preparing your secure Google Drive download\u2026'
-    Object.assign(pendingTab.document.body.style, {
-      margin: '0',
-      minHeight: '100vh',
-      display: 'grid',
-      placeItems: 'center',
-      background: '#020617',
-      color: '#c7d2fe',
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: '16px',
-    })
-  } catch {
-    // Some browsers restrict access to the placeholder document. Navigation
-    // below still works, so no special handling is needed.
-  }
-  return pendingTab
-}
-
-function continueDownload(downloadTab, url) {
-  if (downloadTab && !downloadTab.closed) {
-    downloadTab.location.replace(url)
-    return
-  }
-
-  // Popup-blocked mobile browsers get a reliable same-tab fallback.
-  window.location.assign(url)
+  // Navigate this already-visible tab only after tracking settles or reaches
+  // its timeout. Mobile browsers can suspend an opener as soon as a new tab is
+  // created, which previously left visitors stranded on a blank dark page.
+  window.location.assign(release.url)
 }
 </script>
 
@@ -364,8 +327,6 @@ function continueDownload(downloadTab, url) {
               <a
                 v-if="!activeRelease.isPlaceholder"
                 :href="activeRelease.url"
-                target="_blank"
-                rel="noopener noreferrer"
                 class="button-primary"
                 :aria-busy="downloading"
                 @click.prevent="confirmDownload"

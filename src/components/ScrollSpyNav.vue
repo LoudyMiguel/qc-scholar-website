@@ -406,12 +406,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 9px rgb(34 211 238 / 0.6);
 }
 
-:global(body.modal-open) .scrollspy-desktop,
-:global(body.modal-open) .scrollspy-mobile {
-  opacity: 0;
-  pointer-events: none;
-}
-
 @media (min-width: 1280px) {
   .scrollspy-desktop {
     display: block;

@@ -1,9 +1,8 @@
 <script setup>
-import { Download, X } from '@lucide/vue'
+import { Download } from '@lucide/vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import CommunitySection from './components/CommunitySection.vue'
 import DownloadGlobe from './components/DownloadGlobe.vue'
-import DownloadModal from './components/DownloadModal.vue'
 import FeatureBento from './components/FeatureBento.vue'
 import HeroSection from './components/HeroSection.vue'
 import CapabilitiesSection from './components/CapabilitiesSection.vue'
@@ -21,18 +20,14 @@ import {
   subscribeToDownloadOrigins,
 } from './services/firebase'
 
-const downloadModalOpen = ref(false)
-const requestedPlatform = ref('')
 const downloadCount = ref(0)
 const downloadOrigins = ref([])
 const countReady = ref(false)
-const notice = ref('')
 const mobileDownloadVisible = ref(false)
 const bottomContentInView = new Set()
 
 let unsubscribeDownloadCount = () => {}
 let unsubscribeDownloadOrigins = () => {}
-let noticeTimer = 0
 let bottomContentObserver = null
 
 useScrollExperience()
@@ -69,7 +64,7 @@ onMounted(() => {
     updateMobileDownload()
   })
   document
-    .querySelectorAll('#community, footer')
+    .querySelectorAll('#download, #community, footer')
     .forEach((element) => bottomContentObserver.observe(element))
 })
 
@@ -78,22 +73,18 @@ onBeforeUnmount(() => {
   unsubscribeDownloadOrigins()
   window.removeEventListener('scroll', updateMobileDownload)
   bottomContentObserver?.disconnect()
-  window.clearTimeout(noticeTimer)
 })
 
-// A platform card passes its own id; the header, hero, and footer buttons pass
-// nothing and let the dialog fall back to user-agent detection.
-function openDownload(platformId = '') {
-  requestedPlatform.value = typeof platformId === 'string' ? platformId : ''
-  downloadModalOpen.value = true
-}
-
-function showNotice(message) {
-  notice.value = message
-  window.clearTimeout(noticeTimer)
-  noticeTimer = window.setTimeout(() => {
-    notice.value = ''
-  }, 7000)
+function openDownload() {
+  // Reuse the real navigation anchor so Lenis and native browsers calculate
+  // the same complete document distance. The platform cards handle the actual
+  // tracked Drive navigation without opening a compositor-heavy modal.
+  const downloadAnchor = document.querySelector('a[href="#download"]')
+  if (downloadAnchor instanceof HTMLAnchorElement) {
+    downloadAnchor.click()
+    return
+  }
+  window.location.hash = 'download'
 }
 
 function updateMobileDownload() {
@@ -121,7 +112,7 @@ function updateMobileDownload() {
       <ProductShowcase />
       <CapabilitiesSection />
       <FeatureBento />
-      <PlatformDownloads @download="openDownload" />
+      <PlatformDownloads />
       <DownloadGlobe
         :origins="downloadOrigins"
         :download-count="downloadCount"
@@ -135,7 +126,7 @@ function updateMobileDownload() {
 
     <Transition name="mobile-cta">
       <div
-        v-if="mobileDownloadVisible && !downloadModalOpen"
+        v-if="mobileDownloadVisible"
         class="mobile-download-bar fixed inset-x-3 z-40 rounded-2xl border border-indigo-300/15 bg-slate-950/90 p-2 shadow-[0_18px_60px_rgba(2,6,23,.7)] backdrop-blur-xl sm:hidden"
       >
         <button type="button" class="button-primary w-full" @click="openDownload">
@@ -145,45 +136,17 @@ function updateMobileDownload() {
       </div>
     </Transition>
 
-    <Transition name="toast">
-      <div
-        v-if="notice"
-        class="fixed bottom-4 left-1/2 z-[120] flex w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 items-start gap-3 rounded-2xl border border-amber-300/20 bg-slate-900/95 p-4 text-xs leading-6 text-amber-100 shadow-2xl backdrop-blur-xl sm:bottom-7"
-        role="status"
-        aria-live="polite"
-      >
-        <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-300" />
-        <span class="flex-1">{{ notice }}</span>
-        <button type="button" class="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-500 hover:text-white" aria-label="Dismiss notification" @click="notice = ''">
-          <X :size="16" />
-        </button>
-      </div>
-    </Transition>
-
   </div>
-
-  <DownloadModal
-    :open="downloadModalOpen"
-    :download-count="downloadCount"
-    :count-ready="countReady"
-    :requested-platform="requestedPlatform"
-    @close="downloadModalOpen = false"
-    @notice="showNotice"
-  />
 </template>
 
 <style scoped>
 .mobile-cta-enter-active,
-.mobile-cta-leave-active,
-.toast-enter-active,
-.toast-leave-active {
+.mobile-cta-leave-active {
   transition: opacity 220ms ease, transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .mobile-cta-enter-from,
-.mobile-cta-leave-to,
-.toast-enter-from,
-.toast-leave-to {
+.mobile-cta-leave-to {
   opacity: 0;
   transform: translate(-50%, 16px);
 }

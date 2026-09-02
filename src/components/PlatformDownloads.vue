@@ -2,13 +2,20 @@
 import { Check, Clock, Download, Monitor, Smartphone } from '@lucide/vue'
 import { computed, onMounted, ref } from 'vue'
 import { detectPlatform, releases, siteConfig } from '../config/site'
-
-defineEmits(['download'])
+import {
+  prepareDownloadTracking,
+  recordApproximateDownloadOrigin,
+  recordDownloadClick,
+} from '../services/firebase'
 
 const detected = ref('')
+const downloadingId = ref('')
 
 onMounted(() => {
   detected.value = detectPlatform()
+  prepareDownloadTracking().catch((error) => {
+    console.warn('Download tracking could not be prepared.', error)
+  })
 })
 
 const platformIcons = { android: Smartphone, windows: Monitor }
@@ -37,6 +44,26 @@ const cards = computed(() =>
     isDetected: detected.value === release.id,
   })),
 )
+
+async function downloadRelease(event, card) {
+  event.preventDefault()
+  if (downloadingId.value || card.isPlaceholder) return
+  downloadingId.value = card.id
+
+  try {
+    await Promise.race([
+      Promise.allSettled([
+        recordDownloadClick(card.id),
+        recordApproximateDownloadOrigin(card.id),
+      ]),
+      new Promise((resolve) => window.setTimeout(resolve, 1800)),
+    ])
+  } catch (error) {
+    console.warn('Download tracking was unavailable.', error)
+  }
+
+  window.location.assign(card.url)
+}
 </script>
 
 <template>
@@ -119,15 +146,21 @@ const cards = computed(() =>
                 <span v-else>Not published</span>
               </div>
 
-              <button
+              <a
                 v-if="!card.isPlaceholder"
-                type="button"
+                :href="card.url"
                 class="button-primary w-full"
-                @click="$emit('download', card.id)"
+                :aria-busy="downloadingId === card.id"
+                @click="downloadRelease($event, card)"
               >
-                <Download :size="18" aria-hidden="true" />
-                Download for {{ card.shortName }}
-              </button>
+                <span
+                  v-if="downloadingId === card.id"
+                  class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                  aria-hidden="true"
+                />
+                <Download v-else :size="18" aria-hidden="true" />
+                {{ downloadingId === card.id ? 'Preparing\u2026' : `Download for ${card.shortName}` }}
+              </a>
               <button v-else type="button" class="button-secondary w-full" disabled>
                 <Clock :size="17" aria-hidden="true" />
                 Not available yet

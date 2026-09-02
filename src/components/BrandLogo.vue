@@ -4,12 +4,16 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  href: {
+    type: String,
+    default: '#top',
+  },
 })
 </script>
 
 <template>
   <a
-    href="#top"
+    :href="href"
     class="group inline-flex min-h-11 items-center gap-3 rounded-xl"
     aria-label="GenXYZ Lab home"
   >

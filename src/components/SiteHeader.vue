@@ -13,6 +13,7 @@ const links = [
   { label: 'Download', href: '#download' },
   { label: 'Setup', href: '#setup' },
   { label: 'Community', href: '#community' },
+  { label: 'Docs', href: '/docs/' },
 ]
 
 function requestDownload() {

@@ -47,6 +47,12 @@ function seoFiles(siteUrl) {
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+  <url>
+    <loc>${origin}/docs/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
 `,
       })
@@ -118,6 +124,10 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       cssCodeSplit: true,
       rollupOptions: {
+        input: {
+          main: resolve(process.cwd(), 'index.html'),
+          docs: resolve(process.cwd(), 'docs/index.html'),
+        },
         output: {
           manualChunks: {
             firebase: ['firebase/app', 'firebase/auth', 'firebase/database'],

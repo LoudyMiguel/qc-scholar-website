@@ -137,12 +137,11 @@ content problem, not a technical one.
 
 ## Two things this repo can't do for you
 
-**The APK and Windows zip.** Upload both files to Google Drive, share them as
-**Anyone with the link**, and set `VITE_APK_GOOGLE_DRIVE_URL` and
-`VITE_WINDOWS_GOOGLE_DRIVE_URL` (plus their `*_SIZE` companions) in the same
-Variables screen as Step 3. [`RELEASE_RUNBOOK.md`](RELEASE_RUNBOOK.md) has the
-complete release procedure. A missing or non-Drive URL shows as *Coming soon*
-rather than opening a stale download host.
+**The APK and Windows zip.** Publish both in the public GitHub repository
+`LoudyMiguel/GenXYZ-Lab-Releases`, using the exact stable asset names required
+by [`RELEASE_RUNBOOK.md`](RELEASE_RUNBOOK.md). Deploy `download-worker/` and
+attach its Worker Custom Domain `downloads.genxyzlab.org` before deploying the
+website changes.
 
 **Ads.** Every network has a traffic floor a new domain doesn't have yet —
 AdSense wants a real content library, EthicalAds and Carbon Ads both want
@@ -172,4 +171,5 @@ something to do today; just noting the door isn't closed.
 - [ ] `VITE_SITE_URL` updated, redeployed, sitemap/robots confirmed
 - [ ] Domain authorized in Firebase
 - [ ] Sitemap submitted to Search Console and Bing
-- [ ] APK and Windows zip uploaded to Google Drive and publicly shared
+- [ ] APK and Windows ZIP published in GitHub Releases
+- [ ] Download Worker deployed and both stable URLs tested

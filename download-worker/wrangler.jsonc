@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "genxyz-downloads",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-07",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "downloads.genxyzlab.org",
+      "custom_domain": true
+    }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "GITHUB_OWNER": "LoudyMiguel",
+    "GITHUB_REPOSITORY": "GenXYZ-Lab-Releases",
+    "RELEASE_CACHE_SECONDS": "60"
+  }
+}

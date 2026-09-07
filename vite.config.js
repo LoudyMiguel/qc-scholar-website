@@ -60,15 +60,22 @@ function seoFiles(siteUrl) {
   }
 }
 
-function readGoogleDriveUrl(value) {
+const downloadPaths = {
+  android: '/latest.apk',
+  windows: '/latest-windows.zip',
+}
+
+function readOfficialDownloadUrl(value, platform) {
   if (!value) return ''
 
   try {
     const normalizedValue = value.trim()
     const parsedUrl = new URL(normalizedValue)
-    const hostname = parsedUrl.hostname.toLowerCase()
     return parsedUrl.protocol === 'https:' &&
-      (hostname === 'drive.google.com' || hostname === 'drive.usercontent.google.com')
+      parsedUrl.hostname.toLowerCase() === 'downloads.genxyzlab.org' &&
+      parsedUrl.pathname === downloadPaths[platform] &&
+      !parsedUrl.search &&
+      !parsedUrl.hash
       ? normalizedValue
       : ''
   } catch {
@@ -83,7 +90,9 @@ function releaseManifest(env) {
 
   function buildEntry(platform, urlKey, sizeKey) {
     const entry = metadata[platform]
-    const url = readGoogleDriveUrl(entry.url) || readGoogleDriveUrl(env[urlKey])
+    const url =
+      readOfficialDownloadUrl(entry.url, platform) ||
+      readOfficialDownloadUrl(env[urlKey], platform)
     return {
       ...entry,
       version: url ? entry.version || env.VITE_APP_VERSION : '0.0.0',
@@ -98,10 +107,10 @@ function releaseManifest(env) {
     apply: 'build',
     generateBundle() {
       const manifest = {
-        android: buildEntry('android', 'VITE_APK_GOOGLE_DRIVE_URL', 'VITE_APK_SIZE'),
+        android: buildEntry('android', 'VITE_APK_DOWNLOAD_URL', 'VITE_APK_SIZE'),
         windows: buildEntry(
           'windows',
-          'VITE_WINDOWS_GOOGLE_DRIVE_URL',
+          'VITE_WINDOWS_DOWNLOAD_URL',
           'VITE_WINDOWS_SIZE',
         ),
       }

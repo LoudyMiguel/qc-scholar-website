@@ -10,6 +10,7 @@ import {
 
 const detected = ref('')
 const downloadingId = ref('')
+const liveManifest = ref({})
 
 const props = defineProps({
   downloadCount: {
@@ -28,6 +29,17 @@ const formattedDownloadCount = computed(() =>
 
 onMounted(() => {
   detected.value = detectPlatform()
+  fetch('/version.json', { cache: 'no-store' })
+    .then((response) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      return response.json()
+    })
+    .then((manifest) => {
+      if (manifest && typeof manifest === 'object') liveManifest.value = manifest
+    })
+    .catch((error) => {
+      console.warn('Live release metadata is unavailable; using the build fallback.', error)
+    })
   prepareDownloadTracking().catch((error) => {
     console.warn('Download tracking could not be prepared.', error)
   })
@@ -54,6 +66,8 @@ const highlights = {
 const cards = computed(() =>
   releases.map((release) => ({
     ...release,
+    version: liveManifest.value[release.id]?.version || siteConfig.version,
+    size: liveManifest.value[release.id]?.size || release.size,
     icon: platformIcons[release.id],
     highlights: highlights[release.id] || [],
     isDetected: detected.value === release.id,
@@ -168,7 +182,7 @@ async function downloadRelease(event, card) {
               <div
                 class="mb-4 flex items-center justify-between border-t border-slate-800/80 pt-4 font-mono text-[10px] uppercase tracking-[0.1em] text-slate-500"
               >
-                <span>v{{ siteConfig.version }}</span>
+                <span>v{{ card.version }}</span>
                 <span v-if="!card.isPlaceholder">{{ card.fileKind }} · {{ card.size }}</span>
                 <span v-else>Not published</span>
               </div>

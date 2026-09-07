@@ -392,8 +392,8 @@ export const troubleshooting = [
   {
     problem: 'Android will not install the APK',
     fixes: [
-      'Confirm the download completed and use the official Google Drive link from the GenXYZ Lab website.',
-      'Allow “Install unknown apps” for the browser or Drive app that opened the APK, then try again.',
+      'Confirm the download completed and use the official GenXYZ Lab download link from the website.',
+      'Allow “Install unknown apps” for the browser that downloaded the APK, then try again.',
       'If Android reports a conflicting package or signature, back up your data before removing any older or unofficial build.',
     ],
   },

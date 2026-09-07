@@ -90,14 +90,14 @@ than a site with no visible content.
 ## Releases and platform downloads
 
 `src/config/site.js` builds a `releases` array from the tracked
-`release-manifest.json`. Each entry carries its own URL, size, requirement
-line, install note, and release metadata.
+`release-manifest.json`. The two URLs are permanent first-party routes; a
+Cloudflare Worker resolves them to the newest stable GitHub Release.
 
 ```json
 {
   "android": {
     "version": "1.0.0",
-    "url": "https://drive.google.com/file/d/APK_FILE_ID/view?usp=sharing",
+    "url": "https://downloads.genxyzlab.org/latest.apk",
     "size": "100 MB",
     "releaseDate": "2026-08-07",
     "notes": "Release summary"
@@ -105,22 +105,22 @@ line, install note, and release metadata.
 }
 ```
 
-A missing URL, malformed URL, or URL outside Google Drive is treated as **not
-published yet**: that platform renders as *Coming soon* with a disabled button
-rather than opening a stale download host. The Drive files must be shared as
-**Anyone with the link** and tested in a signed-out browser window.
+A missing URL, malformed URL, or URL outside the exact
+`downloads.genxyzlab.org` platform route is treated as **not published yet**.
+This prevents an old Cloudflare variable from restoring Google Drive or R2.
 
-The same manifest generates the deployed `version.json`, so both the website
-and the installed app use one download source. Changing either URL requires a
-commit and a new Pages build because Vite embeds the values at build time.
+The Pages Function at `/version.json` proxies the Worker's live GitHub release
+metadata. The installed app and the download cards therefore receive the new
+version, date, notes, and asset sizes after a release is published, without a
+website commit. The Vite-generated file remains a local/static-build fallback.
 
 `detectPlatform()` reads the user agent to preselect a build and badge it
 "Your device". It only reorders and preselects — user-agent detection is a
 hint, never a fact, so every platform stays one click away.
 
-Release binaries are never committed. Upload the APK and Windows ZIP to Google
-Drive with versioned filenames, share each as **Anyone with the link**, and
-put the two public share URLs in `release-manifest.json`.
+Release binaries are never committed to the website. Every stable GitHub
+Release must upload assets named exactly `GenXYZ-Lab.apk` and
+`GenXYZ-Lab-Windows.zip`; the Git tag carries the version.
 
 ## Generated hero and download globe
 
@@ -189,8 +189,8 @@ the older rules keeps working instead of failing every download click.
 They count confirmation-link clicks, not completed installations. A public
 client counter can never be authoritative: scripted anonymous accounts can
 click repeatedly, navigation can interrupt an in-flight request, and direct
-Drive links bypass the page entirely. Use Google Drive activity and site
-analytics as supporting evidence rather than treating the counter as an
+Direct GitHub asset links bypass the page entirely. Use GitHub release asset
+statistics and site analytics as supporting evidence rather than treating the counter as an
 installation total. For stronger abuse controls, move
 comment and download writes behind a rate-limited Cloudflare Worker or a
 Firebase callable function.
@@ -243,6 +243,10 @@ defined in three places.
 If Firebase, reCAPTCHA, or the download hostname changes, update `connect-src`,
 `frame-src`, or the navigation policy in `_headers` and check the deployed
 browser console.
+
+The download redirector is a separate Worker under `download-worker/`. Deploy
+it with `npx wrangler deploy`, then attach the Worker Custom Domain
+`downloads.genxyzlab.org`. Do not attach that hostname to the Pages project.
 
 ## Accessibility and performance decisions
 

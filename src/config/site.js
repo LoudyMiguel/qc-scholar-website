@@ -19,15 +19,22 @@ export const siteConfig = Object.freeze({
   termuxDocsUrl: 'https://github.com/termux/termux-app#installation',
 })
 
-function isGoogleDriveUrl(value) {
+const officialDownloads = Object.freeze({
+  android: '/latest.apk',
+  windows: '/latest-windows.zip',
+})
+
+function isOfficialDownloadUrl(value, platform) {
   if (!value) return false
 
   try {
     const parsedUrl = new URL(value)
-    const hostname = parsedUrl.hostname.toLowerCase()
     return (
       parsedUrl.protocol === 'https:' &&
-      (hostname === 'drive.google.com' || hostname === 'drive.usercontent.google.com')
+      parsedUrl.hostname.toLowerCase() === 'downloads.genxyzlab.org' &&
+      parsedUrl.pathname === officialDownloads[platform] &&
+      !parsedUrl.search &&
+      !parsedUrl.hash
     )
   } catch {
     return false
@@ -56,10 +63,10 @@ function buildRelease({
     size: manifestEntry.size || readEnv(sizeKey, fallbackSize),
     requirement,
     note,
-    // Only Google Drive is accepted as a release source. A missing, malformed,
-    // or stale non-Drive value disables the button instead of leaking users
-    // back to an obsolete host.
-    isPlaceholder: !isGoogleDriveUrl(url),
+    // Only the two permanent first-party download routes are accepted. This
+    // prevents a stale build variable from silently sending visitors back to
+    // Google Drive, R2, or a version-specific GitHub asset.
+    isPlaceholder: !isOfficialDownloadUrl(url, id),
   })
 }
 
@@ -69,7 +76,7 @@ export const releases = Object.freeze([
     name: 'Android',
     shortName: 'Android',
     fileKind: 'APK',
-    urlKey: 'VITE_APK_GOOGLE_DRIVE_URL',
+    urlKey: 'VITE_APK_DOWNLOAD_URL',
     sizeKey: 'VITE_APK_SIZE',
     fallbackSize: '~100 MB',
     requirement: 'Android 8.0 or newer · arm64',
@@ -80,7 +87,7 @@ export const releases = Object.freeze([
     name: 'Windows',
     shortName: 'Windows',
     fileKind: 'ZIP',
-    urlKey: 'VITE_WINDOWS_GOOGLE_DRIVE_URL',
+    urlKey: 'VITE_WINDOWS_DOWNLOAD_URL',
     sizeKey: 'VITE_WINDOWS_SIZE',
     fallbackSize: '~120 MB',
     requirement: 'Windows 10 or 11 · 64-bit',

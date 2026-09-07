@@ -50,6 +50,9 @@ function useRelease(value) {
 
 test('redirects Android to the exact latest release asset with 307', async () => {
   useRelease(release)
+  globalThis.fetch = async () => {
+    throw new Error('The download route must not call GitHub API.')
+  }
   const response = await handleRequest(
     new Request('https://downloads.genxyzlab.org/latest.apk'),
     env,
@@ -57,7 +60,10 @@ test('redirects Android to the exact latest release asset with 307', async () =>
   )
 
   assert.equal(response.status, 307)
-  assert.equal(response.headers.get('location'), release.assets[0].browser_download_url)
+  assert.equal(
+    response.headers.get('location'),
+    'https://github.com/LoudyMiguel/GenXYZ-Lab-Releases/releases/latest/download/GenXYZ-Lab.apk',
+  )
   assert.equal(response.headers.get('cache-control'), 'private, no-store, max-age=0')
 })
 
@@ -77,10 +83,10 @@ test('builds the application update manifest from live release metadata', async 
   assert.equal(manifest.android.size, '80.0 MB')
 })
 
-test('returns a branded service error when an asset is missing', async () => {
+test('returns a branded metadata error when an asset is missing', async () => {
   useRelease({ ...release, assets: [release.assets[0]] })
   const response = await handleRequest(
-    new Request('https://downloads.genxyzlab.org/latest-windows.zip'),
+    new Request('https://downloads.genxyzlab.org/version.json'),
     env,
     context(),
   )

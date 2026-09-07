@@ -39,6 +39,12 @@ function githubHeaders(env) {
   return headers
 }
 
+function latestAssetUrl(env, assetName) {
+  const owner = env.GITHUB_OWNER || 'LoudyMiguel'
+  const repository = env.GITHUB_REPOSITORY || 'GenXYZ-Lab-Releases'
+  return `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/releases/latest/download/${encodeURIComponent(assetName)}`
+}
+
 async function fetchLatestRelease(env, context) {
   const owner = env.GITHUB_OWNER || 'LoudyMiguel'
   const repository = env.GITHUB_REPOSITORY || 'GenXYZ-Lab-Releases'
@@ -213,13 +219,14 @@ async function handleRequest(request, env, context) {
       })
     }
 
-    const release = await fetchLatestRelease(env, context)
-    const asset = verifiedAsset(release, route.name)
     return new Response(null, {
       status: 307,
       headers: noStoreHeaders({
-        Location: asset.browser_download_url,
-        'X-GenXYZ-Release': release.tag_name,
+        // The download path deliberately does not call GitHub's REST API.
+        // GitHub resolves this official stable URL itself, so a shared
+        // unauthenticated API rate limit can never block a real download.
+        Location: latestAssetUrl(env, route.name),
+        'X-GenXYZ-Release': 'latest',
       }),
     })
   } catch (error) {

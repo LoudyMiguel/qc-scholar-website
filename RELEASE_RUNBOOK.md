@@ -193,12 +193,13 @@ https://github.com/LoudyMiguel/GenXYZ-Lab-Releases/releases/latest/download/GenX
 https://github.com/LoudyMiguel/GenXYZ-Lab-Releases/releases/latest/download/GenXYZ-Lab-Windows.zip
 ```
 
-The Worker resolves GitHub's latest stable release, verifies the exact asset is
-present, and returns HTTP `307 Temporary Redirect`. A temporary redirect is
-intentional because the destination changes with each release; permanent 301
-or 308 responses could leave users stuck on an old cached asset. The Worker
-does not proxy the large files, so GitHub—not Cloudflare Worker memory—is the
-binary data path.
+The Worker returns HTTP `307 Temporary Redirect` directly to GitHub's official
+`/releases/latest/download/` route. It deliberately performs no GitHub API
+lookup before a download, so an unauthenticated API rate limit cannot block the
+file. A temporary redirect is intentional because the destination changes with
+each release; permanent 301 or 308 responses could leave users stuck on an old
+cached asset. The Worker does not proxy the large files, so GitHub—not
+Cloudflare Worker memory—is the binary data path.
 
 ## Test before switching the website
 
@@ -222,9 +223,10 @@ copy. Do not delete them during migration.
 
 ## Failure and rollback
 
-- A missing asset, GitHub API error, private repository, or invalid release URL
-  returns a branded `503` response with `Retry-After: 60` instead of a raw
-  exception. Unknown paths return 404 and unsupported methods return 405.
+- Download routes do not depend on GitHub's API. A missing asset or private
+  repository therefore produces GitHub's normal 404 after the redirect. The
+  health and metadata routes return a branded `503` for GitHub API errors.
+  Unknown paths return 404 and unsupported methods return 405.
 - Release metadata is cached at Cloudflare for 60 seconds. This reduces GitHub
   API calls, but a newly published release or rollback can take up to one minute
   to appear in a given Cloudflare location.

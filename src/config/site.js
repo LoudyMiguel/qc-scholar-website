@@ -1,6 +1,18 @@
 import releaseManifest from '../../release-manifest.json'
 
-const env = import.meta.env
+// Keep this allowlist explicit. Assigning all of `import.meta.env` to a client
+// variable makes Vite embed every legacy VITE_* value supplied by Cloudflare,
+// even when the application no longer reads that key. That previously left
+// retired Google Drive download URLs in the production JavaScript bundle.
+const env = Object.freeze({
+  VITE_SITE_URL: import.meta.env.VITE_SITE_URL,
+  VITE_APP_VERSION: import.meta.env.VITE_APP_VERSION,
+  VITE_RELEASE_DATE: import.meta.env.VITE_RELEASE_DATE,
+  VITE_APK_DOWNLOAD_URL: import.meta.env.VITE_APK_DOWNLOAD_URL,
+  VITE_APK_SIZE: import.meta.env.VITE_APK_SIZE,
+  VITE_WINDOWS_DOWNLOAD_URL: import.meta.env.VITE_WINDOWS_DOWNLOAD_URL,
+  VITE_WINDOWS_SIZE: import.meta.env.VITE_WINDOWS_SIZE,
+})
 
 function readEnv(key, fallback = '') {
   const value = env[key]

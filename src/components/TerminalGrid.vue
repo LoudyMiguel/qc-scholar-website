@@ -99,7 +99,7 @@ const panels = [
     status: 'verified',
     tone: 'violet',
     lines: [
-      { tag: 'GET', text: 'release manifest v2.4.0', tone: 'muted' },
+      { tag: 'GET', text: 'release manifest v3.0.0', tone: 'muted' },
       { tag: 'HASH', text: 'SHA-256 signature match', tone: 'cyan' },
       { tag: 'CHECK', text: 'Android package signed', tone: 'muted' },
       { tag: 'SAFE', text: 'official build confirmed', tone: 'success' },

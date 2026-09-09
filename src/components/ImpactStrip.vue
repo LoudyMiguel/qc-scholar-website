@@ -32,8 +32,8 @@ const downloads = computed(() =>
         <div class="flex items-center gap-3.5 border-b border-slate-800/80 p-5 lg:border-b-0 lg:border-r">
           <Wrench :size="21" class="text-indigo-300" aria-hidden="true" />
           <div>
-            <p class="text-sm font-bold text-white">7 developer tools</p>
-            <p class="mt-1 text-xs text-slate-500">API tester, Arduino, app builder</p>
+            <p class="text-sm font-bold text-white">30+ tools &amp; studios</p>
+            <p class="mt-1 text-xs text-slate-500">AI/ML, datasets, training, solvers</p>
           </div>
         </div>
         <div class="flex items-center gap-3.5 border-b border-slate-800/80 p-5 sm:border-b-0 sm:border-r">

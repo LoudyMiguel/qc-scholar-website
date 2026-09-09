@@ -1,16 +1,16 @@
 {
   "android": {
-    "version": "2.1.0",
+    "version": "3.0.0",
     "url": "https://downloads.genxyzlab.org/latest.apk",
-    "size": "42.4 MB",
-    "releaseDate": "2026-08-24",
-    "notes": "Adds 70 offline courses, 129 working templates, new 3D games, and a refined UI and UX."
+    "size": "76.6 MB",
+    "releaseDate": "2026-09-09",
+    "notes": "Adds AI and ML projects, Dataset and Training Studios, 30+ tools and studios, a redesigned template experience, code folding, indentation guides, and improved runners."
   },
   "windows": {
-    "version": "2.1.0",
+    "version": "3.0.0",
     "url": "https://downloads.genxyzlab.org/latest-windows.zip",
-    "size": "26.4 MB",
-    "releaseDate": "2026-08-24",
-    "notes": "Adds 70 offline courses, 129 working templates, new 3D games, and a refined UI and UX."
+    "size": "33.1 MB",
+    "releaseDate": "2026-09-09",
+    "notes": "Adds AI and ML projects, Dataset and Training Studios, 30+ tools and studios, a redesigned template experience, code folding, indentation guides, and improved runners."
   }
 }

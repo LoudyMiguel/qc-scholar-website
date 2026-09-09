@@ -22,11 +22,11 @@ const capabilities = [
     span: 'lg:col-span-2',
   },
   {
-    value: '7',
-    unit: 'tools',
-    title: 'Built-in developer tools',
+    value: '30+',
+    unit: 'tools & studios',
+    title: 'Tools, studios, and solvers',
     detail:
-      'Including an API Tester, an Arduino uploader, and a Web App Builder that turns a website into a mobile app.',
+      'Including AI Playground, Dataset Studio, Training Studio, File Explorer, API tools, and 13 offline academic solvers.',
     icon: Wrench,
     tone: 'indigo',
     span: 'lg:col-span-2',

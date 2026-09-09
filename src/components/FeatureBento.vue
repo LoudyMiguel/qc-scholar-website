@@ -1,73 +1,73 @@
 <script setup>
 import {
-  Award,
   Bot,
   Boxes,
   CodeXml,
   Database,
+  FolderOpen,
   WifiOff,
 } from '@lucide/vue'
 
 const features = [
   {
-    title: 'Learn without losing momentum',
-    body: 'Move through 70 guided courses, checkpoints, quizzes, and downloadable material—even when your connection is unreliable.',
+    title: 'Build and train real ML projects',
+    body: 'Generate machine-learning starters, prepare image or tabular datasets, label object-detection data, and follow local training metrics.',
     icon: WifiOff,
     tone: 'cyan',
     size: 'large',
     layout: 'lg:col-span-4 lg:row-span-2',
-    kicker: 'Offline-first learning',
+    kicker: 'AI & ML Playground',
   },
   {
-    title: 'Practice real code',
-    body: 'Write, run, diagnose, and refine code across ten language workflows from one focused workspace.',
+    title: 'Navigate larger code with clarity',
+    body: 'Fold code regions, follow indentation guides, and work across project files in the enhanced editor.',
     icon: CodeXml,
     tone: 'indigo',
     size: 'medium',
     layout: 'lg:col-span-2',
-    kicker: 'Code Practice',
+    kicker: 'Enhanced code editor',
   },
   {
-    title: 'Install with confidence',
-    body: 'Compiler Manager turns toolchain setup into clear, visible steps with detection and repair guidance.',
+    title: 'Find every workspace faster',
+    body: 'Search one Tools page for studios, solvers, APIs, databases, the terminal, compilers, and File Explorer.',
     icon: Boxes,
     tone: 'violet',
     size: 'medium',
     layout: 'lg:col-span-2',
-    kicker: 'Compiler Manager',
+    kicker: 'Tools & File Explorer',
   },
   {
-    title: 'Build beyond snippets',
-    body: 'Start from 129 working templates, then use project files, live previews, APIs, and databases to make each build your own.',
+    title: 'Explore 129 projects with less friction',
+    body: 'Use the redesigned template gallery, richer project details, readiness signals, previews, and workspace placement.',
     icon: Database,
     tone: 'cyan',
     size: 'compact',
     layout: 'lg:col-span-2',
-    kicker: 'Project studio',
+    kicker: 'Redesigned templates',
   },
   {
-    title: 'Ask AI to unblock the work',
-    body: 'Get help running projects, tracing bugs, explaining code, and preparing deployable output.',
+    title: 'Open ready-made AI and vision projects',
+    body: 'Run supported models on photos or a live camera, then explore packaged vision, AR, and interactive ML projects.',
     icon: Bot,
     tone: 'indigo',
     size: 'compact',
     layout: 'lg:col-span-2',
-    kicker: 'AI assistance',
+    kicker: 'AI & Vision Projects',
   },
   {
-    title: 'Make progress visible',
-    body: 'Turn completed learning paths into polished, shareable certificates.',
-    icon: Award,
+    title: 'Understand every run',
+    body: 'Use clearer inputs, output tables, diagrams, and step traces across the improved project and academic runners.',
+    icon: FolderOpen,
     tone: 'amber',
     size: 'compact',
     layout: 'lg:col-span-2',
-    kicker: 'Certificates',
+    kicker: 'Enhanced runner UX',
   },
 ]
 
 const learningFlow = [
   { label: 'Learn', value: '70', detail: 'Offline courses' },
-  { label: 'Practice', value: '10', detail: 'Language workflows' },
+  { label: 'Create', value: '30+', detail: 'Tools & studios' },
   { label: 'Build', value: '129', detail: 'Working templates' },
 ]
 </script>
@@ -77,9 +77,9 @@ const learningFlow = [
     <div class="site-container">
       <div class="mx-auto max-w-3xl text-center">
         <span class="eyebrow">One connected workspace</span>
-        <h2 class="section-heading mt-6">From first concept to a project you can run.</h2>
+        <h2 class="section-heading mt-6">From an idea to data, code, and a running project.</h2>
         <p class="section-copy mt-5">
-          GenXYZ Lab closes the gap between learning a concept and doing something real with it.
+          Version 3.0 brings AI and ML creation, stronger project tools, and a clearer path from source code to results.
         </p>
       </div>
 

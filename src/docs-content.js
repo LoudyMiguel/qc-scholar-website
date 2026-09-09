@@ -140,7 +140,7 @@ export const featureGroups = [
       },
       {
         name: 'Code editor',
-        detail: 'Syntax highlighting, line numbers, line wrapping, adjustable text and themes, automatic indentation, and automatic bracket and quote closing.',
+        detail: 'Syntax highlighting, line numbers, code folding, indentation guides, line wrapping, adjustable text and themes, automatic indentation, and automatic bracket and quote closing.',
       },
       {
         name: 'Workspace files',
@@ -210,7 +210,7 @@ export const featureGroups = [
       },
       {
         name: 'Template detail and placement',
-        detail: 'Read the overview and README, inspect requirements, tech stack, files, screenshots, and preview, then place the project into Code Practice.',
+        detail: 'Use the redesigned gallery and detail flow to inspect readiness, overview, README, requirements, tech stack, files, screenshots, and previews before placing a project into Code Practice.',
       },
       {
         name: 'Classic game projects',
@@ -249,7 +249,7 @@ export const featureGroups = [
       },
       {
         name: 'System',
-        detail: 'AI Assistant, Terminal, and Compiler Manager.',
+        detail: 'AI Assistant, Claude Code, OpenAI Codex, Gemini Code, Terminal, File Explorer, and Compiler Manager.',
       },
       {
         name: 'Tool search and categories',
@@ -311,11 +311,11 @@ export const featureGroups = [
       },
       {
         name: 'Dataset Studio',
-        detail: 'Collect and label images, split data into train, validation, and test sets, and inspect dataset health before training.',
+        detail: 'Collect and label classification or object-detection images, prepare tabular datasets, split data into train, validation, and test sets, and inspect dataset health before training.',
       },
       {
         name: 'Training Studio',
-        detail: 'Run model training against a project dataset and follow metrics while the job is active.',
+        detail: 'Configure and preflight local training, run it against a project dataset, follow live metrics, and stop active jobs from the desktop studio.',
       },
       {
         name: 'AI & Vision Projects',

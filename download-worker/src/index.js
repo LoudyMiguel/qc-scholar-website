@@ -45,6 +45,50 @@ function latestAssetUrl(env, assetName) {
   return `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/releases/latest/download/${encodeURIComponent(assetName)}`
 }
 
+function taggedAssetUrl(env, version, assetName) {
+  const owner = env.GITHUB_OWNER || 'LoudyMiguel'
+  const repository = env.GITHUB_REPOSITORY || 'GenXYZ-Lab-Releases'
+  return `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/releases/download/v${encodeURIComponent(version)}/${encodeURIComponent(assetName)}`
+}
+
+function fallbackRelease(env) {
+  const version = String(env.FALLBACK_RELEASE_VERSION || '')
+  const releaseDate = String(env.FALLBACK_RELEASE_DATE || '')
+  const androidSize = Number.parseInt(env.FALLBACK_ANDROID_SIZE_BYTES || '', 10)
+  const windowsSize = Number.parseInt(env.FALLBACK_WINDOWS_SIZE_BYTES || '', 10)
+  if (
+    !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(releaseDate) ||
+    !(androidSize > 0) ||
+    !(windowsSize > 0)
+  ) {
+    return null
+  }
+
+  return {
+    tag_name: `v${version}`,
+    name: `GenXYZ Lab v${version}`,
+    body: String(env.FALLBACK_RELEASE_NOTES || `GenXYZ Lab v${version}`),
+    draft: false,
+    prerelease: false,
+    published_at: `${releaseDate}T00:00:00Z`,
+    assets: [
+      {
+        name: ASSETS['/latest.apk'].name,
+        state: 'uploaded',
+        size: androidSize,
+        browser_download_url: taggedAssetUrl(env, version, ASSETS['/latest.apk'].name),
+      },
+      {
+        name: ASSETS['/latest-windows.zip'].name,
+        state: 'uploaded',
+        size: windowsSize,
+        browser_download_url: taggedAssetUrl(env, version, ASSETS['/latest-windows.zip'].name),
+      },
+    ],
+  }
+}
+
 async function fetchLatestRelease(env, context) {
   const owner = env.GITHUB_OWNER || 'LoudyMiguel'
   const repository = env.GITHUB_REPOSITORY || 'GenXYZ-Lab-Releases'
@@ -58,6 +102,8 @@ async function fetchLatestRelease(env, context) {
 
   const response = await fetch(apiUrl, { headers: githubHeaders(env) })
   if (!response.ok) {
+    const fallback = fallbackRelease(env)
+    if (fallback) return fallback
     const rateLimited = response.status === 403 || response.status === 429
     throw new ReleaseLookupError(
       rateLimited

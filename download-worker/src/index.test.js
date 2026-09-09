@@ -7,6 +7,11 @@ const env = {
   GITHUB_OWNER: 'LoudyMiguel',
   GITHUB_REPOSITORY: 'GenXYZ-Lab-Releases',
   RELEASE_CACHE_SECONDS: '60',
+  FALLBACK_RELEASE_VERSION: '3.0.0',
+  FALLBACK_RELEASE_DATE: '2026-09-09',
+  FALLBACK_ANDROID_SIZE_BYTES: '80359296',
+  FALLBACK_WINDOWS_SIZE_BYTES: '34722789',
+  FALLBACK_RELEASE_NOTES: 'Fallback release notes',
 }
 
 const release = {
@@ -93,6 +98,27 @@ test('returns a branded metadata error when an asset is missing', async () => {
 
   assert.equal(response.status, 503)
   assert.match(await response.text(), /missing GenXYZ-Lab-Windows\.zip/)
+})
+
+test('serves configured metadata when GitHub rate-limits the lookup', async () => {
+  globalThis.caches = {
+    default: {
+      match: async () => null,
+      put: async () => {},
+    },
+  }
+  globalThis.fetch = async () => new Response('rate limited', { status: 429 })
+  const response = await handleRequest(
+    new Request('https://downloads.genxyzlab.org/version.json'),
+    env,
+    context(),
+  )
+  const manifest = await response.json()
+
+  assert.equal(response.status, 200)
+  assert.equal(manifest.android.version, '3.0.0')
+  assert.equal(manifest.android.size, '76.6 MB')
+  assert.equal(manifest.windows.size, '33.1 MB')
 })
 
 test('rejects unknown paths and write methods', async () => {

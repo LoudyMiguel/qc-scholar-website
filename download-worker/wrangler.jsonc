@@ -16,6 +16,11 @@
   "vars": {
     "GITHUB_OWNER": "LoudyMiguel",
     "GITHUB_REPOSITORY": "GenXYZ-Lab-Releases",
-    "RELEASE_CACHE_SECONDS": "60"
+    "RELEASE_CACHE_SECONDS": "60",
+    "FALLBACK_RELEASE_VERSION": "3.0.0",
+    "FALLBACK_RELEASE_DATE": "2026-09-09",
+    "FALLBACK_ANDROID_SIZE_BYTES": "80359296",
+    "FALLBACK_WINDOWS_SIZE_BYTES": "34722789",
+    "FALLBACK_RELEASE_NOTES": "Adds AI and ML projects, Dataset and Training Studios, 30+ tools and studios, a redesigned template experience, code folding, indentation guides, and improved runners."
   }
 }

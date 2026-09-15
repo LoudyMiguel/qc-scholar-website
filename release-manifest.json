@@ -4,13 +4,15 @@
     "url": "https://downloads.genxyzlab.org/latest.apk",
     "size": "76.6 MB",
     "releaseDate": "2026-09-09",
-    "notes": "Adds AI and ML projects, Dataset and Training Studios, 30+ tools and studios, a redesigned template experience, code folding, indentation guides, and improved runners."
+    "notes": "Adds AI and ML projects, Dataset and Training Studios, 30+ tools and studios, a redesigned template experience, code folding, indentation guides, and improved runners.",
+    "releaseNotesUrl": "https://github.com/LoudyMiguel/GenXYZ-Lab-Releases/releases/tag/v3.0.0"
   },
   "windows": {
     "version": "3.0.0",
     "url": "https://downloads.genxyzlab.org/latest-windows.zip",
     "size": "33.1 MB",
     "releaseDate": "2026-09-09",
-    "notes": "Adds AI and ML projects, Dataset and Training Studios, 30+ tools and studios, a redesigned template experience, code folding, indentation guides, and improved runners."
+    "notes": "Adds AI and ML projects, Dataset and Training Studios, 30+ tools and studios, a redesigned template experience, code folding, indentation guides, and improved runners.",
+    "releaseNotesUrl": "https://github.com/LoudyMiguel/GenXYZ-Lab-Releases/releases/tag/v3.0.0"
   }
 }

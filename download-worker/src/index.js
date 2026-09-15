@@ -72,6 +72,7 @@ function fallbackRelease(env) {
     draft: false,
     prerelease: false,
     published_at: `${releaseDate}T00:00:00Z`,
+    html_url: `https://github.com/${encodeURIComponent(env.GITHUB_OWNER || 'LoudyMiguel')}/${encodeURIComponent(env.GITHUB_REPOSITORY || 'GenXYZ-Lab-Releases')}/releases/tag/v${encodeURIComponent(version)}`,
     assets: [
       {
         name: ASSETS['/latest.apk'].name,
@@ -210,6 +211,7 @@ async function handleVersion(request, env, context) {
   const notes = String(
     env.RELEASE_BANNER_NOTES || release.body || release.name || '',
   ).trim()
+  const releaseNotesUrl = String(release.html_url || '').trim()
 
   return jsonResponse({
     android: {
@@ -218,6 +220,7 @@ async function handleVersion(request, env, context) {
       size: fileSize(android.size),
       releaseDate,
       notes,
+      releaseNotesUrl,
     },
     windows: {
       version,
@@ -225,6 +228,7 @@ async function handleVersion(request, env, context) {
       size: fileSize(windows.size),
       releaseDate,
       notes,
+      releaseNotesUrl,
     },
   })
 }

@@ -22,6 +22,7 @@ const release = {
   draft: false,
   prerelease: false,
   published_at: '2026-09-08T10:00:00Z',
+  html_url: 'https://github.com/LoudyMiguel/GenXYZ-Lab-Releases/releases/tag/v2.2.0',
   assets: [
     {
       name: 'GenXYZ-Lab.apk',
@@ -88,6 +89,7 @@ test('builds the application update manifest from live release metadata', async 
   assert.equal(manifest.windows.url, 'https://downloads.genxyzlab.org/latest-windows.zip')
   assert.equal(manifest.android.size, '80.0 MB')
   assert.equal(manifest.android.notes, 'Short update summary.')
+  assert.equal(manifest.android.releaseNotesUrl, release.html_url)
 })
 
 test('returns a branded metadata error when an asset is missing', async () => {
@@ -121,6 +123,7 @@ test('serves configured metadata when GitHub rate-limits the lookup', async () =
   assert.equal(manifest.android.version, '3.0.0')
   assert.equal(manifest.android.size, '76.6 MB')
   assert.equal(manifest.windows.size, '33.1 MB')
+  assert.match(manifest.android.releaseNotesUrl, /releases\/tag\/v3\.0\.0$/)
 })
 
 test('rejects unknown paths and write methods', async () => {

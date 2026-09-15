@@ -11,6 +11,7 @@ const env = {
   FALLBACK_RELEASE_DATE: '2026-09-09',
   FALLBACK_ANDROID_SIZE_BYTES: '80359296',
   FALLBACK_WINDOWS_SIZE_BYTES: '34722789',
+  RELEASE_BANNER_NOTES: 'Short update summary.',
   FALLBACK_RELEASE_NOTES: 'Fallback release notes',
 }
 
@@ -86,6 +87,7 @@ test('builds the application update manifest from live release metadata', async 
   assert.equal(manifest.android.url, 'https://downloads.genxyzlab.org/latest.apk')
   assert.equal(manifest.windows.url, 'https://downloads.genxyzlab.org/latest-windows.zip')
   assert.equal(manifest.android.size, '80.0 MB')
+  assert.equal(manifest.android.notes, 'Short update summary.')
 })
 
 test('returns a branded metadata error when an asset is missing', async () => {

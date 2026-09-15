@@ -205,7 +205,11 @@ async function handleVersion(request, env, context) {
   const origin = new URL(request.url).origin
   const version = publicVersion(release.tag_name)
   const releaseDate = String(release.published_at || '').slice(0, 10)
-  const notes = String(release.body || release.name || '').trim()
+  // Keep the in-app banner intentionally short. The GitHub release page can
+  // retain comprehensive notes without making actions unreachable on phones.
+  const notes = String(
+    env.RELEASE_BANNER_NOTES || release.body || release.name || '',
+  ).trim()
 
   return jsonResponse({
     android: {

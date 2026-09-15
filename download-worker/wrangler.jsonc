@@ -21,6 +21,7 @@
     "FALLBACK_RELEASE_DATE": "2026-09-09",
     "FALLBACK_ANDROID_SIZE_BYTES": "80359296",
     "FALLBACK_WINDOWS_SIZE_BYTES": "34722789",
+    "RELEASE_BANNER_NOTES": "New in 3.0: AI and ML studios, more developer tools, redesigned templates, code folding, and improved runners.",
     "FALLBACK_RELEASE_NOTES": "Adds AI and ML projects, Dataset and Training Studios, 30+ tools and studios, a redesigned template experience, code folding, indentation guides, and improved runners."
   }
 }

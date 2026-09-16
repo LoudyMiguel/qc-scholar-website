@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#020617" />
+    <style>
+      #app:not([data-v-app]) > main { max-width: 52rem; margin: 0 auto; padding: 4rem 1.5rem; color: #cbd5e1; font: 16px/1.75 system-ui, sans-serif; }
+      #app:not([data-v-app]) h1, #app:not([data-v-app]) h2 { color: #f8fafc; line-height: 1.2; }
+      #app:not([data-v-app]) h1 { font-size: clamp(2.2rem, 6vw, 3.5rem); }
+      #app:not([data-v-app]) h2 { margin-top: 2rem; }
+      #app:not([data-v-app]) a { color: #67e8f9; }
+    </style>
 
     <title>GenXYZ Lab Documentation — Setup, User Guide &amp; Complete Features</title>
     <meta
@@ -68,7 +75,36 @@
     </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <main>
+        <h1>GenXYZ Lab documentation</h1>
+        <p>
+          Official setup and user guide for the GenXYZ Lab Android and Windows
+          application. Learn how to install the app, configure local compilers,
+          use offline courses, open templates, manage project files, and work with
+          the AI and machine-learning studios.
+        </p>
+        <h2>Android setup</h2>
+        <p>
+          Install the official ARM64 APK on Android 8 or newer. Install the current
+          F-Droid version of Termux when you want local compilers, terminals,
+          development servers, or framework toolchains.
+        </p>
+        <h2>Windows setup</h2>
+        <p>
+          Extract the complete Windows x64 ZIP before launching GenXYZ Lab. Keep
+          the executable, libraries, and data folders together, then use Compiler
+          Manager to detect development tools available on PATH.
+        </p>
+        <h2>Features</h2>
+        <p>
+          Explore 70 offline courses, 129 working templates, Code Practice,
+          AI Playground, Dataset Studio, Training Studio, File Explorer, API and
+          database tools, ready-made vision projects, and 13 offline academic solvers.
+        </p>
+        <p><a href="/">Visit the GenXYZ Lab website</a></p>
+      </main>
+    </div>
     <script type="module" src="/src/docs-main.js"></script>
   </body>
 </html>

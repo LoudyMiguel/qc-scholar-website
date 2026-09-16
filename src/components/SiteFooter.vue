@@ -32,7 +32,7 @@ const year = new Date().getFullYear()
             <a href="#setup" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Setup</a>
             <a href="/docs/" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Documentation</a>
             <a href="#community" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Community</a>
-            <a href="/privacy.html" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Privacy</a>
+            <a href="/privacy" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Privacy</a>
             <button type="button" class="inline-flex min-h-10 items-center text-xs font-semibold text-indigo-300 transition hover:text-indigo-200" @click="$emit('download')">Get GenXYZ Lab</button>
           </div>
         </nav>

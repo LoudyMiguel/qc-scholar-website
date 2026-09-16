@@ -304,7 +304,7 @@ async function handleTabKeydown(event) {
             <p class="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] leading-5 text-slate-400">
               <LockKeyhole :size="12" aria-hidden="true" />
               Not shown publicly; readable by you and site administrators.
-              <a href="/privacy.html" class="font-bold text-indigo-300 hover:text-indigo-200">Privacy details</a>
+              <a href="/privacy" class="font-bold text-indigo-300 hover:text-indigo-200">Privacy details</a>
             </p>
           </form>
 

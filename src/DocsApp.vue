@@ -445,7 +445,7 @@ function closeMobileNav() {
         <div class="flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-slate-500">
           <a href="/" class="hover:text-white">Website</a>
           <a href="/#download" class="hover:text-white">Download</a>
-          <a href="/privacy.html" class="hover:text-white">Privacy</a>
+          <a href="/privacy" class="hover:text-white">Privacy</a>
           <a :href="siteConfig.termuxDocsUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 hover:text-white">
             Termux notes <ExternalLink :size="11" aria-hidden="true" />
           </a>

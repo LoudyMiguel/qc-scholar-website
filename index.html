@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#020617" />
+    <style>
+      #app:not([data-v-app]) > main { max-width: 72rem; margin: 0 auto; padding: 5rem 1.5rem; color: #cbd5e1; font: 16px/1.75 system-ui, sans-serif; }
+      #app:not([data-v-app]) h1, #app:not([data-v-app]) h2 { color: #f8fafc; line-height: 1.15; }
+      #app:not([data-v-app]) h1 { max-width: 52rem; font-size: clamp(2.4rem, 6vw, 4.5rem); }
+      #app:not([data-v-app]) section { max-width: 52rem; margin-top: 3rem; }
+      #app:not([data-v-app]) a { color: #67e8f9; }
+    </style>
 
     <title>GenXYZ Lab — Learn to code and build real projects on Android &amp; Windows</title>
     <meta
@@ -57,39 +64,112 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "GenXYZ Lab",
-        "url": "%VITE_SITE_URL%/",
-        "applicationCategory": "EducationalApplication",
-        "operatingSystem": "Android 8.0+, Windows 10, Windows 11",
-        "softwareVersion": "%VITE_APP_VERSION%",
-        "dateModified": "2026-09-09",
-        "applicationSubCategory": "Coding education and software development tools",
-        "description": "A free offline-first learning, coding, and AI/ML studio with 70 courses, 129 working templates, 30+ tools and studios, dataset preparation, local training, and open-source projects.",
-        "image": "%VITE_SITE_URL%/assets/og-cover-v2.png",
-        "isAccessibleForFree": true,
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "featureList": [
-          "70 free offline courses with quizzes and certificates",
-          "30+ built-in tools and studios including AI Playground, Dataset Studio, Training Studio, File Explorer, and 13 offline academic solvers",
-          "20+ supported frameworks for mobile and app development",
-          "30+ open-source games with 3D Subway Dash, billiards, bowling, and an interactive periodic table",
-          "129 working system templates for complete, ready-to-run projects",
-          "AI and machine-learning project generation, image labeling, object-detection and tabular dataset preparation, and local training",
-          "Enhanced template gallery, project details, navigation, and responsive interactions",
-          "Code practice across ten language toolchains with code folding and indentation guides",
-          "Compiler Manager for local toolchain setup",
-          "Project-aware AI assistance"
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "%VITE_SITE_URL%/#organization",
+            "name": "GenXYZ Lab",
+            "url": "%VITE_SITE_URL%/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "%VITE_SITE_URL%/assets/logo.png"
+            },
+            "sameAs": [
+              "https://github.com/LoudyMiguel/GenXYZ-Lab-Releases",
+              "https://github.com/LoudyMiguel/qc-scholar-website"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "%VITE_SITE_URL%/#website",
+            "name": "GenXYZ Lab",
+            "url": "%VITE_SITE_URL%/",
+            "publisher": { "@id": "%VITE_SITE_URL%/#organization" },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "%VITE_SITE_URL%/#software",
+            "name": "GenXYZ Lab",
+            "url": "%VITE_SITE_URL%/",
+            "mainEntityOfPage": { "@id": "%VITE_SITE_URL%/#website" },
+            "author": { "@id": "%VITE_SITE_URL%/#organization" },
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Android 8.0+, Windows 10, Windows 11",
+            "softwareVersion": "%VITE_APP_VERSION%",
+            "dateModified": "2026-09-16",
+            "applicationSubCategory": "Coding education and software development tools",
+            "description": "A free offline-first learning, coding, and AI/ML studio with 70 courses, 129 working templates, 30+ tools and studios, dataset preparation, local training, and open-source projects.",
+            "image": "%VITE_SITE_URL%/assets/og-cover-v2.png",
+            "downloadUrl": "%VITE_SITE_URL%/#download",
+            "isAccessibleForFree": true,
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "featureList": [
+              "70 free offline courses with quizzes and certificates",
+              "30+ built-in tools and studios including AI Playground, Dataset Studio, Training Studio, File Explorer, and 13 offline academic solvers",
+              "20+ supported frameworks for mobile and app development",
+              "30+ open-source games and interactive 3D projects",
+              "129 working system templates for complete, ready-to-run projects",
+              "AI and machine-learning project generation, image labeling, object-detection and tabular dataset preparation, and local training",
+              "Code practice across ten language toolchains with code folding and indentation guides",
+              "Compiler Manager for local toolchain setup",
+              "Project-aware AI assistance"
+            ]
+          }
         ]
       }
     </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <main>
+        <header>
+          <p>GenXYZ Lab · Free for Android and Windows</p>
+          <h1>Learn coding, build real projects, and experiment with AI and machine learning.</h1>
+          <p>
+            GenXYZ Lab is a free, offline-first learning and creation studio for
+            Android phones and Windows PCs. It combines structured programming
+            courses with practical editors, project templates, developer tools,
+            academic solvers, and open-source games.
+          </p>
+          <p><a href="#download">Download GenXYZ Lab</a> · <a href="/docs/">Read the documentation</a></p>
+        </header>
+        <section aria-labelledby="learn-build-create">
+          <h2 id="learn-build-create">One workspace for learning and building</h2>
+          <p>
+            Work through 70 offline courses, practise ten programming-language
+            workflows, and start projects from 129 working templates. Code Practice
+            includes project files, local toolchains, code folding, indentation
+            guides, run consoles, terminals, previews, and compiler setup guidance.
+          </p>
+        </section>
+        <section aria-labelledby="ai-ml-tools">
+          <h2 id="ai-ml-tools">AI, machine learning, datasets, and training</h2>
+          <p>
+            AI Playground creates real machine-learning starter projects. Dataset
+            Studio prepares classification, object-detection, and tabular datasets
+            with labels, train-validation-test splits, and health checks. Training
+            Studio configures and monitors supported local training jobs on Windows,
+            while AI &amp; Vision Projects provides ready-made computer-vision and
+            interactive ML experiences.
+          </p>
+        </section>
+        <section aria-labelledby="available-platforms">
+          <h2 id="available-platforms">Available platforms</h2>
+          <p>
+            Download the official ARM64 APK for Android 8 or newer, or the complete
+            Windows x64 ZIP for Windows 10 and Windows 11. The app is free and does
+            not require a subscription. Network-dependent catalogs and AI providers
+            are optional; downloaded learning material and local tools remain usable
+            offline.
+          </p>
+        </section>
+      </main>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

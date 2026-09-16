@@ -42,7 +42,7 @@ function seoFiles(siteUrl) {
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>${origin}/privacy.html</loc>
+    <loc>${origin}/privacy</loc>
     <lastmod>${today}</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

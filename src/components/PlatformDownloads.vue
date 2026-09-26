@@ -45,7 +45,7 @@ onMounted(() => {
   })
 })
 
-const platformIcons = { android: Smartphone, windows: Monitor }
+const platformIcons = { android: Smartphone, android32: Smartphone, windows: Monitor }
 
 // What each build actually does differently. Vague parity claims ("works
 // everywhere!") are worse than useless here — the compiler story is genuinely
@@ -55,6 +55,11 @@ const highlights = {
     'Guided courses, quizzes, and certificates offline',
     'Real compilers on-device through Termux',
     'Arduino, Flutter, and web project studios',
+  ],
+  android32: [
+    'The same courses, quizzes, and certificates',
+    'Built specifically for older 32-bit ARM phones',
+    'Camera, AI, Arduino, and project tools retained',
   ],
   windows: [
     'The same courses, editor, and project tools',
@@ -105,7 +110,7 @@ async function downloadRelease(event, card) {
     <div class="site-container relative">
       <div class="mx-auto max-w-3xl text-center" data-reveal>
         <span class="eyebrow">Get the app</span>
-        <h2 class="section-heading mt-6">One workspace. Two platforms.</h2>
+        <h2 class="section-heading mt-6">Choose the build for your device.</h2>
         <p class="section-copy mt-5">
           Free, with no account and no subscription. Pick the build that matches
           the device you learn on.
@@ -124,7 +129,10 @@ async function downloadRelease(event, card) {
         </div>
       </div>
 
-      <div class="mt-14 grid gap-4 lg:grid-cols-2">
+      <div
+        class="mt-14 grid gap-4"
+        :class="cards.length === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-3'"
+      >
         <article
           v-for="(card, index) in cards"
           :key="card.id"

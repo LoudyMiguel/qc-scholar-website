@@ -10,6 +10,8 @@ const env = Object.freeze({
   VITE_RELEASE_DATE: import.meta.env.VITE_RELEASE_DATE,
   VITE_APK_DOWNLOAD_URL: import.meta.env.VITE_APK_DOWNLOAD_URL,
   VITE_APK_SIZE: import.meta.env.VITE_APK_SIZE,
+  VITE_APK_32_DOWNLOAD_URL: import.meta.env.VITE_APK_32_DOWNLOAD_URL,
+  VITE_APK_32_SIZE: import.meta.env.VITE_APK_32_SIZE,
   VITE_WINDOWS_DOWNLOAD_URL: import.meta.env.VITE_WINDOWS_DOWNLOAD_URL,
   VITE_WINDOWS_SIZE: import.meta.env.VITE_WINDOWS_SIZE,
 })
@@ -33,6 +35,7 @@ export const siteConfig = Object.freeze({
 
 const officialDownloads = Object.freeze({
   android: '/latest.apk',
+  android32: '/latest-android-32.apk',
   windows: '/latest-windows.zip',
 })
 
@@ -75,7 +78,7 @@ function buildRelease({
     size: manifestEntry.size || readEnv(sizeKey, fallbackSize),
     requirement,
     note,
-    // Only the two permanent first-party download routes are accepted. This
+    // Only the permanent first-party download routes are accepted. This
     // prevents a stale build variable from silently sending visitors back to
     // Google Drive, R2, or a version-specific GitHub asset.
     isPlaceholder: !isOfficialDownloadUrl(url, id),
@@ -85,15 +88,29 @@ function buildRelease({
 export const releases = Object.freeze([
   buildRelease({
     id: 'android',
-    name: 'Android',
-    shortName: 'Android',
+    name: 'Android (64-bit)',
+    shortName: 'Android 64-bit',
     fileKind: 'APK',
     urlKey: 'VITE_APK_DOWNLOAD_URL',
     sizeKey: 'VITE_APK_SIZE',
-    fallbackSize: '~100 MB',
-    requirement: 'Android 8.0 or newer · arm64',
-    note: 'Install Termux first if you want on-device compilers.',
+    fallbackSize: '~79 MB',
+    requirement: 'Android 7.0 or newer · 64-bit ARM',
+    note: 'Recommended for most current Android phones.',
   }),
+  // Temporarily hidden until the 32-bit ARM APK is actually published.
+  // Keep the manifest fields and card metadata nearby so the build can be
+  // restored by uncommenting this block once the asset is release-ready.
+  // buildRelease({
+  //   id: 'android32',
+  //   name: 'Android (32-bit)',
+  //   shortName: 'Android 32-bit',
+  //   fileKind: 'APK',
+  //   urlKey: 'VITE_APK_32_DOWNLOAD_URL',
+  //   sizeKey: 'VITE_APK_32_SIZE',
+  //   fallbackSize: '~67 MB',
+  //   requirement: 'Android 7.0 or newer · 32-bit ARM',
+  //   note: 'For older ARMv7 phones; Android 6 and earlier are not supported.',
+  // }),
   buildRelease({
     id: 'windows',
     name: 'Windows',

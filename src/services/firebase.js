@@ -19,6 +19,10 @@ import {
   serverTimestamp,
   set,
 } from 'firebase/database'
+import {
+  assertCommunityCommentAllowed,
+  normalizeCommentForComparison,
+} from './comment-moderation'
 
 const env = import.meta.env
 
@@ -49,6 +53,10 @@ let auth = null
 let database = null
 let signInPromise = null
 let approximateOriginPromise = null
+
+const COMMENT_COOLDOWN_MS = 2 * 60 * 1000
+const COMMENT_POSTED_AT_KEY = 'genxyz-lab-comment-posted-at'
+const COMMENT_BODY_KEY = 'genxyz-lab-comment-body'
 
 if (isFirebaseConfigured) {
   app = initializeApp(firebaseConfig)
@@ -128,8 +136,9 @@ export async function recordDownloadClick(platform = '') {
   // Per-platform breakdown is deliberately best-effort and never rethrows: it
   // needs a rules deploy the aggregate counter does not, so a project still on
   // the older rules keeps working instead of failing every download click.
-  if (platform === 'android' || platform === 'windows') {
-    incrementCounter(`stats/platform_downloads/${platform}`).catch(() => {})
+  const platformGroup = platform === 'android32' ? 'android' : platform
+  if (platformGroup === 'android' || platformGroup === 'windows') {
+    incrementCounter(`stats/platform_downloads/${platformGroup}`).catch(() => {})
   }
 
   return result.snapshot.val()
@@ -208,6 +217,7 @@ export async function recordApproximateDownloadOrigin(platform = '') {
   const { lat, lng } = origin
 
   await ensureAnonymousUser()
+  const platformGroup = platform === 'android32' ? 'android' : platform
   const originRef = ref(database, `stats/download_origins/${downloadOriginKey(lat, lng)}`)
   const result = await runTransaction(originRef, (current) => {
     const previous = current && typeof current === 'object' ? current : {}
@@ -218,8 +228,8 @@ export async function recordApproximateDownloadOrigin(platform = '') {
       lat,
       lng,
       count: count + 1,
-      android: android + (platform === 'android' ? 1 : 0),
-      windows: windows + (platform === 'windows' ? 1 : 0),
+      android: android + (platformGroup === 'android' ? 1 : 0),
+      windows: windows + (platformGroup === 'windows' ? 1 : 0),
     }
   })
   return result.committed
@@ -313,20 +323,38 @@ export function subscribeToCommentReactions(
 }
 
 export async function createComment({ authorName, body }) {
-  await ensureAnonymousUser()
+  const user = await ensureAnonymousUser()
   const name = normalizeText(authorName, 40) || 'Anonymous builder'
-  const message = normalizeText(body, 1000)
+  const message = normalizeText(body, 500)
 
   if (message.length < 3) {
     throw new Error('Please write at least 3 characters.')
   }
 
+  assertCommunityCommentAllowed(message)
+  enforceLocalCommentCooldown(message)
+
   const commentRef = push(ref(database, 'comments'))
+  const rateLimitRef = ref(database, `commentRateLimits/${user.uid}`)
+  try {
+    await set(rateLimitRef, {
+      commentId: commentRef.key,
+      createdAt: serverTimestamp(),
+    })
+  } catch (error) {
+    if (error?.code === 'PERMISSION_DENIED') {
+      throw new Error('Please wait two minutes before posting another comment.')
+    }
+    throw error
+  }
+
   await set(commentRef, {
     authorName: name,
     body: message,
     createdAt: serverTimestamp(),
   })
+
+  rememberLocalComment(message)
 
   return commentRef.key
 }
@@ -396,4 +424,31 @@ function normalizeText(value, maxLength) {
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
     .trim()
     .slice(0, maxLength)
+}
+
+function enforceLocalCommentCooldown(message) {
+  try {
+    const lastPostedAt = Number(localStorage.getItem(COMMENT_POSTED_AT_KEY))
+    const lastBody = localStorage.getItem(COMMENT_BODY_KEY)
+    const elapsed = Date.now() - lastPostedAt
+    if (Number.isFinite(lastPostedAt) && elapsed < COMMENT_COOLDOWN_MS) {
+      const seconds = Math.ceil((COMMENT_COOLDOWN_MS - elapsed) / 1000)
+      throw new Error(`Please wait ${seconds} seconds before posting again.`)
+    }
+    if (lastBody === normalizeCommentForComparison(message)) {
+      throw new Error('That comment was already posted.')
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('Please')) throw error
+    // Storage can be unavailable in privacy modes. Firebase rules still apply.
+  }
+}
+
+function rememberLocalComment(message) {
+  try {
+    localStorage.setItem(COMMENT_POSTED_AT_KEY, String(Date.now()))
+    localStorage.setItem(COMMENT_BODY_KEY, normalizeCommentForComparison(message))
+  } catch {
+    // Optional fast feedback only; Firebase rules enforce the real cooldown.
+  }
 }

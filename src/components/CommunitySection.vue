@@ -225,14 +225,14 @@ async function handleTabKeydown(event) {
             <div class="mt-4">
               <div class="flex items-end justify-between">
                 <label for="comment-body" class="field-label">Comment or idea</label>
-                <span class="mb-2 text-[11px] text-slate-400">{{ commentForm.body.length }}/1000</span>
+                <span class="mb-2 text-[11px] text-slate-400">{{ commentForm.body.length }}/500</span>
               </div>
               <textarea
                 id="comment-body"
                 v-model="commentForm.body"
                 class="field-control min-h-36 resize-y"
                 minlength="3"
-                maxlength="1000"
+                maxlength="500"
                 required
                 placeholder="What would make GenXYZ Lab more useful for you?"
                 :disabled="!firebaseReady || submitting"
@@ -244,7 +244,7 @@ async function handleTabKeydown(event) {
               {{ submitting ? 'Publishing…' : 'Publish comment' }}
             </button>
             <p class="mt-3 text-center text-[11px] leading-5 text-slate-400">
-              Your display name and comment are public. Please do not share secrets or personal data.
+              Your display name and comment are public. One comment is allowed every two minutes. Please do not share secrets or personal data.
             </p>
           </form>
 

@@ -43,16 +43,29 @@
       ".read": true,
       ".indexOn": ["createdAt"],
       "$commentId": {
-        ".write": "auth != null && (auth.token.admin === true || (!data.exists() && newData.exists()))",
+        ".write": "auth != null && (auth.token.admin === true || (!data.exists() && newData.exists() && root.child('commentRateLimits').child(auth.uid).child('commentId').val() === $commentId && root.child('commentRateLimits').child(auth.uid).child('createdAt').val() >= now - 15000))",
         ".validate": "newData.hasChildren(['authorName', 'body', 'createdAt'])",
         "authorName": {
           ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
         },
         "body": {
-          ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 1000"
+          ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 500"
         },
         "createdAt": {
           ".validate": "newData.isNumber() && ((!data.exists() && newData.val() >= now - 60000 && newData.val() <= now + 1000) || (data.exists() && newData.val() === data.val()))"
+        },
+        "$other": { ".validate": false }
+      }
+    },
+    "commentRateLimits": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && newData.hasChildren(['commentId', 'createdAt']) && (!data.exists() || newData.child('createdAt').val() >= data.child('createdAt').val() + 120000)",
+        "commentId": {
+          ".validate": "newData.isString() && newData.val().length >= 16 && newData.val().length <= 32"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() >= now - 1000 && newData.val() <= now + 1000"
         },
         "$other": { ".validate": false }
       }

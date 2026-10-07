@@ -7,48 +7,45 @@
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#090b13" media="(prefers-color-scheme: dark)" />
     <script src="/theme-init.js"></script>
-    <style>
-      #app:not([data-v-app]) > main { max-width: 52rem; margin: 0 auto; padding: 4rem 1.5rem; color: #475569; font: 16px/1.75 system-ui, sans-serif; }
-      #app:not([data-v-app]) h1, #app:not([data-v-app]) h2 { color: #0f172a; line-height: 1.2; }
-      #app:not([data-v-app]) h1 { font-size: clamp(2.2rem, 6vw, 3.5rem); }
-      #app:not([data-v-app]) h2 { margin-top: 2rem; }
-      #app:not([data-v-app]) a { color: #4f46e5; }
-      .dark #app:not([data-v-app]) > main { color: #94a3b8; }
-      .dark #app:not([data-v-app]) h1, .dark #app:not([data-v-app]) h2 { color: #f1f5f9; }
-      .dark #app:not([data-v-app]) a { color: #a5b4fc; }
-    </style>
 
-    <title>GenXYZ Lab Documentation — Setup, User Guide &amp; Complete Features</title>
+    <title>GenXYZ Lab Docs — Setup Guide &amp; Feature Reference</title>
     <meta
       name="description"
-      content="Official GenXYZ Lab documentation for Android and Windows: proper installation, Termux and compiler setup, app workflow, complete feature list, updates, backups, and troubleshooting."
+      content="Install GenXYZ Lab on Android or Windows, set up compilers with Termux or your PATH, follow the Learn, Practice, Build workflow, and fix common problems."
     />
-    <link rel="canonical" href="%VITE_SITE_URL%/docs/" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="%SITE_URL%/docs/" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
     <meta name="author" content="GenXYZ Lab" />
+    <meta name="application-name" content="GenXYZ Lab" />
     <meta
       name="keywords"
-      content="GenXYZ Lab documentation, GenXYZ Lab setup, Android Termux coding setup, GenXYZ Lab Windows install, offline coding app guide"
+      content="GenXYZ Lab documentation, GenXYZ Lab setup, install GenXYZ Lab Android, install GenXYZ Lab Windows, Termux compiler setup, offline coding app guide"
     />
 
     <meta property="og:site_name" content="GenXYZ Lab" />
-    <meta property="og:title" content="GenXYZ Lab Documentation" />
+    <meta property="og:title" content="GenXYZ Lab Docs — Setup Guide &amp; Feature Reference" />
     <meta
       property="og:description"
-      content="Install GenXYZ Lab correctly, learn the recommended workflow, and explore every current app feature."
+      content="Set up GenXYZ Lab on Android or Windows, learn the recommended workflow, and browse every feature in the current release."
     />
     <meta property="og:type" content="article" />
-    <meta property="og:url" content="%VITE_SITE_URL%/docs/" />
-    <meta property="og:image" content="%VITE_SITE_URL%/assets/og-cover-v2.png" />
-    <meta property="og:image:alt" content="GenXYZ Lab documentation for Android and Windows" />
+    <meta property="og:url" content="%SITE_URL%/docs/" />
+    <meta property="og:image" content="%SITE_URL%/assets/og-cover-v3.png" />
+    <meta property="og:image:secure_url" content="%SITE_URL%/assets/og-cover-v3.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="GenXYZ Lab — Learn to code. Build real projects. A code editor running a Python lesson, with 70 courses, 129 templates, and 30+ tools." />
+    <meta property="og:locale" content="en_US" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="GenXYZ Lab Documentation" />
+    <meta name="twitter:title" content="GenXYZ Lab Docs — Setup Guide &amp; Feature Reference" />
     <meta
       name="twitter:description"
-      content="Official setup, user workflow, complete features, updates, backups, and troubleshooting."
+      content="Set up GenXYZ Lab on Android or Windows, learn the recommended workflow, and browse every feature in the current release."
     />
-    <meta name="twitter:image" content="%VITE_SITE_URL%/assets/og-cover-v2.png" />
+    <meta name="twitter:image" content="%SITE_URL%/assets/og-cover-v3.png" />
+    <meta name="twitter:image:alt" content="GenXYZ Lab — Learn to code. Build real projects. A code editor running a Python lesson, with 70 courses, 129 templates, and 30+ tools." />
 
     <link rel="icon" href="/assets/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
@@ -62,55 +59,46 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "TechArticle",
-        "headline": "GenXYZ Lab Documentation",
-        "description": "Official setup, user guide, complete feature reference, update instructions, backup guidance, and troubleshooting for GenXYZ Lab.",
-        "url": "%VITE_SITE_URL%/docs/",
-        "image": "%VITE_SITE_URL%/assets/og-cover-v2.png",
-        "author": {
-          "@type": "Organization",
-          "name": "GenXYZ Lab"
-        },
-        "about": {
-          "@type": "SoftwareApplication",
-          "name": "GenXYZ Lab",
-          "softwareVersion": "%VITE_APP_VERSION%",
-          "operatingSystem": "Android 8.0+, Windows 10, Windows 11"
-        }
+        "@graph": [
+          {
+            "@type": "TechArticle",
+            "@id": "%SITE_URL%/docs/#article",
+            "headline": "GenXYZ Lab Docs — Setup Guide & Feature Reference",
+            "description": "Install GenXYZ Lab on Android or Windows, set up compilers with Termux or your PATH, follow the Learn, Practice, Build workflow, and fix common problems.",
+            "url": "%SITE_URL%/docs/",
+            "mainEntityOfPage": "%SITE_URL%/docs/",
+            "image": "%SITE_URL%/assets/og-cover-v3.png",
+            "dateModified": "%RELEASE_DATE%",
+            "inLanguage": "en",
+            "author": { "@type": "Organization", "name": "GenXYZ Lab", "url": "%SITE_URL%/" },
+            "publisher": {
+              "@type": "Organization",
+              "name": "GenXYZ Lab",
+              "url": "%SITE_URL%/",
+              "logo": { "@type": "ImageObject", "url": "%SITE_URL%/assets/logo.png" }
+            },
+            "about": {
+              "@type": "SoftwareApplication",
+              "name": "GenXYZ Lab",
+              "url": "%SITE_URL%/",
+              "applicationCategory": "EducationalApplication",
+              "softwareVersion": "%RELEASE_VERSION%",
+              "operatingSystem": "Android 8.0+, Windows 10, Windows 11"
+            }
+          },
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "GenXYZ Lab", "item": "%SITE_URL%/" },
+              { "@type": "ListItem", "position": 2, "name": "Documentation", "item": "%SITE_URL%/docs/" }
+            ]
+          }
+        ]
       }
     </script>
   </head>
   <body>
-    <div id="app">
-      <main>
-        <h1>GenXYZ Lab documentation</h1>
-        <p>
-          Official setup and user guide for the GenXYZ Lab Android and Windows
-          application. Learn how to install the app, configure local compilers,
-          use offline courses, open templates, manage project files, and work with
-          the AI and machine-learning studios.
-        </p>
-        <h2>Android setup</h2>
-        <p>
-          Install the official ARM64 APK on Android 8 or newer. Install the current
-          F-Droid version of Termux when you want local compilers, terminals,
-          development servers, or framework toolchains.
-        </p>
-        <h2>Windows setup</h2>
-        <p>
-          Extract the complete Windows x64 ZIP before launching GenXYZ Lab. Keep
-          the executable, libraries, and data folders together, then use Compiler
-          Manager to detect development tools available on PATH.
-        </p>
-        <h2>Features</h2>
-        <p>
-          Explore 70 offline courses, 129 working templates, Code Practice,
-          AI Playground, Dataset Studio, Training Studio, File Explorer, API and
-          database tools, ready-made vision projects, and 13 offline academic solvers.
-        </p>
-        <p><a href="/">Visit the GenXYZ Lab website</a></p>
-      </main>
-    </div>
+    <div id="app"><!--app-html--></div>
     <script type="module" src="/src/docs-main.js"></script>
   </body>
 </html>

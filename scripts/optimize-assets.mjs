@@ -14,7 +14,7 @@
  */
 import { access, mkdir, readdir, stat } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import sharp from 'sharp'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -90,15 +90,25 @@ async function roundedIcon(file, size, radiusRatio) {
   return pipeline.png({ compressionLevel: 9 }).toBuffer()
 }
 
+// Mirrors the light theme tokens in src/assets/main.css so the social card
+// looks like the site it links to.
 const BRAND = {
-  ink: '#020617',
-  panel: '#0b1120',
-  indigo: '#6366f1',
-  violet: '#8b5cf6',
-  cyan: '#22d3ee',
-  text: '#f8fafc',
-  muted: '#94a3b8',
+  bg: '#ffffff',
+  subtle: '#f8fafc',
+  border: '#e2e8f0',
+  fg: '#0f172a',
+  muted: '#475569',
+  faint: '#64748b',
+  brand: '#4f46e5',
+  keyword: '#7c3aed',
+  string: '#047857',
+  fn: '#2563eb',
+  number: '#c2410c',
+  success: '#047857',
 }
+
+const SANS = 'Inter, Segoe UI, Helvetica Neue, Arial, sans-serif'
+const MONO = 'Consolas, Menlo, DejaVu Sans Mono, monospace'
 
 async function icons(source, radiusRatio) {
   // 256 is the largest size the mark is ever displayed at (the OG cover
@@ -125,81 +135,116 @@ async function icons(source, radiusRatio) {
 }
 
 /**
- * Social preview card. Built as an SVG so the layout is declarative, then
- * rasterised — link unfurlers (Slack, Discord, iMessage, X) do not render SVG,
- * so this must ship as a PNG at exactly 1200x630.
+ * Social preview card, laid out like the site's hero: the headline and key
+ * numbers on the left, the code-editor preview on the right. Built as an SVG
+ * so the layout is declarative, then rasterised — link unfurlers (Slack,
+ * Discord, iMessage, X) do not render SVG, so this must ship as a PNG at
+ * exactly 1200x630. The output name is versioned because link previews cache
+ * images by URL; bump it (and the meta tags) whenever the design changes.
  */
+export const OG_COVER_FILE = 'og-cover-v3.png'
+
 async function ogCover(source, radiusRatio) {
-  const logo = await roundedIcon(source, 148, radiusRatio)
+  const logo = await roundedIcon(source, 64, radiusRatio)
+
+  const code = [
+    [['comment', '# Lesson 4 · Lists and functions']],
+    [['keyword', 'def '], ['fn', 'average'], ['plain', '(scores):']],
+    [['plain', '    '], ['keyword', 'return '], ['fn', 'sum'], ['plain', '(scores) / '], ['fn', 'len'], ['plain', '(scores)']],
+    [],
+    [['plain', 'grades = ['], ['number', '92'], ['plain', ', '], ['number', '85'], ['plain', ', '], ['number', '78'], ['plain', ', '], ['number', '96'], ['plain', ']']],
+    [['fn', 'print'], ['plain', '(average(grades))']],
+  ]
+  const tokenColor = {
+    comment: BRAND.faint,
+    keyword: BRAND.keyword,
+    fn: BRAND.fn,
+    number: BRAND.number,
+    plain: BRAND.fg,
+  }
+  const escape = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  const codeLines = code
+    .map((line, index) => {
+      const y = 248 + index * 30
+      const spans = line
+        .map(([type, text]) => `<tspan fill="${tokenColor[type]}"${type === 'comment' ? ' font-style="italic"' : ''}>${escape(text)}</tspan>`)
+        .join('')
+      return `<text x="712" y="${y}" font-size="16" fill="${BRAND.faint}" fill-opacity="0.6">${index + 1}</text>
+    <text x="740" y="${y}" font-size="16" xml:space="preserve">${spans}</text>`
+    })
+    .join('\n    ')
+
+  const stats = [
+    ['70', 'offline courses'],
+    ['129', 'templates'],
+    ['30+', 'tools'],
+  ]
+  const statBlocks = stats
+    .map(([value, label], index) => {
+      const x = 80 + index * 180
+      return `<text x="${x}" y="476" font-size="44" font-weight="700" fill="${BRAND.fg}" letter-spacing="-1">${value}</text>
+    <text x="${x}" y="508" font-size="20" fill="${BRAND.faint}">${label}</text>`
+    })
+    .join('\n    ')
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="${BRAND.panel}"/>
-      <stop offset="100%" stop-color="${BRAND.ink}"/>
-    </linearGradient>
-    <radialGradient id="glowA" cx="0.78" cy="0.24" r="0.55">
-      <stop offset="0%" stop-color="${BRAND.indigo}" stop-opacity="0.42"/>
-      <stop offset="100%" stop-color="${BRAND.indigo}" stop-opacity="0"/>
+    <radialGradient id="glow" cx="0.9" cy="0" r="0.75">
+      <stop offset="0%" stop-color="${BRAND.brand}" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="${BRAND.brand}" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glowB" cx="0.22" cy="0.88" r="0.5">
-      <stop offset="0%" stop-color="${BRAND.cyan}" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="${BRAND.cyan}" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="${BRAND.indigo}"/>
-      <stop offset="55%" stop-color="${BRAND.violet}"/>
-      <stop offset="100%" stop-color="${BRAND.cyan}"/>
-    </linearGradient>
-    <pattern id="grid" width="56" height="56" patternUnits="userSpaceOnUse">
-      <path d="M56 0H0V56" fill="none" stroke="#64748b" stroke-opacity="0.08" stroke-width="1"/>
-    </pattern>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#0f172a" flood-opacity="0.14"/>
+    </filter>
   </defs>
 
-  <rect width="1200" height="630" fill="url(#sky)"/>
-  <rect width="1200" height="630" fill="url(#grid)"/>
-  <rect width="1200" height="630" fill="url(#glowA)"/>
-  <rect width="1200" height="630" fill="url(#glowB)"/>
+  <rect width="1200" height="630" fill="${BRAND.bg}"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
 
-  <!-- Orbit motif, echoing the site's connected learning-system visual -->
-  <g transform="translate(940 315)" fill="none" stroke-width="1.5">
-    <ellipse rx="196" ry="74" stroke="${BRAND.indigo}" stroke-opacity="0.34" transform="rotate(-24)"/>
-    <ellipse rx="248" ry="94" stroke="${BRAND.violet}" stroke-opacity="0.26" transform="rotate(18)"/>
-    <ellipse rx="300" ry="112" stroke="${BRAND.cyan}" stroke-opacity="0.18" transform="rotate(-52)"/>
-    <circle r="6" cx="182" cy="-52" fill="${BRAND.cyan}" stroke="none" opacity="0.9"/>
-    <circle r="5" cx="-210" cy="62" fill="${BRAND.violet}" stroke="none" opacity="0.8"/>
-    <circle r="4" cx="96" cy="104" fill="${BRAND.indigo}" stroke="none" opacity="0.75"/>
+  <g font-family="${SANS}">
+    <text x="164" y="103" font-size="30" font-weight="700" fill="${BRAND.fg}" letter-spacing="-0.5">GenXYZ Lab</text>
+
+    <text x="80" y="246" font-size="60" font-weight="700" fill="${BRAND.fg}" letter-spacing="-2">Learn to code.</text>
+    <text x="80" y="318" font-size="60" font-weight="700" fill="${BRAND.brand}" letter-spacing="-2">Build real projects.</text>
+    <text x="80" y="374" font-size="24" fill="${BRAND.muted}">Free for Android and Windows · Works offline</text>
+
+    ${statBlocks}
+
+    <rect x="80" y="550" width="132" height="40" rx="20" fill="${BRAND.brand}" fill-opacity="0.1"/>
+    <text x="146" y="576" font-size="17" font-weight="600" fill="${BRAND.brand}" text-anchor="middle">Android</text>
+    <rect x="224" y="550" width="132" height="40" rx="20" fill="${BRAND.brand}" fill-opacity="0.1"/>
+    <text x="290" y="576" font-size="17" font-weight="600" fill="${BRAND.brand}" text-anchor="middle">Windows</text>
+    <rect x="368" y="550" width="96" height="40" rx="20" fill="${BRAND.success}" fill-opacity="0.1"/>
+    <text x="416" y="576" font-size="17" font-weight="600" fill="${BRAND.success}" text-anchor="middle">Free</text>
   </g>
 
-  <rect x="86" y="214" width="54" height="3" rx="1.5" fill="url(#accent)"/>
+  <!-- Code editor preview, as in the site's hero -->
+  <g filter="url(#shadow)">
+    <rect x="690" y="150" width="440" height="390" rx="16" fill="${BRAND.bg}" stroke="${BRAND.border}"/>
+  </g>
+  <path d="M706 150h408a16 16 0 0 1 16 16v32H690v-32a16 16 0 0 1 16-16z" fill="${BRAND.subtle}"/>
+  <line x1="690" y1="198" x2="1130" y2="198" stroke="${BRAND.border}"/>
+  <circle cx="716" cy="174" r="6" fill="#cbd5e1"/>
+  <circle cx="736" cy="174" r="6" fill="#cbd5e1"/>
+  <circle cx="756" cy="174" r="6" fill="#cbd5e1"/>
+  <text x="780" y="180" font-family="${SANS}" font-size="15" font-weight="500" fill="${BRAND.faint}">main.py</text>
 
-  <text x="86" y="300" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
-        font-size="66" font-weight="700" fill="${BRAND.text}" letter-spacing="-2.4">GenXYZ Lab</text>
-  <text x="86" y="358" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
-        font-size="32" font-weight="600" fill="#c7d2fe" letter-spacing="-0.6">Learn. Practice. Build. Get certified.</text>
-
-  <!-- The numbers are the strongest thing this card can say. A shared link is
-       often the only impression someone gets, so it leads with substance
-       rather than repeating the tagline in smaller type. -->
-  <g font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
-    <text x="86" y="418" font-size="25" font-weight="700" fill="${BRAND.text}">70 free offline courses</text>
-    <text x="86" y="454" font-size="21" font-weight="400" fill="${BRAND.muted}">129 templates · 7 developer tools · 20+ frameworks · 30+ games</text>
+  <g font-family="${MONO}">
+    ${codeLines}
   </g>
 
-  <g font-family="Consolas, Menlo, monospace" font-size="18" font-weight="700" letter-spacing="2.4">
-    <rect x="86" y="500" width="150" height="42" rx="21" fill="#6366f1" fill-opacity="0.14" stroke="${BRAND.indigo}" stroke-opacity="0.4"/>
-    <text x="112" y="527" fill="#a5b4fc">ANDROID</text>
-    <rect x="250" y="500" width="150" height="42" rx="21" fill="#22d3ee" fill-opacity="0.12" stroke="${BRAND.cyan}" stroke-opacity="0.36"/>
-    <text x="276" y="527" fill="#67e8f9">WINDOWS</text>
-    <rect x="414" y="500" width="96" height="42" rx="21" fill="#34d399" fill-opacity="0.12" stroke="#34d399" stroke-opacity="0.36"/>
-    <text x="446" y="527" fill="#6ee7b7">FREE</text>
-  </g>
+  <line x1="690" y1="452" x2="1130" y2="452" stroke="${BRAND.border}"/>
+  <path d="M690 452h440v72a16 16 0 0 1-16 16H706a16 16 0 0 1-16-16z" fill="${BRAND.subtle}"/>
+  <text x="712" y="486" font-family="${MONO}" font-size="16" fill="${BRAND.fg}">87.75</text>
+  <text x="712" y="516" font-family="${MONO}" font-size="16" fill="${BRAND.success}">✓ Finished in 0.12s</text>
+  <rect x="1050" y="470" width="58" height="28" rx="6" fill="${BRAND.brand}"/>
+  <text x="1079" y="489" font-family="${SANS}" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle">Run</text>
 </svg>`
 
   await sharp(Buffer.from(svg))
-    .composite([{ input: logo, top: 52, left: 86 }])
+    .composite([{ input: logo, top: 56, left: 80 }])
     .png({ compressionLevel: 9 })
-    .toFile(join(OUT, 'og-cover-v2.png'))
+    .toFile(join(OUT, OG_COVER_FILE))
 }
 
 async function report() {
@@ -212,16 +257,24 @@ async function report() {
   console.log(rows.join('\n'))
 }
 
-await mkdir(OUT, { recursive: true })
+async function main() {
+  await mkdir(OUT, { recursive: true })
 
-const appIcon = await resolveAppIcon()
-const radiusRatio = await measureCornerRadiusRatio(appIcon)
-console.log(`App icon: ${appIcon}`)
-console.log(`Corner radius: ${(radiusRatio * 100).toFixed(1)}% of width`)
+  const appIcon = await resolveAppIcon()
+  const radiusRatio = await measureCornerRadiusRatio(appIcon)
+  console.log(`App icon: ${appIcon}`)
+  console.log(`Corner radius: ${(radiusRatio * 100).toFixed(1)}% of width`)
 
-console.log('Generating icons…')
-await icons(appIcon, radiusRatio)
-console.log('Generating social cover…')
-await ogCover(appIcon, radiusRatio)
-console.log('\npublic/assets:')
-await report()
+  console.log('Generating icons…')
+  await icons(appIcon, radiusRatio)
+  console.log('Generating social cover…')
+  await ogCover(appIcon, radiusRatio)
+  console.log('\npublic/assets:')
+  await report()
+}
+
+export { icons, measureCornerRadiusRatio, ogCover }
+
+// `npm run assets` runs everything; importing this file runs nothing, so a
+// single output can be regenerated on its own.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) await main()

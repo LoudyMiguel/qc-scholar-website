@@ -17,7 +17,9 @@ application.
 
 ```text
 website/
-├─ scripts/optimize-assets.mjs    # app icon -> favicon, logo, social card
+├─ scripts/
+│  ├─ optimize-assets.mjs         # app icon -> favicon, logo, social card
+│  └─ prerender.mjs               # writes rendered pages into dist/
 ├─ public/
 │  ├─ assets/                     # generated icons and social card only
 │  ├─ theme-init.js               # applies light/dark before first paint
@@ -41,7 +43,8 @@ website/
 │  ├─ config/site.js              # releases, platform detection, site origin
 │  ├─ services/firebase.js
 │  ├─ App.vue  DocsApp.vue  docs-content.js
-│  └─ main.js  docs-main.js
+│  ├─ entry-server.js             # build-time render of both pages
+│  └─ main.js  docs-main.js       # hydrate the pre-rendered markup
 ```
 
 ## Run locally
@@ -118,6 +121,31 @@ cards share one manifest request and one tracked-download flow.
 Release binaries are never committed to the website. Every stable GitHub
 Release must upload assets named exactly `GenXYZ-Lab.apk` and
 `GenXYZ-Lab-Windows.zip`; the Git tag carries the version.
+
+## Pre-rendering and SEO
+
+`npm run build` runs three steps: the normal browser build, a Node build of
+`src/entry-server.js`, and `scripts/prerender.mjs`, which renders both pages
+and writes the markup into `dist/index.html` and `dist/docs/index.html` in
+place of their `<!--app-html-->` mount points. The browser then hydrates that
+markup (`createSSRApp` in `main.js` / `docs-main.js`) instead of building the
+page from scratch.
+
+That gives two things at once. The first paint is the real page, so there is
+no fallback screen flashing before the app loads, and search engines, link
+previews, and AI crawlers read the complete content without running
+JavaScript. A render failure fails the build on purpose.
+
+Code that depends on the visitor (theme, platform, live Firebase data) must
+not change the first render, or hydration will not match the pre-rendered
+HTML. Read such state in `onMounted`, or drive it from CSS: the theme toggle
+picks its icon from the `dark` class that `theme-init.js` sets before paint.
+
+SEO placeholders in the HTML entries are filled at build time by the
+`htmlMetadata` plugin in `vite.config.js`: `%SITE_URL%` from `VITE_SITE_URL`
+(defaulting to the production origin) and `%RELEASE_VERSION%`,
+`%RELEASE_DATE%`, `%RELEASE_NOTES_URL%` from `release-manifest.json`, so the
+structured data always names the shipped release.
 
 ## Themes
 
@@ -242,7 +270,16 @@ real transparency, since the source PNG has no alpha.
 | `logo.png` (256²) | Header and footer mark |
 | `apple-touch-icon.png` (180²) | iOS home screen |
 | `favicon.png` (48²) | Browser tab |
-| `og-cover-v2.png` (1200×630) | Versioned social link preview with current course/template totals |
+| `og-cover-v3.png` (1200×630) | Social link preview in the site's light design: hero headline, key numbers, editor preview |
+
+The social card's file name is versioned because link previews cache images
+by URL. When its design changes, bump `OG_COVER_FILE` in the script and the
+`og:image`/`twitter:image` tags in both HTML entries. The script's generators
+are importable, so one output can be regenerated alone:
+
+```bash
+node -e "const m = await import('./scripts/optimize-assets.mjs'); const icon = '../assets/images/app_ic.png'; await m.ogCover(icon, await m.measureCornerRadiusRatio(icon))"
+```
 
 ## Deploy to Cloudflare Pages
 

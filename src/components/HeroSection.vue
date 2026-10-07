@@ -51,9 +51,14 @@ const assurances = ['Free, no subscription', 'No account required', 'Works offli
           </a>
         </div>
 
-        <p v-if="recommended" class="mt-3 text-sm text-fg-subtle">
-          v{{ recommended.version }} · {{ recommended.fileKind }} · {{ recommended.size }} ·
-          <a href="#download" class="text-link font-medium">Other platforms</a>
+        <!-- Always rendered so the detected build's details, which appear only
+             after hydration, fill this line instead of pushing content down. -->
+        <p class="mt-3 text-sm text-fg-subtle">
+          <template v-if="recommended">
+            v{{ recommended.version }} · {{ recommended.fileKind }} · {{ recommended.size }} ·
+            <a href="#download" class="text-link font-medium">Other platforms</a>
+          </template>
+          <template v-else>Available for Android and Windows</template>
         </p>
 
         <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-fg-muted" aria-label="Highlights">

@@ -23,6 +23,9 @@ const { isDark } = useTheme()
 const section = ref(null)
 const mapElement = ref(null)
 const status = ref('idle') // idle | loading | ready | failed
+// The pre-rendered HTML cannot know the visitor's theme. Leaflet loads only
+// after mount anyway, so the dark tile filter waits for hydration too.
+const mounted = ref(false)
 
 // The OpenStreetMap Foundation's standard tiles: free, no API key, open data.
 // Their usage policy asks for visible attribution and a normal browser
@@ -197,6 +200,7 @@ watch(isDark, () => {
 })
 
 onMounted(() => {
+  mounted.value = true
   gateObserver = new IntersectionObserver(
     ([entry]) => {
       if (!entry.isIntersecting) return
@@ -252,7 +256,7 @@ onBeforeUnmount(() => {
         <div
           ref="mapElement"
           class="download-map h-[380px] w-full sm:h-[480px] lg:h-[560px]"
-          :class="{ 'is-dark': isDark }"
+          :class="{ 'is-dark': mounted && isDark }"
           role="region"
           aria-label="Map of approximate download locations. Use the list below the map for the same data."
         />

@@ -40,6 +40,6 @@ export default [
     },
   },
   {
-    ignores: ['dist/**', 'node_modules/**', 'assets-source/**', '.tmp-ui/**'],
+    ignores: ['dist/**', 'dist-ssr/**', 'node_modules/**', 'assets-source/**', '.tmp-ui/**'],
   },
 ]

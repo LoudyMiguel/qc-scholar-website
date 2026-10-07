@@ -60,6 +60,38 @@ function seoFiles(siteUrl) {
   }
 }
 
+/**
+ * Fills the SEO placeholders in every HTML entry from one source each:
+ * `%SITE_URL%` from VITE_SITE_URL (default: the production origin), and the
+ * release fields from release-manifest.json. Vite's own `%VITE_*%` syntax
+ * left the literal placeholder in the page whenever a deployment lacked the
+ * variable (preview builds shipped `href="%VITE_SITE_URL%/"` as canonical),
+ * and a stale VITE_APP_VERSION told search engines the app was 2.1.0 after
+ * 3.0.0 shipped.
+ */
+function htmlMetadata(siteUrl) {
+  const manifest = JSON.parse(
+    readFileSync(resolve(process.cwd(), 'release-manifest.json'), 'utf8'),
+  )
+  const release = manifest.android || {}
+  const values = {
+    '%SITE_URL%': siteUrl.replace(/\/+$/, ''),
+    '%RELEASE_VERSION%': release.version || '',
+    '%RELEASE_DATE%': release.releaseDate || '',
+    '%RELEASE_NOTES_URL%': release.releaseNotesUrl || '',
+  }
+
+  return {
+    name: 'genxyz-html-metadata',
+    transformIndexHtml(html) {
+      return Object.entries(values).reduce(
+        (output, [placeholder, value]) => output.replaceAll(placeholder, value),
+        html,
+      )
+    },
+  }
+}
+
 const downloadPaths = {
   android: '/latest.apk',
   windows: '/latest-windows.zip',
@@ -123,12 +155,19 @@ function releaseManifest(env) {
   }
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, isSsrBuild }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   const siteUrl = env.VITE_SITE_URL || 'https://genxyzlab.org'
 
+  // `vite build --ssr src/entry-server.js` compiles the pages for the Node
+  // prerender step only; it needs none of the browser bundle's entries,
+  // chunking, or generated SEO files.
+  if (isSsrBuild) {
+    return { plugins: [vue()] }
+  }
+
   return {
-    plugins: [vue(), seoFiles(siteUrl), releaseManifest(env)],
+    plugins: [vue(), htmlMetadata(siteUrl), seoFiles(siteUrl), releaseManifest(env)],
     build: {
       target: 'es2020',
       cssCodeSplit: true,

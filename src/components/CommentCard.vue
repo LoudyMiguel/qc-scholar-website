@@ -20,7 +20,7 @@ const initials = computed(() => {
     .trim()
     .split(/\s+/)
     .slice(0, 2)
-  return words.map((word) => word[0]?.toUpperCase()).join('') || 'QS'
+  return words.map((word) => word[0]?.toUpperCase()).join('') || 'AB'
 })
 
 const createdLabel = computed(() => {
@@ -61,34 +61,31 @@ const reactionButtons = [
 </script>
 
 <template>
-  <article class="rounded-2xl border border-slate-800 bg-slate-950/45 p-4 transition hover:border-slate-700 sm:p-5">
+  <article class="rounded-lg border border-line bg-surface p-4 sm:p-5">
     <header class="flex items-center gap-3">
-      <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-indigo-400/20 to-violet-400/20 text-xs font-bold text-indigo-200 ring-1 ring-inset ring-indigo-300/10">
+      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand/10 text-xs font-semibold text-brand-text" aria-hidden="true">
         {{ initials }}
       </span>
       <div class="min-w-0">
-        <p class="truncate text-sm font-bold text-slate-100">{{ comment.authorName }}</p>
-        <time :datetime="createdIso" :title="absoluteDate" class="mt-1 block text-[11px] font-semibold text-slate-400">
+        <p class="truncate text-sm font-semibold text-fg">{{ comment.authorName }}</p>
+        <time :datetime="createdIso" :title="absoluteDate" class="block text-xs text-fg-subtle">
           {{ createdLabel }}
         </time>
       </div>
-      <span class="ml-auto rounded-full border border-slate-800 bg-slate-900 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
-        Community
-      </span>
     </header>
 
-    <p class="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-slate-300">{{ comment.body }}</p>
+    <p class="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-fg-muted">{{ comment.body }}</p>
 
-    <footer class="mt-5 flex flex-wrap gap-2 border-t border-slate-800/80 pt-4" aria-label="Comment reactions">
+    <footer class="mt-4 flex flex-wrap gap-2" aria-label="Comment reactions">
       <button
         v-for="reaction in reactionButtons"
         :key="reaction.key"
         type="button"
-        class="inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 text-[11px] font-bold transition disabled:cursor-wait disabled:opacity-60"
+        class="inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors duration-150 disabled:cursor-wait disabled:opacity-60"
         :class="
           comment.reactions[reaction.key].active
-            ? 'border-indigo-400/30 bg-indigo-400/10 text-indigo-200'
-            : 'border-slate-800 bg-slate-900/60 text-slate-500 hover:border-slate-700 hover:text-slate-300'
+            ? 'border-brand/40 bg-brand/10 text-brand-text'
+            : 'border-line text-fg-muted hover:border-line-strong hover:text-fg'
         "
         :aria-pressed="comment.reactions[reaction.key].active"
         :aria-label="`${reaction.label}: ${comment.reactions[reaction.key].count}`"
@@ -102,7 +99,7 @@ const reactionButtons = [
           aria-hidden="true"
         />
         {{ reaction.label }}
-        <span class="text-[10px] opacity-70">{{ comment.reactions[reaction.key].count }}</span>
+        <span class="tabular-nums opacity-80">{{ comment.reactions[reaction.key].count }}</span>
       </button>
     </footer>
   </article>

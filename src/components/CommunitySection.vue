@@ -1,12 +1,13 @@
 <script setup>
 import {
   Bug,
-  CheckCircle2,
+  CircleAlert,
+  CircleCheck,
   LoaderCircle,
   LockKeyhole,
   MessageCircle,
+  MessagesSquare,
   Send,
-  Sparkles,
   WifiOff,
 } from '@lucide/vue'
 import { nextTick, onMounted, reactive, ref } from 'vue'
@@ -134,32 +135,19 @@ async function handleTabKeydown(event) {
 </script>
 
 <template>
-  <section id="community" class="relative overflow-hidden py-24 sm:py-28">
-    <img
-      src="/assets/community-constellation.webp"
-      alt=""
-      width="1600"
-      height="686"
-      loading="lazy"
-      decoding="async"
-      class="community-art pointer-events-none absolute left-1/2 top-8 h-[430px] w-[min(1400px,120vw)] max-w-none -translate-x-1/2 object-cover object-center opacity-30"
-      aria-hidden="true"
-    />
-    <div class="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-gradient-to-b from-slate-950/30 via-slate-950/65 to-slate-950" aria-hidden="true" />
-    <div class="pointer-events-none absolute bottom-0 left-1/2 h-[30rem] w-[46rem] -translate-x-1/2 rounded-full bg-violet-600/10 blur-[130px]" aria-hidden="true" />
-
-    <div class="site-container relative">
-      <div class="mx-auto max-w-3xl text-center" data-reveal>
-        <span class="eyebrow">Built in public</span>
-        <h2 class="section-heading mt-6">Help make the next release better.</h2>
-        <p class="section-copy mt-5">
-          Share an idea, help another learner, or send a bug report that stays out of the public conversation.
+  <section id="community" class="section border-t border-line bg-subtle">
+    <div class="site-container">
+      <div class="mx-auto max-w-2xl text-center">
+        <p class="eyebrow">Community</p>
+        <h2 class="section-title mt-3">Help shape the next release</h2>
+        <p class="section-lead mt-4">
+          Share an idea, help another learner, or send a private bug report.
         </p>
       </div>
 
-      <div class="mt-14 grid items-start gap-5 lg:grid-cols-[.82fr_1.18fr]">
-        <div class="glass-panel overflow-hidden rounded-3xl" data-reveal="left">
-          <div class="grid grid-cols-2 border-b border-slate-800 p-2" role="tablist" aria-label="Community contribution type">
+      <div class="mt-12 grid items-start gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div class="card overflow-hidden">
+          <div class="grid grid-cols-2 gap-1 border-b border-line bg-subtle p-1.5" role="tablist" aria-label="Community contribution type">
             <button
               ref="discussionTab"
               id="discussion-tab"
@@ -168,13 +156,13 @@ async function handleTabKeydown(event) {
               :aria-selected="activeTab === 'discussion'"
               :tabindex="activeTab === 'discussion' ? 0 : -1"
               aria-controls="discussion-panel"
-              class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-xs font-bold transition"
-              :class="activeTab === 'discussion' ? 'bg-indigo-400/10 text-indigo-200' : 'text-slate-500 hover:text-slate-300'"
+              class="tab"
+              :class="{ 'is-active': activeTab === 'discussion' }"
               @click="activeTab = 'discussion'; statusMessage = ''"
               @keydown="handleTabKeydown"
             >
               <MessageCircle :size="16" aria-hidden="true" />
-              Join discussion
+              Comment
             </button>
             <button
               ref="bugTab"
@@ -184,8 +172,8 @@ async function handleTabKeydown(event) {
               :aria-selected="activeTab === 'bug'"
               :tabindex="activeTab === 'bug' ? 0 : -1"
               aria-controls="bug-panel"
-              class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-xs font-bold transition"
-              :class="activeTab === 'bug' ? 'bg-rose-400/10 text-rose-200' : 'text-slate-500 hover:text-slate-300'"
+              class="tab"
+              :class="{ 'is-active': activeTab === 'bug' }"
               @click="activeTab = 'bug'; statusMessage = ''"
               @keydown="handleTabKeydown"
             >
@@ -194,11 +182,11 @@ async function handleTabKeydown(event) {
             </button>
           </div>
 
-          <div v-if="!firebaseReady" class="m-5 flex gap-3 rounded-2xl border border-amber-300/15 bg-amber-300/[0.06] p-4 text-amber-100/70">
-            <WifiOff :size="19" class="mt-0.5 shrink-0 text-amber-300" aria-hidden="true" />
+          <div v-if="!firebaseReady" class="mx-5 mt-5 flex gap-3 rounded-lg border border-warning/30 bg-warning/10 p-4 sm:mx-6">
+            <WifiOff :size="18" class="mt-0.5 shrink-0 text-warning-text" aria-hidden="true" />
             <div>
-              <p class="text-xs font-bold text-amber-100">Community preview mode</p>
-              <p class="mt-1 text-[11px] leading-5">Add the Firebase values from <code>.env.example</code> to enable live posts and reactions.</p>
+              <p class="text-sm font-semibold text-fg">Community preview mode</p>
+              <p class="mt-1 text-sm text-fg-muted">Add the Firebase values from <code class="font-mono text-xs">.env.example</code> to enable live posts and reactions.</p>
             </div>
           </div>
 
@@ -211,7 +199,7 @@ async function handleTabKeydown(event) {
             @submit.prevent="submitComment"
           >
             <div>
-              <label for="comment-name" class="field-label">Display name <span class="normal-case tracking-normal text-slate-600">(optional)</span></label>
+              <label for="comment-name" class="field-label">Display name <span class="font-normal text-fg-subtle">(optional)</span></label>
               <input
                 id="comment-name"
                 v-model="commentForm.authorName"
@@ -223,14 +211,14 @@ async function handleTabKeydown(event) {
               />
             </div>
             <div class="mt-4">
-              <div class="flex items-end justify-between">
+              <div class="flex items-baseline justify-between">
                 <label for="comment-body" class="field-label">Comment or idea</label>
-                <span class="mb-2 text-[11px] text-slate-400">{{ commentForm.body.length }}/500</span>
+                <span class="text-xs text-fg-subtle">{{ commentForm.body.length }}/500</span>
               </div>
               <textarea
                 id="comment-body"
                 v-model="commentForm.body"
-                class="field-control min-h-36 resize-y"
+                class="field-control min-h-32 resize-y"
                 minlength="3"
                 maxlength="500"
                 required
@@ -238,13 +226,13 @@ async function handleTabKeydown(event) {
                 :disabled="!firebaseReady || submitting"
               />
             </div>
-            <button type="submit" class="button-primary mt-5 w-full" :disabled="!firebaseReady || submitting || commentForm.body.trim().length < 3">
+            <button type="submit" class="btn btn-primary mt-5 w-full" :disabled="!firebaseReady || submitting || commentForm.body.trim().length < 3">
               <LoaderCircle v-if="submitting" :size="17" class="animate-spin" aria-hidden="true" />
               <Send v-else :size="17" aria-hidden="true" />
               {{ submitting ? 'Publishing…' : 'Publish comment' }}
             </button>
-            <p class="mt-3 text-center text-[11px] leading-5 text-slate-400">
-              Your display name and comment are public. One comment is allowed every two minutes. Please do not share secrets or personal data.
+            <p class="mt-3 text-center text-xs leading-relaxed text-fg-subtle">
+              Your display name and comment are public. One comment every two minutes. Please do not share secrets or personal data.
             </p>
           </form>
 
@@ -258,11 +246,11 @@ async function handleTabKeydown(event) {
           >
             <div class="grid gap-4 sm:grid-cols-2">
               <div>
-                <label for="bug-name" class="field-label">Your name <span class="normal-case tracking-normal text-slate-600">(optional)</span></label>
+                <label for="bug-name" class="field-label">Your name <span class="font-normal text-fg-subtle">(optional)</span></label>
                 <input id="bug-name" v-model="bugForm.name" class="field-control" maxlength="60" autocomplete="name" placeholder="Anonymous builder" :disabled="!firebaseReady || submitting" />
               </div>
               <div>
-                <label for="bug-contact" class="field-label">Contact <span class="normal-case tracking-normal text-slate-600">(optional)</span></label>
+                <label for="bug-contact" class="field-label">Contact <span class="font-normal text-fg-subtle">(optional)</span></label>
                 <input id="bug-contact" v-model="bugForm.contact" class="field-control" maxlength="160" autocomplete="email" placeholder="Email or handle" :disabled="!firebaseReady || submitting" />
               </div>
               <div>
@@ -276,19 +264,19 @@ async function handleTabKeydown(event) {
                 </select>
               </div>
               <div>
-                <label for="bug-device" class="field-label">Device <span class="normal-case tracking-normal text-slate-600">(optional)</span></label>
-                <input id="bug-device" v-model="bugForm.device" class="field-control" maxlength="120" placeholder="e.g. Pixel 8 (Android 15) or Windows 11" :disabled="!firebaseReady || submitting" />
+                <label for="bug-device" class="field-label">Device <span class="font-normal text-fg-subtle">(optional)</span></label>
+                <input id="bug-device" v-model="bugForm.device" class="field-control" maxlength="120" placeholder="e.g. Pixel 8, Windows 11" :disabled="!firebaseReady || submitting" />
               </div>
             </div>
             <div class="mt-4">
-              <div class="flex items-end justify-between">
+              <div class="flex items-baseline justify-between">
                 <label for="bug-description" class="field-label">What happened?</label>
-                <span class="mb-2 text-[11px] text-slate-400">{{ bugForm.description.length }}/2000</span>
+                <span class="text-xs text-fg-subtle">{{ bugForm.description.length }}/2000</span>
               </div>
               <textarea
                 id="bug-description"
                 v-model="bugForm.description"
-                class="field-control min-h-40 resize-y"
+                class="field-control min-h-36 resize-y"
                 minlength="5"
                 maxlength="2000"
                 required
@@ -296,45 +284,51 @@ async function handleTabKeydown(event) {
                 :disabled="!firebaseReady || submitting"
               />
             </div>
-            <button type="submit" class="button-primary mt-5 w-full" :disabled="!firebaseReady || submitting || bugForm.description.trim().length < 5">
+            <button type="submit" class="btn btn-primary mt-5 w-full" :disabled="!firebaseReady || submitting || bugForm.description.trim().length < 5">
               <LoaderCircle v-if="submitting" :size="17" class="animate-spin" aria-hidden="true" />
               <Bug v-else :size="17" aria-hidden="true" />
               {{ submitting ? 'Sending report…' : 'Send bug report' }}
             </button>
-            <p class="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] leading-5 text-slate-400">
+            <p class="mt-3 flex flex-wrap items-center justify-center gap-x-1.5 text-center text-xs leading-relaxed text-fg-subtle">
               <LockKeyhole :size="12" aria-hidden="true" />
-              Not shown publicly; readable by you and site administrators.
-              <a href="/privacy" class="font-bold text-indigo-300 hover:text-indigo-200">Privacy details</a>
+              Not shown publicly; readable only by you and site administrators.
+              <a href="/privacy" class="text-link">Privacy details</a>
             </p>
           </form>
 
-          <div v-if="statusMessage" class="mx-5 mb-5 flex gap-2 rounded-xl border p-3 text-[11px] leading-5" :class="statusTone === 'success' ? 'border-emerald-300/15 bg-emerald-300/[0.06] text-emerald-100/75' : 'border-rose-300/15 bg-rose-300/[0.06] text-rose-100/75'" role="status" aria-live="polite">
-            <CheckCircle2 v-if="statusTone === 'success'" :size="16" class="mt-0.5 shrink-0 text-emerald-300" aria-hidden="true" />
-            <Bug v-else :size="16" class="mt-0.5 shrink-0 text-rose-300" aria-hidden="true" />
+          <div
+            v-if="statusMessage"
+            class="mx-5 mb-5 flex gap-2.5 rounded-lg border p-3 text-sm sm:mx-6"
+            :class="statusTone === 'success' ? 'border-success/30 bg-success/10 text-fg' : 'border-danger/30 bg-danger/10 text-fg'"
+            role="status"
+            aria-live="polite"
+          >
+            <CircleCheck v-if="statusTone === 'success'" :size="17" class="mt-0.5 shrink-0 text-success-text" aria-hidden="true" />
+            <CircleAlert v-else :size="17" class="mt-0.5 shrink-0 text-danger-text" aria-hidden="true" />
             {{ statusMessage }}
           </div>
         </div>
 
-        <div class="glass-panel rounded-3xl p-5 sm:p-6" data-reveal="right">
-          <div class="flex items-center justify-between gap-4 border-b border-slate-800 pb-5">
-            <div>
-              <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Live community</p>
-              <h3 class="mt-2 font-display text-xl font-semibold text-white">Ideas from fellow builders</h3>
-            </div>
-            <span class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em]" :class="firebaseReady ? 'border-emerald-400/15 bg-emerald-400/[0.06] text-emerald-300' : 'border-slate-700 bg-slate-900 text-slate-500'">
-              <span class="h-1.5 w-1.5 rounded-full" :class="firebaseReady ? 'bg-emerald-400' : 'bg-slate-600'" />
-              {{ firebaseReady ? 'Realtime' : 'Preview' }}
+        <div class="card p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-4 border-b border-line pb-4">
+            <h3 class="text-lg font-semibold text-fg">Recent comments</h3>
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+              :class="firebaseReady ? 'bg-success/10 text-success-text' : 'bg-muted text-fg-subtle'"
+            >
+              <span class="h-1.5 w-1.5 rounded-full" :class="firebaseReady ? 'bg-success' : 'bg-fg-subtle'" aria-hidden="true" />
+              {{ firebaseReady ? 'Live' : 'Preview' }}
             </span>
           </div>
 
-          <div v-if="loading" class="grid min-h-72 place-items-center" aria-live="polite">
+          <div v-if="loading" class="grid min-h-64 place-items-center" aria-live="polite">
             <div class="text-center">
-              <LoaderCircle :size="25" class="mx-auto animate-spin text-indigo-300" aria-hidden="true" />
-              <p class="mt-3 text-xs text-slate-500">Loading the conversation…</p>
+              <LoaderCircle :size="24" class="mx-auto animate-spin text-brand-text" aria-hidden="true" />
+              <p class="mt-3 text-sm text-fg-subtle">Loading the conversation…</p>
             </div>
           </div>
 
-          <div v-else-if="comments.length" class="mt-5 space-y-3 pr-1 lg:max-h-[670px] lg:overflow-y-auto">
+          <div v-else-if="comments.length" class="comment-feed -mr-2 mt-4 space-y-3 pr-2 lg:max-h-[640px] lg:overflow-y-auto">
             <CommentCard
               v-for="comment in comments"
               :key="comment.id"
@@ -344,19 +338,19 @@ async function handleTabKeydown(event) {
             />
           </div>
 
-          <div v-else class="grid min-h-72 place-items-center rounded-2xl border border-dashed border-slate-800 bg-slate-950/30 p-8 text-center">
+          <div v-else class="mt-4 grid min-h-64 place-items-center rounded-lg border border-dashed border-line-strong p-8 text-center">
             <div>
-              <span class="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-indigo-400/10 text-indigo-300">
-                <Sparkles :size="21" aria-hidden="true" />
+              <span class="icon-tile mx-auto">
+                <MessagesSquare :size="20" aria-hidden="true" />
               </span>
-              <h4 class="mt-4 text-sm font-bold text-slate-200">The conversation starts here.</h4>
-              <p class="mt-2 max-w-xs text-xs leading-6 text-slate-500">
-                {{ firebaseReady ? 'Share the first thoughtful idea or setup tip.' : 'Connect Firebase to publish the first community comment.' }}
+              <h4 class="mt-4 text-sm font-semibold text-fg">No comments yet</h4>
+              <p class="mx-auto mt-1 max-w-xs text-sm text-fg-muted">
+                {{ firebaseReady ? 'Be the first to share an idea or a setup tip.' : 'Connect Firebase to publish the first community comment.' }}
               </p>
             </div>
           </div>
 
-          <p v-if="error" class="mt-4 text-[11px] leading-5 text-rose-300" role="status" aria-live="polite">{{ error }}</p>
+          <p v-if="error" class="mt-4 text-sm text-danger-text" role="status" aria-live="polite">{{ error }}</p>
         </div>
       </div>
     </div>
@@ -364,18 +358,15 @@ async function handleTabKeydown(event) {
 </template>
 
 <style scoped>
-.community-art {
-  filter: saturate(1.12) contrast(1.04);
-  mask-image: linear-gradient(to bottom, black 0%, black 64%, transparent 100%);
-  animation: constellation-drift 14s ease-in-out infinite alternate;
+.tab {
+  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md text-sm font-medium text-fg-muted transition-colors duration-150 hover:text-fg;
 }
 
-@keyframes constellation-drift {
-  from {
-    transform: translateX(-50%) scale(1.01);
-  }
-  to {
-    transform: translateX(-50%) scale(1.055);
-  }
+.tab.is-active {
+  @apply bg-surface text-fg shadow-card;
+}
+
+.comment-feed {
+  scrollbar-width: thin;
 }
 </style>

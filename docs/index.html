@@ -1,15 +1,21 @@
 <!doctype html>
-<html lang="en" class="bg-slate-950">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#020617" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#090b13" media="(prefers-color-scheme: dark)" />
+    <script src="/theme-init.js"></script>
     <style>
-      #app:not([data-v-app]) > main { max-width: 52rem; margin: 0 auto; padding: 4rem 1.5rem; color: #cbd5e1; font: 16px/1.75 system-ui, sans-serif; }
-      #app:not([data-v-app]) h1, #app:not([data-v-app]) h2 { color: #f8fafc; line-height: 1.2; }
+      #app:not([data-v-app]) > main { max-width: 52rem; margin: 0 auto; padding: 4rem 1.5rem; color: #475569; font: 16px/1.75 system-ui, sans-serif; }
+      #app:not([data-v-app]) h1, #app:not([data-v-app]) h2 { color: #0f172a; line-height: 1.2; }
       #app:not([data-v-app]) h1 { font-size: clamp(2.2rem, 6vw, 3.5rem); }
       #app:not([data-v-app]) h2 { margin-top: 2rem; }
-      #app:not([data-v-app]) a { color: #67e8f9; }
+      #app:not([data-v-app]) a { color: #4f46e5; }
+      .dark #app:not([data-v-app]) > main { color: #94a3b8; }
+      .dark #app:not([data-v-app]) h1, .dark #app:not([data-v-app]) h2 { color: #f1f5f9; }
+      .dark #app:not([data-v-app]) a { color: #a5b4fc; }
     </style>
 
     <title>GenXYZ Lab Documentation — Setup, User Guide &amp; Complete Features</title>
@@ -49,7 +55,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
 

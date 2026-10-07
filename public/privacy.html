@@ -3,38 +3,56 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#020617" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#090b13" media="(prefers-color-scheme: dark)" />
+    <script src="/theme-init.js"></script>
     <meta name="description" content="How the GenXYZ Lab website handles community and download data." />
     <link rel="canonical" href="https://genxyzlab.org/privacy" />
     <meta name="robots" content="index, follow" />
     <link rel="icon" href="/assets/favicon.png" type="image/png" />
     <title>Privacy · GenXYZ Lab</title>
     <style>
-      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
+      :root {
+        --bg: #ffffff; --surface: #f8fafc; --border: #e2e8f0;
+        --fg: #0f172a; --muted: #475569; --subtle: #64748b; --link: #4f46e5;
+        color-scheme: light;
+      }
+      :root.dark {
+        --bg: #090b13; --surface: #111522; --border: #242b40;
+        --fg: #f1f5f9; --muted: #94a3b8; --subtle: #7d8aa0; --link: #a5b4fc;
+        color-scheme: dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not(.light):not(.dark) {
+          --bg: #090b13; --surface: #111522; --border: #242b40;
+          --fg: #f1f5f9; --muted: #94a3b8; --subtle: #7d8aa0; --link: #a5b4fc;
+          color-scheme: dark;
+        }
+      }
       * { box-sizing: border-box; }
-      body { min-width: 320px; min-height: 100vh; margin: 0; background: radial-gradient(circle at 75% 10%, rgba(79,70,229,.18), transparent 28rem), #020617; }
-      a { color: #a5b4fc; }
-      a:focus-visible { outline: 3px solid #22d3ee; outline-offset: 4px; }
-      .wrap { width: min(760px, calc(100% - 2.5rem)); margin: 0 auto; padding: 3rem 0 5rem; }
-      .back { display: inline-flex; min-height: 44px; align-items: center; font-weight: 700; text-decoration: none; }
-      .mark { display: block; width: 48px; height: 48px; margin-top: 3rem; border-radius: 15px; object-fit: cover; box-shadow: 0 18px 60px rgba(79,70,229,.3); }
-      h1, h2 { font-family: Sora, ui-sans-serif, system-ui, sans-serif; color: #fff; letter-spacing: -.035em; }
-      h1 { margin: 1.5rem 0 .75rem; font-size: clamp(2.2rem, 8vw, 3.6rem); line-height: 1.08; }
-      h2 { margin: 2.5rem 0 .75rem; font-size: 1.25rem; }
-      p, li { color: #94a3b8; font-size: .95rem; line-height: 1.85; }
-      ul { padding-left: 1.25rem; }
-      .updated { color: #64748b; font-size: .8rem; }
-      .panel { margin-top: 2.25rem; padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid rgba(148,163,184,.14); border-radius: 24px; background: rgba(15,23,42,.72); box-shadow: inset 0 1px rgba(255,255,255,.04); }
-      code { color: #c7d2fe; }
+      body { min-width: 320px; margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.7 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+      a { color: var(--link); font-weight: 600; text-underline-offset: 3px; }
+      a:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; border-radius: 4px; }
+      .wrap { width: min(760px, calc(100% - 2rem)); margin: 0 auto; padding: 2rem 0 5rem; }
+      .back { display: inline-flex; min-height: 44px; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--fg); }
+      .back img { width: 32px; height: 32px; border-radius: 8px; }
+      h1, h2 { color: var(--fg); letter-spacing: -0.02em; line-height: 1.2; }
+      h1 { margin: 2.5rem 0 0.5rem; font-size: clamp(2rem, 7vw, 2.75rem); }
+      h2 { margin: 2.25rem 0 0.5rem; font-size: 1.15rem; }
+      p, li { color: var(--muted); font-size: 0.95rem; }
+      .updated { margin: 0; color: var(--subtle); font-size: 0.85rem; }
+      .panel { margin-top: 2rem; padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+      .panel h2:first-child { margin-top: 0; }
+      strong { color: var(--fg); }
     </style>
   </head>
   <body>
     <main class="wrap">
-      <a class="back" href="/">← Back to GenXYZ Lab</a>
-      <img class="mark" src="/assets/logo.png" alt="" width="48" height="48" />
+      <a class="back" href="/"><img src="/assets/logo.png" alt="" width="32" height="32" />← Back to GenXYZ Lab</a>
       <h1>Website privacy</h1>
-      <p class="updated">Effective 29 August 2026</p>
-      <p>This page describes data handled by the GenXYZ Lab landing page. It does not replace the privacy information shipped with the application itself.</p>
+      <p class="updated">Effective 7 October 2026</p>
+      <p>This page describes data handled by the GenXYZ Lab website. It does not replace the privacy information shipped with the application itself.</p>
 
       <div class="panel">
         <h2>Anonymous community identity</h2>
@@ -47,15 +65,18 @@
         <p>Bug reports are not shown in the public feed. They can be read at their exact database path by the submitting anonymous account and by site administrators. A name, contact method, and device are optional; the description, category, app version, creation time, and report status are stored. Never include passwords, API keys, private source code, or other secrets.</p>
 
         <h2>Download counter</h2>
-        <p>The site attempts to increment a global counter after you confirm a download, plus a second counter for the platform you chose (Android or Windows). Both are plain totals; neither is linked to your anonymous identifier, and no device fingerprint is stored. They measure recorded link clicks, not completed downloads or installations. Cloudflare may separately process normal request logs when serving the site, and Google processes the release-file request.</p>
-        <p>To render the public download globe, Cloudflare provides the download request's approximate latitude and longitude to a same-origin function. The function immediately rounds each coordinate to the nearest 5 degrees (a cell hundreds of kilometres across). Firebase stores only that coarse coordinate cell and its aggregate download count. The map record does not include an IP address, precise location, timestamp, device identifier, or Firebase account identifier.</p>
+        <p>The site attempts to increment a global counter after you start a download, plus a second counter for the platform you chose (Android or Windows). Both are plain totals; neither is linked to your anonymous identifier, and no device fingerprint is stored. They measure recorded link clicks, not completed downloads or installations. Cloudflare may separately process normal request logs when serving the site, and GitHub processes the release-file request.</p>
+
+        <h2>Download map</h2>
+        <p>To draw the public download map, Cloudflare provides the download request's approximate latitude and longitude, derived from your network address, to a same-origin function. The function immediately rounds each coordinate to the nearest <strong>0.25 degrees</strong> (an area roughly 25 kilometres across). Firebase stores only that rounded location and its aggregate download counts per platform. The map record does not include an IP address, precise location, timestamp, device identifier, or Firebase account identifier. Locations recorded before 7 October 2026 were rounded to 5 degrees and remain at that coarser precision.</p>
+        <p>When you scroll to the map, your browser loads map images directly from the OpenStreetMap Foundation's tile servers. Like any web request, this shares your IP address and browser details with the OpenStreetMap Foundation, under its own <a href="https://osmfoundation.org/wiki/Privacy_Policy">privacy policy</a>.</p>
         <p>Your browser's reported platform is read once in your own browser so the download button can lead with the build you most likely want. That reading is never transmitted or stored.</p>
 
         <h2>Local storage and retention</h2>
-        <p>The display name convenience field and Firebase anonymous session may persist in your browser. You can clear site data in browser settings. Public comments remain until moderated. Bug reports are retained while they are being reviewed and are deleted by the operator when no longer needed; the client does not perform automated retention.</p>
+        <p>Your light or dark theme choice, the display-name convenience field, and the Firebase anonymous session may persist in your browser. You can clear site data in browser settings. Public comments remain until moderated. Bug reports are retained while they are being reviewed and are deleted by the operator when no longer needed; the client does not perform automated retention.</p>
 
         <h2>Service providers and requests</h2>
-        <p>Firebase processes authentication and database data; Cloudflare hosts the page and processes coarse location at the edge; GitHub hosts the public release files. To request correction or deletion, submit a bug report with category <strong>Other</strong>, include a way to contact you, and identify the relevant content. Because comments do not expose an owner ID, enough detail is needed to locate the item.</p>
+        <p>Firebase processes authentication and database data; Cloudflare hosts the page and processes approximate location at the edge; the OpenStreetMap Foundation serves the map images; GitHub hosts the public release files. To request correction or deletion, submit a bug report with category <strong>Other</strong>, include a way to contact you, and identify the relevant content. Because comments do not expose an owner ID, enough detail is needed to locate the item.</p>
       </div>
     </main>
   </body>

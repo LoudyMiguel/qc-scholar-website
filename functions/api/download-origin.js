@@ -1,4 +1,9 @@
-const GRID_DEGREES = 5
+// 0.25° is roughly 25-28 km: enough to put a dot on the right city, and about
+// as fine as Cloudflare's IP-based location really is. It is a power-of-two
+// fraction, so every snapped value is exact in binary floating point and the
+// database rules can verify it with `(value * 4) % 1 === 0`.
+// Records written before this change used a 5° grid; those values remain valid.
+const GRID_DEGREES = 0.25
 
 function snapCoordinate(value, minimum, maximum) {
   const number = Number(value)

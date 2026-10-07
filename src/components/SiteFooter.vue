@@ -1,60 +1,75 @@
 <script setup>
-import { ExternalLink, GitFork, Heart } from '@lucide/vue'
+import { ExternalLink } from '@lucide/vue'
 import BrandLogo from './BrandLogo.vue'
 import { siteConfig } from '../config/site'
 
-defineEmits(['download'])
-
 const year = new Date().getFullYear()
+
+const columns = [
+  {
+    title: 'Product',
+    links: [
+      { label: 'Features', href: '#features' },
+      { label: 'Download', href: '#download' },
+      { label: 'Setup guide', href: '#setup' },
+      { label: 'Documentation', href: '/docs/' },
+    ],
+  },
+  {
+    title: 'Community',
+    links: [
+      { label: 'Discussion', href: '#community' },
+      { label: 'Report a bug', href: '#community' },
+      { label: 'Privacy', href: '/privacy' },
+    ],
+  },
+  {
+    title: 'Resources',
+    links: [
+      { label: 'Release files', href: siteConfig.releasesUrl, external: true },
+      { label: 'Termux on F-Droid', href: siteConfig.termuxUrl, external: true },
+      { label: 'Termux install notes', href: siteConfig.termuxDocsUrl, external: true },
+    ],
+  },
+]
 </script>
 
 <template>
-  <footer class="border-t border-white/[0.06] bg-slate-950/60 pb-28 pt-12 sm:pb-12">
-    <div class="site-container">
-      <div class="grid gap-10 border-b border-slate-800/80 pb-10 md:grid-cols-[1.3fr_.7fr_.7fr]">
+  <footer class="border-t border-line bg-canvas">
+    <div class="site-container py-12 sm:py-16">
+      <div class="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <BrandLogo />
-          <p class="mt-5 max-w-md text-sm leading-7 text-slate-500">
-            Guided learning, on-device coding, developer tools, and proof of progress in one workspace — on Android and Windows.
-          </p>
-          <p class="mt-4 inline-flex items-center gap-2 text-[11px] font-semibold text-slate-600">
-            Built independently with
-            <Heart :size="13" class="text-rose-400" fill="currentColor" aria-label="care" />
-            and learner feedback.
+          <p class="mt-4 max-w-xs text-sm leading-relaxed text-fg-muted">
+            A free, offline-first learning and coding studio for Android and Windows.
           </p>
         </div>
 
-        <nav aria-label="Product links">
-          <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">Explore</p>
-          <div class="mt-4 flex flex-col items-start gap-1">
-            <a href="#features" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Features</a>
-            <a href="#download" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Download</a>
-            <a href="#setup" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Setup</a>
-            <a href="/docs/" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Documentation</a>
-            <a href="#community" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Community</a>
-            <a href="/privacy" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-400 transition hover:text-white">Privacy</a>
-            <button type="button" class="inline-flex min-h-10 items-center text-xs font-semibold text-indigo-300 transition hover:text-indigo-200" @click="$emit('download')">Get GenXYZ Lab</button>
-          </div>
-        </nav>
-
-        <nav aria-label="Verified resources">
-          <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">Verified resources</p>
-          <div class="mt-4 flex flex-col items-start gap-1">
-            <a :href="siteConfig.termuxUrl" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-slate-400 transition hover:text-white">
-              Termux on F-Droid
-              <span class="sr-only"> (opens in a new tab)</span>
-              <ExternalLink :size="12" />
-            </a>
-            <a :href="siteConfig.termuxDocsUrl" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-slate-400 transition hover:text-white">
-              Installation notes
-              <span class="sr-only"> (opens in a new tab)</span>
-              <GitFork :size="12" />
-            </a>
-          </div>
+        <nav
+          v-for="column in columns"
+          :key="column.title"
+          :aria-label="column.title"
+        >
+          <h2 class="text-sm font-semibold text-fg">{{ column.title }}</h2>
+          <ul class="mt-3 space-y-1">
+            <li v-for="link in column.links" :key="link.label">
+              <a
+                :href="link.href"
+                class="inline-flex min-h-9 items-center gap-1.5 text-sm text-fg-muted transition-colors duration-150 hover:text-fg"
+                v-bind="link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {}"
+              >
+                {{ link.label }}
+                <template v-if="link.external">
+                  <ExternalLink :size="13" aria-hidden="true" />
+                  <span class="sr-only">(opens in a new tab)</span>
+                </template>
+              </a>
+            </li>
+          </ul>
         </nav>
       </div>
 
-      <div class="flex flex-col gap-3 pt-6 text-[10px] leading-5 text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+      <div class="mt-10 flex flex-col gap-3 border-t border-line pt-6 text-xs leading-relaxed text-fg-subtle sm:flex-row sm:justify-between">
         <p>© {{ year }} GenXYZ Lab. All rights reserved.</p>
         <p class="max-w-xl sm:text-right">
           Termux is a separate open-source project. GenXYZ Lab is not affiliated with or endorsed by the Termux maintainers or F-Droid.

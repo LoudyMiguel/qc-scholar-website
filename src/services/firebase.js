@@ -144,9 +144,20 @@ export async function recordDownloadClick(platform = '') {
   return result.snapshot.val()
 }
 
+// Must match GRID_DEGREES in functions/api/download-origin.js and the
+// `* 4) % 1` checks in database.rules.json.
+const ORIGIN_CELLS_PER_DEGREE = 4
+
+function isOriginGridValue(value) {
+  return Number.isInteger(value * ORIGIN_CELLS_PER_DEGREE)
+}
+
 function downloadOriginKey(lat, lng) {
+  // Firebase keys cannot contain '.', so 14.25 is written as 14p25. Whole
+  // degrees keep their original form (n15_e120), so 5° records written before
+  // the finer grid still resolve to the same keys.
   const encode = (value, positive, negative) =>
-    `${value >= 0 ? positive : negative}${Math.abs(value)}`
+    `${value >= 0 ? positive : negative}${String(Math.abs(value)).replace('.', 'p')}`
   return `${encode(lat, 'n', 's')}_${encode(lng, 'e', 'w')}`
 }
 
@@ -173,8 +184,8 @@ async function getApproximateDownloadOrigin() {
           lat > 90 ||
           lng < -180 ||
           lng > 180 ||
-          lat % 5 !== 0 ||
-          lng % 5 !== 0
+          !isOriginGridValue(lat) ||
+          !isOriginGridValue(lng)
         ) {
           return null
         }
@@ -207,7 +218,7 @@ export function prepareDownloadTracking() {
 
 /**
  * Cloudflare supplies approximate request coordinates to the same-origin Pages
- * Function. That function snaps them to a coarse 5° cell before returning; the
+ * Function. That function snaps them to a 0.25° (~25 km) cell before returning; the
  * browser stores only an aggregate count for that cell. No IP, account id,
  * timestamp, or precise coordinate reaches Firebase.
  */
@@ -260,7 +271,7 @@ export function subscribeToDownloadOrigins(onData, onError = console.error) {
         }
       })
       origins.sort((a, b) => b.count - a.count)
-      onData(origins.slice(0, 80))
+      onData(origins.slice(0, 500))
     },
     onError,
   )

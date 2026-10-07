@@ -1,165 +1,118 @@
 <script setup>
 import {
-  ArrowUpRight,
+  ArrowRight,
   BatteryCharging,
-  BookOpenCheck,
-  Download,
   ExternalLink,
+  Info,
   Monitor,
-  Play,
-  Terminal,
+  Smartphone,
 } from '@lucide/vue'
 import { siteConfig } from '../config/site'
 
-defineEmits(['download'])
-
-const steps = [
+const platforms = [
   {
-    number: '01',
-    title: 'Install official Termux',
-    body: 'Get the current Termux APK from its verified F-Droid package page. Do not use the obsolete Play Store build.',
-    icon: Download,
-    link: siteConfig.termuxUrl,
-    linkLabel: 'Open verified source',
+    name: 'Windows',
+    icon: Monitor,
+    summary: 'Uses the compilers already installed on your PC — there is nothing extra to set up.',
+    steps: [
+      { title: 'Extract the ZIP', body: 'Unzip the whole download into a normal folder. Do not run the app from inside the archive.' },
+      { title: 'Launch GenXYZ Lab', body: 'Open the extracted folder and start the GenXYZ Lab executable. Keep the other files beside it.' },
+      { title: 'Check your toolchains', body: 'Compiler Manager detects Python, Node.js, JDK, GCC, Go, Rust, and Dart on your PATH and links to official installers for anything missing.' },
+    ],
   },
   {
-    number: '02',
-    title: 'Open Termux once',
-    body: 'Launch Termux and let its initial environment finish preparing before you return to GenXYZ Lab.',
-    icon: Terminal,
-  },
-  {
-    number: '03',
-    title: 'Open Compiler Manager',
-    body: 'In GenXYZ Lab, go to Code Practice → Compilers → Compiler Manager.',
-    icon: Play,
-  },
-  {
-    number: '04',
-    title: 'Follow the guided setup',
-    body: 'Choose your language or framework, then follow its explicit installation, permission, and detection guide.',
-    icon: BookOpenCheck,
+    name: 'Android',
+    icon: Smartphone,
+    summary: 'Courses work right away. To run code on your phone, connect local compilers through Termux.',
+    steps: [
+      { title: 'Install Termux from F-Droid', body: 'Use the current verified F-Droid build. The old Play Store version is obsolete.', link: siteConfig.termuxUrl, linkLabel: 'Open Termux on F-Droid' },
+      { title: 'Open Termux once', body: 'Let it finish preparing its environment, then return to GenXYZ Lab.' },
+      { title: 'Open Compiler Manager', body: 'In GenXYZ Lab, go to Code Practice → Compilers → Compiler Manager.' },
+      { title: 'Follow the guided setup', body: 'Pick a language or framework and follow its install, permission, and detection steps.' },
+    ],
   },
 ]
 </script>
 
 <template>
-  <section id="setup" class="relative overflow-hidden py-24 sm:py-28">
-    <div class="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-indigo-400/20 to-transparent" aria-hidden="true" />
-    <div class="site-container relative">
-      <div class="mx-auto max-w-3xl text-center" data-reveal>
-        <span class="eyebrow">Onboarding</span>
-        <h2 class="section-heading mt-6">Real compilers, without the guesswork.</h2>
-        <p class="section-copy mt-5">
-          On Windows the app uses the toolchains already on your PATH, so there is
-          nothing extra to wire up. Android needs four deliberate steps to reach
-          local toolchains through Termux.
+  <section id="setup" class="section">
+    <div class="site-container">
+      <div class="mx-auto max-w-2xl text-center">
+        <p class="eyebrow">Setup</p>
+        <h2 class="section-title mt-3">Up and running in a few minutes</h2>
+        <p class="section-lead mt-4">
+          Real compilers, without the guesswork. Here is everything each platform needs.
         </p>
       </div>
 
-      <div
-        class="mx-auto mt-10 flex max-w-2xl items-start gap-3.5 rounded-2xl border border-slate-700/60 bg-slate-950/50 p-5"
-        data-reveal
-      >
-        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-indigo-400/10 text-indigo-300">
-          <Monitor :size="20" aria-hidden="true" />
-        </span>
+      <div class="mt-12 grid gap-4 lg:grid-cols-2">
+        <article v-for="platform in platforms" :key="platform.name" class="card p-6 sm:p-8">
+          <div class="flex items-center gap-3">
+            <span class="icon-tile">
+              <component :is="platform.icon" :size="20" aria-hidden="true" />
+            </span>
+            <h3 class="text-xl font-semibold text-fg">{{ platform.name }}</h3>
+          </div>
+          <p class="mt-4 text-sm leading-relaxed text-fg-muted">{{ platform.summary }}</p>
+
+          <ol class="mt-6 space-y-5">
+            <li v-for="(step, index) in platform.steps" :key="step.title" class="flex gap-4">
+              <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line-strong text-xs font-semibold text-fg">
+                {{ index + 1 }}
+              </span>
+              <div class="min-w-0 pt-0.5">
+                <h4 class="text-sm font-semibold text-fg">{{ step.title }}</h4>
+                <p class="mt-1 text-sm leading-relaxed text-fg-muted">{{ step.body }}</p>
+                <a
+                  v-if="step.link"
+                  :href="step.link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-link mt-1.5 inline-flex min-h-9 items-center gap-1.5 text-sm"
+                >
+                  {{ step.linkLabel }}
+                  <ExternalLink :size="14" aria-hidden="true" />
+                  <span class="sr-only">(opens in a new tab)</span>
+                </a>
+              </div>
+            </li>
+          </ol>
+        </article>
+      </div>
+
+      <div class="mt-4 grid gap-4 md:grid-cols-2">
+        <div class="flex gap-3 rounded-xl border border-warning/30 bg-warning/10 p-5">
+          <Info :size="20" class="mt-0.5 shrink-0 text-warning-text" aria-hidden="true" />
+          <div>
+            <h3 class="text-sm font-semibold text-fg">Android: install order matters</h3>
+            <p class="mt-1 text-sm leading-relaxed text-fg-muted">
+              Planning to compile offline? Install Termux before GenXYZ Lab so Android can grant the permission that connects the two apps.
+            </p>
+          </div>
+        </div>
+        <div class="flex gap-3 rounded-xl border border-brand/25 bg-brand/5 p-5">
+          <BatteryCharging :size="20" class="mt-0.5 shrink-0 text-brand-text" aria-hidden="true" />
+          <div>
+            <h3 class="text-sm font-semibold text-fg">Keep long-running tools alive</h3>
+            <p class="mt-1 text-sm leading-relaxed text-fg-muted">
+              If Android stops a local server or tunnel, set Termux battery usage to <strong class="font-semibold text-fg">Unrestricted</strong> in Android settings.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-12 flex flex-col items-start gap-6 p-6 sm:p-8 md:flex-row md:items-center md:justify-between">
         <div>
-          <h3 class="text-sm font-bold text-white">On Windows: unzip and run</h3>
-          <p class="mt-2 text-xs leading-6 text-slate-400">
-            No Termux, no bridge. Compiler Manager detects Python, Node, JDK, GCC,
-            Go, Rust, and the Dart SDK on your PATH, and links you to the official
-            installer for anything missing.
+          <h3 class="text-xl font-semibold text-fg">Ready to start building?</h3>
+          <p class="mt-1 text-sm text-fg-muted">
+            Download the app, then follow the full guide for tips, workflows, and troubleshooting.
           </p>
         </div>
-      </div>
-
-      <p
-        class="mt-12 text-center font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"
-        data-reveal
-      >
-        Android · four steps
-      </p>
-
-      <div class="relative mt-8">
-        <div class="pointer-events-none absolute left-[12.5%] right-[12.5%] top-8 hidden h-px bg-gradient-to-r from-indigo-400/20 via-cyan-300/50 to-violet-400/20 lg:block" aria-hidden="true" />
-        <ol class="grid gap-4 lg:grid-cols-4">
-          <li
-            v-for="(step, index) in steps"
-            :key="step.number"
-            data-scroll-depth="5"
-          >
-            <div class="h-full" data-reveal :style="{ '--reveal-delay': `${index * 80}ms` }">
-              <article class="glass-panel group relative h-full rounded-2xl p-5 sm:p-6">
-              <div class="relative z-10 flex items-center justify-between">
-                <span class="grid h-12 w-12 place-items-center rounded-xl border border-indigo-400/20 bg-indigo-400/10 text-indigo-200 shadow-[0_0_25px_rgba(99,102,241,.12)]">
-                  <component :is="step.icon" :size="21" aria-hidden="true" />
-                </span>
-                <span class="font-display text-2xl font-semibold text-slate-800">{{ step.number }}</span>
-              </div>
-              <h3 class="mt-7 font-display text-lg font-semibold tracking-tight text-white">{{ step.title }}</h3>
-              <p class="mt-3 text-sm leading-7 text-slate-400">{{ step.body }}</p>
-              <a
-                v-if="step.link"
-                :href="step.link"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg text-xs font-bold text-cyan-300 transition hover:text-cyan-200"
-              >
-                {{ step.linkLabel }}
-                <span class="sr-only"> (opens in a new tab)</span>
-                <ExternalLink :size="14" aria-hidden="true" />
-              </a>
-              </article>
-            </div>
-          </li>
-        </ol>
-      </div>
-
-      <div class="mt-6 grid gap-4 lg:grid-cols-2" data-reveal>
-        <div class="rounded-2xl border border-amber-300/15 bg-amber-300/[0.06] p-5 sm:flex sm:items-start sm:gap-4">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-300/10 text-amber-300">
-            <Download :size="20" aria-hidden="true" />
-          </span>
-          <div class="mt-3 sm:mt-0">
-            <h3 class="text-sm font-bold text-amber-100">Install order matters</h3>
-            <p class="mt-2 text-xs leading-6 text-amber-100/65">
-              Planning to compile offline? Install Termux before GenXYZ Lab so Android can expose the command permission that connects the two apps.
-            </p>
-          </div>
-        </div>
-        <div class="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] p-5 sm:flex sm:items-start sm:gap-4">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-cyan-300/10 text-cyan-300">
-            <BatteryCharging :size="20" aria-hidden="true" />
-          </span>
-          <div class="mt-3 sm:mt-0">
-            <h3 class="text-sm font-bold text-cyan-100">Keep long-running tools alive</h3>
-            <p class="mt-2 text-xs leading-6 text-cyan-100/65">
-              If Android stops a local server or tunnel, set Termux battery usage to <strong class="text-cyan-100">Unrestricted</strong> in Android settings.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-8 flex flex-col items-center justify-between gap-5 rounded-3xl border border-indigo-400/15 bg-gradient-to-r from-indigo-500/10 via-slate-900/70 to-violet-500/10 p-7 sm:flex-row sm:p-9" data-reveal>
-        <div>
-          <p class="font-display text-xl font-semibold text-white">Ready to start building?</p>
-          <p class="mt-2 text-sm text-slate-400">Get the Android or Windows release, then let Compiler Manager guide the setup.</p>
-        </div>
-        <div class="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-          <button type="button" class="button-primary w-full sm:w-auto" @click="$emit('download')">
-            Download GenXYZ Lab
-            <ArrowUpRight :size="17" aria-hidden="true" />
-          </button>
-          <a
-            :href="siteConfig.termuxDocsUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex min-h-9 items-center justify-center gap-1.5 text-[10px] font-semibold text-slate-500 hover:text-slate-300"
-          >
-            Read the official Termux installation notes
-            <span class="sr-only"> (opens in a new tab)</span>
-            <ExternalLink :size="11" />
+        <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <a href="#download" class="btn btn-primary">Download GenXYZ Lab</a>
+          <a href="/docs/#setup" class="btn btn-secondary">
+            Full setup guide
+            <ArrowRight :size="16" aria-hidden="true" />
           </a>
         </div>
       </div>

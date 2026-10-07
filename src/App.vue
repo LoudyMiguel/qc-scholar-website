@@ -13,15 +13,15 @@ import WorkflowSection from './components/WorkflowSection.vue'
 import {
   isFirebaseConfigured,
   subscribeToDownloadCount,
-  subscribeToDownloadOrigins,
+  subscribeToDownloadMap,
 } from './services/firebase'
 
 const downloadCount = ref(0)
-const downloadOrigins = ref([])
+const downloadMap = ref({ locations: [], regions: [] })
 const countReady = ref(false)
 
 let unsubscribeDownloadCount = () => {}
-let unsubscribeDownloadOrigins = () => {}
+let unsubscribeDownloadMap = () => {}
 
 onMounted(() => {
   if (!isFirebaseConfigured) return
@@ -35,19 +35,19 @@ onMounted(() => {
       countReady.value = false
     },
   )
-  unsubscribeDownloadOrigins = subscribeToDownloadOrigins(
-    (origins) => {
-      downloadOrigins.value = origins
+  unsubscribeDownloadMap = subscribeToDownloadMap(
+    (map) => {
+      downloadMap.value = map
     },
     () => {
-      downloadOrigins.value = []
+      downloadMap.value = { locations: [], regions: [] }
     },
   )
 })
 
 onBeforeUnmount(() => {
   unsubscribeDownloadCount()
-  unsubscribeDownloadOrigins()
+  unsubscribeDownloadMap()
 })
 </script>
 
@@ -68,7 +68,8 @@ onBeforeUnmount(() => {
     <WorkflowSection />
     <PlatformDownloads :download-count="downloadCount" :count-ready="countReady" />
     <DownloadMap
-      :origins="downloadOrigins"
+      :locations="downloadMap.locations"
+      :regions="downloadMap.regions"
       :download-count="downloadCount"
       :count-ready="countReady"
     />

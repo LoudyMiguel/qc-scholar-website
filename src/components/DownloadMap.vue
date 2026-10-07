@@ -4,7 +4,13 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useTheme } from '../composables/useTheme'
 
 const props = defineProps({
-  origins: {
+  // Precise 0.25° cells, already validated and sorted by parseCells().
+  locations: {
+    type: Array,
+    default: () => [],
+  },
+  // Coarse 5° regions recorded before October 2026.
+  regions: {
     type: Array,
     default: () => [],
   },
@@ -38,23 +44,17 @@ const ATTRIBUTION =
 let L = null
 let map = null
 let markerLayer = null
+let regionLayer = null
 let gateObserver = null
 const markersById = new Map()
 
-const locations = computed(() =>
-  props.origins
-    .filter(
-      (origin) =>
-        Number.isFinite(origin.lat) &&
-        Number.isFinite(origin.lng) &&
-        Number.isSafeInteger(origin.count) &&
-        origin.count > 0,
-    )
-    .sort((a, b) => b.count - a.count),
-)
+// Half of a 5° legacy cell, in metres: each region is drawn at its true size.
+const LEGACY_REGION_RADIUS_M = 278_000
+
+const locations = computed(() => props.locations)
 
 const mappedDownloads = computed(() =>
-  locations.value.reduce((sum, origin) => sum + origin.count, 0),
+  [...props.locations, ...props.regions].reduce((sum, cell) => sum + cell.count, 0),
 )
 
 const topLocations = computed(() => locations.value.slice(0, 5))
@@ -73,11 +73,13 @@ function plural(count, word) {
 
 // Built only from validated numbers, never from free text, because Leaflet
 // renders tooltip strings as HTML.
-function tooltipFor(origin) {
+function tooltipFor(cell, legacy = false) {
   const parts = []
-  if (Number.isSafeInteger(origin.android) && origin.android > 0) parts.push(`Android ${origin.android.toLocaleString()}`)
-  if (Number.isSafeInteger(origin.windows) && origin.windows > 0) parts.push(`Windows ${origin.windows.toLocaleString()}`)
-  return `<strong>${plural(origin.count, 'download')}</strong>${parts.length ? `<br>${parts.join(' · ')}` : ''}`
+  if (Number.isSafeInteger(cell.android) && cell.android > 0) parts.push(`Android ${cell.android.toLocaleString()}`)
+  if (Number.isSafeInteger(cell.windows) && cell.windows > 0) parts.push(`Windows ${cell.windows.toLocaleString()}`)
+  const platforms = parts.length ? `<br>${parts.join(' · ')}` : ''
+  const note = legacy ? '<br>Before Oct 2026 · somewhere in this ~550 km area' : ''
+  return `<strong>${plural(cell.count, 'download')}</strong>${platforms}${note}`
 }
 
 function tokenColor(name, alpha = 1) {
@@ -101,8 +103,29 @@ function markerStyle() {
   }
 }
 
+// Legacy records only know a 5° cell, so they are drawn as faint areas of
+// that real size rather than as points that would claim a precise city.
+function regionStyle() {
+  return {
+    radius: LEGACY_REGION_RADIUS_M,
+    weight: 1,
+    color: tokenColor('brand-hover', 0.45),
+    dashArray: '4 4',
+    fillColor: tokenColor('brand-hover'),
+    fillOpacity: 0.12,
+  }
+}
+
 function drawMarkers() {
   if (!map) return
+  regionLayer.clearLayers()
+  const areaStyle = regionStyle()
+  props.regions.forEach((region) => {
+    L.circle([region.lat, region.lng], areaStyle)
+      .bindTooltip(tooltipFor(region, true), { direction: 'top', sticky: true })
+      .addTo(regionLayer)
+  })
+
   markerLayer.clearLayers()
   markersById.clear()
   const style = markerStyle()
@@ -119,9 +142,10 @@ function prefersReducedMotion() {
 }
 
 function initialView() {
-  if (locations.value.length) {
+  const cells = [...props.locations, ...props.regions]
+  if (cells.length) {
     map.fitBounds(
-      locations.value.map((origin) => [origin.lat, origin.lng]),
+      cells.map((cell) => [cell.lat, cell.lng]),
       { padding: [48, 48], maxZoom: 4, animate: false },
     )
   } else {
@@ -175,6 +199,7 @@ async function bootMap() {
       attribution: ATTRIBUTION,
       maxZoom: 19,
     }).addTo(map)
+    regionLayer = L.layerGroup().addTo(map)
     markerLayer = L.layerGroup().addTo(map)
 
     drawMarkers()
@@ -186,17 +211,22 @@ async function bootMap() {
   }
 }
 
-let hadLocations = false
-watch(locations, (current) => {
-  drawMarkers()
-  // Frame the data the first time it arrives, but never move a map the
-  // visitor is already exploring.
-  if (map && !hadLocations && current.length) initialView()
-  hadLocations = hadLocations || current.length > 0
-})
+let hadData = false
+watch(
+  () => [props.locations, props.regions],
+  ([current, legacy]) => {
+    drawMarkers()
+    // Frame the data the first time it arrives, but never move a map the
+    // visitor is already exploring.
+    const hasData = current.length > 0 || legacy.length > 0
+    if (map && !hadData && hasData) initialView()
+    hadData = hadData || hasData
+  },
+)
 
 watch(isDark, () => {
   markerLayer?.eachLayer((marker) => marker.setStyle(markerStyle()))
+  regionLayer?.eachLayer((region) => region.setStyle(regionStyle()))
 })
 
 onMounted(() => {
@@ -252,11 +282,13 @@ onBeforeUnmount(() => {
         </dl>
       </div>
 
-      <div class="card relative z-0 mt-10 overflow-hidden">
+      <!-- The theme class lives on this wrapper, never on the map element:
+           Leaflet adds its own classes to that element, and a Vue class
+           binding there would overwrite them on every theme change. -->
+      <div class="card relative z-0 mt-10 overflow-hidden" :class="{ 'is-dark': mounted && isDark }">
         <div
           ref="mapElement"
           class="download-map h-[380px] w-full sm:h-[480px] lg:h-[560px]"
-          :class="{ 'is-dark': mounted && isDark }"
           role="region"
           aria-label="Map of approximate download locations. Use the list below the map for the same data."
         />
@@ -295,6 +327,7 @@ onBeforeUnmount(() => {
             Locations come from Cloudflare's approximate network location and are rounded to a
             0.25° grid (about 25 km) before storage. Only an aggregate count is kept — no IP
             address, precise location, timestamp, account, or device identity.
+            <template v-if="regions.length"> Shaded areas show downloads from before October 2026, which were only kept to within about 550 km.</template>
             <template v-if="mappedDownloads">{{ ' ' + plural(mappedDownloads, 'download') }} mapped so far.</template>
             {{ ' ' }}<a href="/privacy" class="text-link font-medium">Privacy details</a>
           </span>
@@ -311,13 +344,18 @@ onBeforeUnmount(() => {
   font-family: inherit;
 }
 
+/* The card clips overflow, so draw the keyboard focus ring inside the map. */
+.download-map:focus-visible {
+  outline-offset: -3px;
+}
+
 /* Calm the colourful standard style so the brand dots stand out, and derive a
    dark map from it. Only the tile layer is filtered, never the dots. */
 .download-map :deep(.leaflet-tile-pane) {
   filter: saturate(0.35) brightness(1.02);
 }
 
-.download-map.is-dark :deep(.leaflet-tile-pane) {
+.is-dark .download-map :deep(.leaflet-tile-pane) {
   filter: invert(1) hue-rotate(180deg) saturate(0.3) brightness(0.85) contrast(0.95);
 }
 

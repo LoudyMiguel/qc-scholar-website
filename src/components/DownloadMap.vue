@@ -261,8 +261,9 @@ onBeforeUnmount(() => {
           </p>
           <h2 class="section-title mt-3">Where learners download GenXYZ Lab</h2>
           <p class="section-lead mt-4">
-            Every dot is a city-level area where the app has been downloaded. Zoom in to explore,
-            and hover or tap a dot to see its total.
+            Dots mark city-level areas, about 25 km across, where the app has been downloaded;
+            shaded circles are older, approximate regions. Zoom in to explore, and hover or tap
+            to see the totals.
           </p>
         </div>
 
@@ -274,9 +275,9 @@ onBeforeUnmount(() => {
             </dd>
           </div>
           <div class="card p-4">
-            <dt class="text-sm text-fg-muted">Locations</dt>
+            <dt class="text-sm text-fg-muted">Places on the map</dt>
             <dd class="mt-1 text-2xl font-bold tracking-tight text-fg">
-              {{ locations.length.toLocaleString() }}
+              {{ (locations.length + regions.length).toLocaleString() }}
             </dd>
           </div>
         </dl>

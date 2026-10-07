@@ -46,7 +46,7 @@ async function handleMenuKeydown(event) {
     <div class="site-container flex h-16 items-center justify-between gap-4">
       <BrandLogo />
 
-      <nav class="hidden items-center gap-1 md:flex" aria-label="Main navigation">
+      <nav class="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
         <a
           v-for="link in links"
           :key="link.href"
@@ -72,7 +72,7 @@ async function handleMenuKeydown(event) {
         <button
           ref="menuButton"
           type="button"
-          class="icon-button md:hidden"
+          class="icon-button lg:hidden"
           :aria-expanded="menuOpen"
           aria-controls="mobile-navigation"
           :aria-label="menuOpen ? 'Close navigation' : 'Open navigation'"
@@ -87,7 +87,7 @@ async function handleMenuKeydown(event) {
     <nav
       v-if="menuOpen"
       id="mobile-navigation"
-      class="border-t border-line bg-canvas md:hidden"
+      class="border-t border-line bg-canvas lg:hidden"
       aria-label="Mobile navigation"
     >
       <div class="site-container py-2">

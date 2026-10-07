@@ -180,15 +180,21 @@ or focused, and on phones one finger scrolls the page while pinch zooms.
 New download clicks call the same-origin Pages Function, which reads
 Cloudflare's approximate request coordinates, snaps them to a **0.25° cell**
 (about 25 km), and returns only that cell. Firebase stores an aggregate count
-per cell — never an IP, precise coordinate, user id, timestamp, or device
-identifier. Cells recorded before October 2026 used a 5° grid and stay at those
-coarser points. Keys encode the decimal point as `p` (`n14p25_e121`) because
-Firebase keys cannot contain `.`; whole-degree keys keep their original form.
+per cell under `stats/download_locations` — never an IP, precise coordinate,
+user id, timestamp, or device identifier. Keys encode the decimal point as `p`
+(`n14p25_e121`) because Firebase keys cannot contain `.`.
 
-**The 0.25° grid needs the updated `database.rules.json` deployed**
-(`firebase deploy --only database`). Until then, the old rules reject the new
-finer cells; location recording is best-effort, so downloads keep working and
-the map simply receives no new dots.
+Downloads recorded before October 2026 were rounded to 5° and stay under
+`stats/download_origins`, a separate data set so the two precisions are never
+merged. The map draws them as faint, true-size ~550 km areas instead of points,
+and leaves them out of the "Most active locations" list.
+
+The database rules change is additive: `stats/download_origins` keeps its
+original rules and `stats/download_locations` is new. Deploy it with
+`firebase deploy --only database` (after `firebase use --add` once, which
+writes `.firebaserc`). Until it is deployed, the old rules reject the new path,
+and the client falls back to recording the 5° region exactly as before, so no
+download goes unmapped while the two deploys are out of step.
 
 ## Connect Firebase
 
@@ -219,7 +225,8 @@ Data layout:
 ```text
 stats/download_count
 stats/platform_downloads/{android|windows}
-stats/download_origins/{cell}   # { lat, lng, count, android, windows }
+stats/download_locations/{cell} # 0.25° cells: { lat, lng, count, android, windows }
+stats/download_origins/{cell}   # legacy 5° regions (before Oct 2026), same shape
 comments/{commentId}
 commentReactions/{commentId}/{upvote|like|heart}/{anonymousUid}
 bugReports/{reportId}

@@ -23,6 +23,12 @@ import {
   assertCommunityCommentAllowed,
   normalizeCommentForComparison,
 } from './comment-moderation'
+import {
+  cellKey,
+  isLocationGridValue,
+  parseCells,
+  toLegacyRegion,
+} from './download-cells'
 
 const env = import.meta.env
 
@@ -147,22 +153,11 @@ export async function recordDownloadClick(platform = '') {
   return result.snapshot.val()
 }
 
-// Must match GRID_DEGREES in functions/api/download-origin.js and the
-// `* 4) % 1` checks in database.rules.json.
-const ORIGIN_CELLS_PER_DEGREE = 4
-
-function isOriginGridValue(value) {
-  return Number.isInteger(value * ORIGIN_CELLS_PER_DEGREE)
-}
-
-function downloadOriginKey(lat, lng) {
-  // Firebase keys cannot contain '.', so 14.25 is written as 14p25. Whole
-  // degrees keep their original form (n15_e120), so 5° records written before
-  // the finer grid still resolve to the same keys.
-  const encode = (value, positive, negative) =>
-    `${value >= 0 ? positive : negative}${String(Math.abs(value)).replace('.', 'p')}`
-  return `${encode(lat, 'n', 's')}_${encode(lng, 'e', 'w')}`
-}
+// Precise 0.25° cells (about 25 km). stats/download_origins holds the coarse
+// 5° regions recorded before October 2026 and stays a separate data set, so
+// the two precisions are never merged into one record.
+const LOCATIONS_PATH = 'stats/download_locations'
+const LEGACY_REGIONS_PATH = 'stats/download_origins'
 
 async function getApproximateDownloadOrigin() {
   if (!approximateOriginPromise) {
@@ -187,8 +182,8 @@ async function getApproximateDownloadOrigin() {
           lat > 90 ||
           lng < -180 ||
           lng > 180 ||
-          !isOriginGridValue(lat) ||
-          !isOriginGridValue(lng)
+          !isLocationGridValue(lat) ||
+          !isLocationGridValue(lng)
         ) {
           return null
         }
@@ -219,21 +214,8 @@ export function prepareDownloadTracking() {
   ])
 }
 
-/**
- * Cloudflare supplies approximate request coordinates to the same-origin Pages
- * Function. That function snaps them to a 0.25° (~25 km) cell before returning; the
- * browser stores only an aggregate count for that cell. No IP, account id,
- * timestamp, or precise coordinate reaches Firebase.
- */
-export async function recordApproximateDownloadOrigin(platform = '') {
-  const origin = await getApproximateDownloadOrigin()
-  if (!origin) return false
-  const { lat, lng } = origin
-
-  await ensureAnonymousUser()
-  const platformGroup = platform === 'android32' ? 'android' : platform
-  const originRef = ref(database, `stats/download_origins/${downloadOriginKey(lat, lng)}`)
-  const result = await runTransaction(originRef, (current) => {
+function incrementCell(path, lat, lng, platformGroup) {
+  return runTransaction(ref(database, `${path}/${cellKey(lat, lng)}`), (current) => {
     const previous = current && typeof current === 'object' ? current : {}
     const android = Number.isSafeInteger(previous.android) ? previous.android : 0
     const windows = Number.isSafeInteger(previous.windows) ? previous.windows : 0
@@ -246,38 +228,68 @@ export async function recordApproximateDownloadOrigin(platform = '') {
       windows: windows + (platformGroup === 'windows' ? 1 : 0),
     }
   })
-  return result.committed
 }
 
-export function subscribeToDownloadOrigins(onData, onError = console.error) {
-  if (!isFirebaseConfigured) {
-    onData([])
+/**
+ * Cloudflare supplies approximate request coordinates to the same-origin Pages
+ * Function. That function snaps them to a 0.25° (~25 km) cell before returning;
+ * the browser stores only an aggregate count for that cell. No IP, account id,
+ * timestamp, or precise coordinate reaches Firebase.
+ */
+export async function recordApproximateDownloadOrigin(platform = '') {
+  const origin = await getApproximateDownloadOrigin()
+  if (!origin) return false
+
+  await ensureAnonymousUser()
+  const platformGroup = platform === 'android32' ? 'android' : platform
+  try {
+    const result = await incrementCell(LOCATIONS_PATH, origin.lat, origin.lng, platformGroup)
+    return result.committed
+  } catch (error) {
+    // Database rules deployed before stats/download_locations existed reject
+    // the new path. Record the coarse 5° region they still accept, so no
+    // download goes unmapped while the rules deploy lags the site deploy.
+    if (error?.code !== 'PERMISSION_DENIED') throw error
+    const result = await incrementCell(
+      LEGACY_REGIONS_PATH,
+      toLegacyRegion(origin.lat),
+      toLegacyRegion(origin.lng),
+      platformGroup,
+    )
+    return result.committed
+  }
+}
+
+/**
+ * Streams both map data sets: precise `locations` and the coarse legacy
+ * `regions`. Either listener updating re-emits the latest pair.
+ */
+export function subscribeToDownloadMap(onData, onError = console.error) {
+  const state = { locations: [], regions: [] }
+  if (!isFirebaseConfigured || !database) {
+    onData(state)
     return () => {}
   }
 
-  return onValue(
-    ref(database, 'stats/download_origins'),
-    (snapshot) => {
-      const origins = []
-      snapshot.forEach((child) => {
-        const value = child.val() || {}
-        const lat = Number(value.lat)
-        const lng = Number(value.lng)
-        const count = Number(value.count)
-        if (
-          Number.isFinite(lat) &&
-          Number.isFinite(lng) &&
-          Number.isSafeInteger(count) &&
-          count > 0
-        ) {
-          origins.push({ id: child.key, ...value, lat, lng, count })
-        }
-      })
-      origins.sort((a, b) => b.count - a.count)
-      onData(origins.slice(0, 500))
-    },
-    onError,
-  )
+  const listen = (path, field, limit) =>
+    onValue(
+      ref(database, path),
+      (snapshot) => {
+        const entries = []
+        snapshot.forEach((child) => {
+          entries.push([child.key, child.val()])
+        })
+        state[field] = parseCells(entries).slice(0, limit)
+        onData({ ...state })
+      },
+      onError,
+    )
+
+  const stops = [
+    listen(LOCATIONS_PATH, 'locations', 500),
+    listen(LEGACY_REGIONS_PATH, 'regions', 200),
+  ]
+  return () => stops.forEach((stop) => stop())
 }
 
 export function subscribeToPlatformDownloads(onData, onError = console.error) {

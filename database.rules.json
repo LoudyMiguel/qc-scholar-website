@@ -20,6 +20,29 @@
           ".write": "auth != null && newData.hasChildren(['lat', 'lng', 'count', 'android', 'windows']) && ((!data.exists() && newData.child('count').val() === 1) || (data.exists() && newData.child('count').val() === data.child('count').val() + 1))",
           ".validate": "newData.child('android').val() + newData.child('windows').val() === newData.child('count').val() && ((!data.exists()) || (newData.child('lat').val() === data.child('lat').val() && newData.child('lng').val() === data.child('lng').val()))",
           "lat": {
+            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90 && newData.val() % 5 === 0"
+          },
+          "lng": {
+            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180 && newData.val() % 5 === 0"
+          },
+          "count": {
+            ".validate": "newData.isNumber() && newData.val() >= 1"
+          },
+          "android": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "windows": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "$other": { ".validate": false }
+        }
+      },
+      "download_locations": {
+        ".read": true,
+        "$bucket": {
+          ".write": "auth != null && newData.hasChildren(['lat', 'lng', 'count', 'android', 'windows']) && ((!data.exists() && newData.child('count').val() === 1) || (data.exists() && newData.child('count').val() === data.child('count').val() + 1))",
+          ".validate": "newData.child('android').val() + newData.child('windows').val() === newData.child('count').val() && ((!data.exists()) || (newData.child('lat').val() === data.child('lat').val() && newData.child('lng').val() === data.child('lng').val()))",
+          "lat": {
             ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90 && (newData.val() * 4) % 1 === 0"
           },
           "lng": {

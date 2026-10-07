@@ -99,7 +99,7 @@ const reactionButtons = [
           aria-hidden="true"
         />
         {{ reaction.label }}
-        <span class="tabular-nums opacity-80">{{ comment.reactions[reaction.key].count }}</span>
+        <span class="tabular-nums" :class="{ 'opacity-80': !comment.reactions[reaction.key].active }">{{ comment.reactions[reaction.key].count }}</span>
       </button>
     </footer>
   </article>

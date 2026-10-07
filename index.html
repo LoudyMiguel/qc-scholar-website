@@ -7,56 +7,49 @@
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#090b13" media="(prefers-color-scheme: dark)" />
     <script src="/theme-init.js"></script>
-    <style>
-      #app:not([data-v-app]) > main { max-width: 72rem; margin: 0 auto; padding: 5rem 1.5rem; color: #475569; font: 16px/1.75 system-ui, sans-serif; }
-      #app:not([data-v-app]) h1, #app:not([data-v-app]) h2 { color: #0f172a; line-height: 1.15; }
-      #app:not([data-v-app]) h1 { max-width: 52rem; font-size: clamp(2.4rem, 6vw, 4.5rem); }
-      #app:not([data-v-app]) section { max-width: 52rem; margin-top: 3rem; }
-      #app:not([data-v-app]) a { color: #4f46e5; }
-      .dark #app:not([data-v-app]) > main { color: #94a3b8; }
-      .dark #app:not([data-v-app]) h1, .dark #app:not([data-v-app]) h2 { color: #f1f5f9; }
-      .dark #app:not([data-v-app]) a { color: #a5b4fc; }
-    </style>
 
-    <title>GenXYZ Lab — Learn to code and build real projects on Android &amp; Windows</title>
+    <title>GenXYZ Lab — Free Offline Coding App for Android &amp; Windows</title>
     <meta
       name="description"
-      content="GenXYZ Lab 3.0 is a free offline-first coding and AI/ML studio for Android and Windows with 70 courses, 129 templates, 30+ tools and studios, datasets, local training, and open-source projects."
+      content="Learn to code offline with 70 free courses, 129 working templates, and AI &amp; machine-learning studios. Free for Android and Windows, no account needed."
     />
-    <link rel="canonical" href="%VITE_SITE_URL%/" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="%SITE_URL%/" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
     <meta name="author" content="GenXYZ Lab" />
+    <meta name="application-name" content="GenXYZ Lab" />
+    <meta name="apple-mobile-web-app-title" content="GenXYZ Lab" />
     <meta
       name="keywords"
-      content="70 offline coding courses, 129 working project templates, Android coding app, Windows coding studio, offline programming lessons, open-source games"
+      content="learn to code offline, offline coding app, coding app for Android, coding app for Windows, free programming courses, project templates, AI and machine learning studio, Termux compiler setup"
     />
 
     <meta property="og:site_name" content="GenXYZ Lab" />
-    <meta property="og:title" content="GenXYZ Lab — Learn. Code. Build." />
+    <meta property="og:title" content="GenXYZ Lab — Learn to code. Build real projects." />
     <meta
       property="og:description"
-      content="GenXYZ Lab 3.0 adds AI and ML projects, Dataset and Training Studios, 30+ tools, an enhanced editor, and 129 working templates. Free for Android and Windows."
+      content="70 offline courses, 129 working templates, 30+ tools, and AI &amp; ML studios in one free app for Android and Windows."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta property="og:url" content="%SITE_URL%/" />
     <!-- Absolute URL on purpose: crawlers and chat previews discard a relative
-         og:image, which is how a link ends up sharing with no thumbnail. -->
-    <meta property="og:image" content="%VITE_SITE_URL%/assets/og-cover-v2.png" />
-    <meta property="og:image:secure_url" content="%VITE_SITE_URL%/assets/og-cover-v2.png" />
+         og:image, which is how a link ends up sharing with no thumbnail. The
+         file name is versioned because link previews cache images by URL. -->
+    <meta property="og:image" content="%SITE_URL%/assets/og-cover-v3.png" />
+    <meta property="og:image:secure_url" content="%SITE_URL%/assets/og-cover-v3.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="GenXYZ Lab 3.0 — offline courses, AI and ML studios, tools, templates, and games" />
+    <meta property="og:image:alt" content="GenXYZ Lab — Learn to code. Build real projects. A code editor running a Python lesson, with 70 courses, 129 templates, and 30+ tools." />
     <meta property="og:locale" content="en_US" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="GenXYZ Lab — Learn. Code. Build." />
+    <meta name="twitter:title" content="GenXYZ Lab — Learn to code. Build real projects." />
     <meta
       name="twitter:description"
-      content="GenXYZ Lab 3.0 adds AI and ML projects, dataset labeling, local training, 30+ tools, code folding, and 129 templates for Android and Windows."
+      content="70 offline courses, 129 working templates, 30+ tools, and AI &amp; ML studios in one free app for Android and Windows."
     />
-    <meta name="twitter:image" content="%VITE_SITE_URL%/assets/og-cover-v2.png" />
-    <meta name="twitter:image:alt" content="GenXYZ Lab 3.0 — AI and ML creation, offline courses, and 129 templates" />
+    <meta name="twitter:image" content="%SITE_URL%/assets/og-cover-v3.png" />
+    <meta name="twitter:image:alt" content="GenXYZ Lab — Learn to code. Build real projects. A code editor running a Python lesson, with 70 courses, 129 templates, and 30+ tools." />
 
     <link rel="icon" href="/assets/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
@@ -73,12 +66,14 @@
         "@graph": [
           {
             "@type": "Organization",
-            "@id": "%VITE_SITE_URL%/#organization",
+            "@id": "%SITE_URL%/#organization",
             "name": "GenXYZ Lab",
-            "url": "%VITE_SITE_URL%/",
+            "url": "%SITE_URL%/",
             "logo": {
               "@type": "ImageObject",
-              "url": "%VITE_SITE_URL%/assets/logo.png"
+              "url": "%SITE_URL%/assets/logo.png",
+              "width": 256,
+              "height": 256
             },
             "sameAs": [
               "https://github.com/LoudyMiguel/GenXYZ-Lab-Releases",
@@ -87,43 +82,65 @@
           },
           {
             "@type": "WebSite",
-            "@id": "%VITE_SITE_URL%/#website",
+            "@id": "%SITE_URL%/#website",
             "name": "GenXYZ Lab",
-            "url": "%VITE_SITE_URL%/",
-            "publisher": { "@id": "%VITE_SITE_URL%/#organization" },
+            "url": "%SITE_URL%/",
+            "publisher": { "@id": "%SITE_URL%/#organization" },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "WebPage",
+            "@id": "%SITE_URL%/#webpage",
+            "url": "%SITE_URL%/",
+            "name": "GenXYZ Lab — Free Offline Coding App for Android & Windows",
+            "description": "Learn to code offline with 70 free courses, 129 working templates, and AI & machine-learning studios. Free for Android and Windows, no account needed.",
+            "isPartOf": { "@id": "%SITE_URL%/#website" },
+            "about": { "@id": "%SITE_URL%/#software" },
+            "primaryImageOfPage": {
+              "@type": "ImageObject",
+              "url": "%SITE_URL%/assets/og-cover-v3.png",
+              "width": 1200,
+              "height": 630
+            },
             "inLanguage": "en"
           },
           {
             "@type": "SoftwareApplication",
-            "@id": "%VITE_SITE_URL%/#software",
+            "@id": "%SITE_URL%/#software",
             "name": "GenXYZ Lab",
-            "url": "%VITE_SITE_URL%/",
-            "mainEntityOfPage": { "@id": "%VITE_SITE_URL%/#website" },
-            "author": { "@id": "%VITE_SITE_URL%/#organization" },
+            "url": "%SITE_URL%/",
+            "mainEntityOfPage": { "@id": "%SITE_URL%/#webpage" },
+            "author": { "@id": "%SITE_URL%/#organization" },
+            "publisher": { "@id": "%SITE_URL%/#organization" },
             "applicationCategory": "EducationalApplication",
-            "operatingSystem": "Android 8.0+, Windows 10, Windows 11",
-            "softwareVersion": "%VITE_APP_VERSION%",
-            "dateModified": "2026-09-16",
             "applicationSubCategory": "Coding education and software development tools",
-            "description": "A free offline-first learning, coding, and AI/ML studio with 70 courses, 129 working templates, 30+ tools and studios, dataset preparation, local training, and open-source projects.",
-            "image": "%VITE_SITE_URL%/assets/og-cover-v2.png",
-            "downloadUrl": "%VITE_SITE_URL%/#download",
+            "operatingSystem": "Android 8.0+, Windows 10, Windows 11",
+            "softwareVersion": "%RELEASE_VERSION%",
+            "dateModified": "%RELEASE_DATE%",
+            "releaseNotes": "%RELEASE_NOTES_URL%",
+            "description": "A free, offline-first learning and coding studio for Android and Windows: 70 courses, code practice in 10 languages, 129 working templates, 30+ tools and studios, and AI and machine-learning projects.",
+            "image": "%SITE_URL%/assets/og-cover-v3.png",
+            "downloadUrl": [
+              "https://downloads.genxyzlab.org/latest.apk",
+              "https://downloads.genxyzlab.org/latest-windows.zip"
+            ],
             "isAccessibleForFree": true,
             "offers": {
               "@type": "Offer",
               "price": "0",
               "priceCurrency": "USD"
             },
+            "inLanguage": "en",
             "featureList": [
               "70 free offline courses with quizzes and certificates",
-              "30+ built-in tools and studios including AI Playground, Dataset Studio, Training Studio, File Explorer, and 13 offline academic solvers",
-              "20+ supported frameworks for mobile and app development",
+              "Code practice in 10 languages: Python, Java, JavaScript, TypeScript, C, C++, Dart, Rust, Go, and Kotlin",
+              "129 working, ready-to-run project templates",
+              "AI Playground, Dataset Studio, and Training Studio for machine-learning projects",
+              "30+ tools and studios, including API Tester, SQL and NoSQL labs, File Explorer, and 13 offline academic solvers",
+              "20+ frameworks, including Flutter, Arduino, React, Vue, Django, FastAPI, and Spring Boot",
               "30+ open-source games and interactive 3D projects",
-              "129 working system templates for complete, ready-to-run projects",
-              "AI and machine-learning project generation, image labeling, object-detection and tabular dataset preparation, and local training",
-              "Code practice across ten language toolchains with code folding and indentation guides",
-              "Compiler Manager for local toolchain setup",
-              "Project-aware AI assistance"
+              "Project-aware AI assistant",
+              "Certificates with QR verification and portable backups"
             ]
           }
         ]
@@ -131,51 +148,7 @@
     </script>
   </head>
   <body>
-    <div id="app">
-      <main>
-        <header>
-          <p>GenXYZ Lab · Free for Android and Windows</p>
-          <h1>Learn coding, build real projects, and experiment with AI and machine learning.</h1>
-          <p>
-            GenXYZ Lab is a free, offline-first learning and creation studio for
-            Android phones and Windows PCs. It combines structured programming
-            courses with practical editors, project templates, developer tools,
-            academic solvers, and open-source games.
-          </p>
-          <p><a href="#download">Download GenXYZ Lab</a> · <a href="/docs/">Read the documentation</a></p>
-        </header>
-        <section aria-labelledby="learn-build-create">
-          <h2 id="learn-build-create">One workspace for learning and building</h2>
-          <p>
-            Work through 70 offline courses, practise ten programming-language
-            workflows, and start projects from 129 working templates. Code Practice
-            includes project files, local toolchains, code folding, indentation
-            guides, run consoles, terminals, previews, and compiler setup guidance.
-          </p>
-        </section>
-        <section aria-labelledby="ai-ml-tools">
-          <h2 id="ai-ml-tools">AI, machine learning, datasets, and training</h2>
-          <p>
-            AI Playground creates real machine-learning starter projects. Dataset
-            Studio prepares classification, object-detection, and tabular datasets
-            with labels, train-validation-test splits, and health checks. Training
-            Studio configures and monitors supported local training jobs on Windows,
-            while AI &amp; Vision Projects provides ready-made computer-vision and
-            interactive ML experiences.
-          </p>
-        </section>
-        <section aria-labelledby="available-platforms">
-          <h2 id="available-platforms">Available platforms</h2>
-          <p>
-            Download the official ARM64 APK for Android 8 or newer, or the complete
-            Windows x64 ZIP for Windows 10 and Windows 11. The app is free and does
-            not require a subscription. Network-dependent catalogs and AI providers
-            are optional; downloaded learning material and local tools remain usable
-            offline.
-          </p>
-        </section>
-      </main>
-    </div>
+    <div id="app"><!--app-html--></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

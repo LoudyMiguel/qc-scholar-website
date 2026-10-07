@@ -58,9 +58,12 @@ const COMMENT_COOLDOWN_MS = 2 * 60 * 1000
 const COMMENT_POSTED_AT_KEY = 'genxyz-lab-comment-posted-at'
 const COMMENT_BODY_KEY = 'genxyz-lab-comment-body'
 
-if (isFirebaseConfigured) {
+// Browser only: the build-time prerender imports this module in Node, where
+// it must not open Firebase connections that would keep the build alive.
+// Rendering only depends on `isFirebaseConfigured`, which is the same in both.
+if (isFirebaseConfigured && typeof window !== 'undefined') {
   app = initializeApp(firebaseConfig)
-  if (env.VITE_FIREBASE_APPCHECK_SITE_KEY && typeof window !== 'undefined') {
+  if (env.VITE_FIREBASE_APPCHECK_SITE_KEY) {
     initializeAppCheck(app, {
       provider: new ReCaptchaEnterpriseProvider(
         env.VITE_FIREBASE_APPCHECK_SITE_KEY,

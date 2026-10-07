@@ -29,10 +29,14 @@ const assurances = ['Free, no subscription', 'No account required', 'Works offli
         </p>
 
         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+          <!-- The pre-rendered page always shows "Download free"; the detected
+               platform's longer label replaces it after hydration. The minimum
+               width fits the longest label, so the swap never pushes the
+               button beside it sideways. -->
           <button
             v-if="recommended"
             type="button"
-            class="btn btn-primary btn-lg"
+            class="btn btn-primary btn-lg sm:min-w-[19rem]"
             :aria-busy="downloadingId === recommended.id"
             :disabled="downloadingId === recommended.id"
             @click="startDownload(recommended)"
@@ -41,7 +45,7 @@ const assurances = ['Free, no subscription', 'No account required', 'Works offli
             <Download v-else :size="18" aria-hidden="true" />
             {{ downloadingId === recommended.id ? 'Starting download…' : `Download for ${recommended.shortName}` }}
           </button>
-          <a v-else href="#download" class="btn btn-primary btn-lg">
+          <a v-else href="#download" class="btn btn-primary btn-lg sm:min-w-[19rem]">
             <Download :size="18" aria-hidden="true" />
             Download free
           </a>

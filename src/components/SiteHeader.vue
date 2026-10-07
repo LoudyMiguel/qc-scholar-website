@@ -1,24 +1,29 @@
 <script setup>
 import { Download, Menu, X } from '@lucide/vue'
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useActiveSection } from '../composables/useActiveSection'
 import BrandLogo from './BrandLogo.vue'
+import ThemeToggle from './ThemeToggle.vue'
 
-const emit = defineEmits(['download'])
 const menuOpen = ref(false)
 const menuButton = ref(null)
 
 const links = [
-  { label: 'Experience', href: '#experience' },
-  { label: 'Features', href: '#features' },
-  { label: 'Download', href: '#download' },
-  { label: 'Setup', href: '#setup' },
-  { label: 'Community', href: '#community' },
-  { label: 'Docs', href: '/docs/' },
+  { label: 'Features', href: '#features', sections: ['features', 'workflow'] },
+  { label: 'Download', href: '#download', sections: ['download', 'download-map'] },
+  { label: 'Setup', href: '#setup', sections: ['setup'] },
+  { label: 'Community', href: '#community', sections: ['community'] },
+  { label: 'Docs', href: '/docs/', sections: [] },
 ]
 
-function requestDownload() {
+const activeSection = useActiveSection(links.flatMap((link) => link.sections))
+
+function isActive(link) {
+  return link.sections.includes(activeSection.value)
+}
+
+function closeMenu() {
   menuOpen.value = false
-  emit('download')
 }
 
 watch(menuOpen, (isOpen) => {
@@ -26,9 +31,7 @@ watch(menuOpen, (isOpen) => {
   else document.removeEventListener('keydown', handleMenuKeydown)
 })
 
-onBeforeUnmount(() =>
-  document.removeEventListener('keydown', handleMenuKeydown),
-)
+onBeforeUnmount(() => document.removeEventListener('keydown', handleMenuKeydown))
 
 async function handleMenuKeydown(event) {
   if (event.key !== 'Escape') return
@@ -39,38 +42,37 @@ async function handleMenuKeydown(event) {
 </script>
 
 <template>
-  <header
-    class="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-slate-950/75 backdrop-blur-xl"
-  >
-    <div class="site-container flex h-[76px] items-center justify-between">
+  <header class="sticky top-0 z-50 border-b border-line bg-canvas">
+    <div class="site-container flex h-16 items-center justify-between gap-4">
       <BrandLogo />
 
-      <nav class="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
+      <nav class="hidden items-center gap-1 md:flex" aria-label="Main navigation">
         <a
           v-for="link in links"
           :key="link.href"
           :href="link.href"
-          class="inline-flex min-h-11 items-center rounded-lg px-3.5 text-sm font-semibold text-slate-400 transition hover:bg-white/[0.04] hover:text-white"
+          class="rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150"
+          :class="isActive(link) ? 'bg-muted text-fg' : 'text-fg-muted hover:text-fg'"
+          :aria-current="isActive(link) ? 'location' : undefined"
         >
           {{ link.label }}
         </a>
       </nav>
 
-      <div class="flex items-center gap-2.5">
-        <span
-          class="hidden items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.13em] text-emerald-300 sm:inline-flex"
+      <div class="flex items-center gap-1.5">
+        <ThemeToggle />
+        <a
+          href="#download"
+          class="btn btn-primary h-10 min-h-0 w-10 whitespace-nowrap px-0 sm:w-auto sm:px-4"
+          aria-label="Download GenXYZ Lab"
         >
-          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_#34d399]" />
-          Offline-first
-        </span>
-        <button type="button" class="button-primary hidden md:inline-flex" @click="requestDownload">
           <Download :size="17" aria-hidden="true" />
-          Download
-        </button>
+          <span class="hidden sm:inline">Download</span>
+        </a>
         <button
           ref="menuButton"
           type="button"
-          class="grid h-11 w-11 place-items-center rounded-xl border border-slate-800 bg-slate-900 text-slate-200 lg:hidden"
+          class="icon-button md:hidden"
           :aria-expanded="menuOpen"
           aria-controls="mobile-navigation"
           :aria-label="menuOpen ? 'Close navigation' : 'Open navigation'"
@@ -82,40 +84,23 @@ async function handleMenuKeydown(event) {
       </div>
     </div>
 
-    <Transition name="menu">
-      <nav
-        v-if="menuOpen"
-        id="mobile-navigation"
-        class="border-t border-white/[0.06] bg-slate-950/95 px-5 pb-5 pt-3 backdrop-blur-xl lg:hidden"
-        aria-label="Mobile navigation"
-      >
+    <nav
+      v-if="menuOpen"
+      id="mobile-navigation"
+      class="border-t border-line bg-canvas md:hidden"
+      aria-label="Mobile navigation"
+    >
+      <div class="site-container py-2">
         <a
           v-for="link in links"
           :key="link.href"
           :href="link.href"
-          class="flex min-h-12 items-center border-b border-slate-800/70 text-sm font-semibold text-slate-300"
-          @click="menuOpen = false"
+          class="flex min-h-12 items-center border-b border-line text-base font-medium text-fg last:border-b-0"
+          @click="closeMenu"
         >
           {{ link.label }}
         </a>
-        <button type="button" class="button-primary mt-4 w-full" @click="requestDownload">
-          <Download :size="17" aria-hidden="true" />
-          Download GenXYZ Lab
-        </button>
-      </nav>
-    </Transition>
+      </div>
+    </nav>
   </header>
 </template>
-
-<style scoped>
-.menu-enter-active,
-.menu-leave-active {
-  transition: opacity 180ms ease, transform 180ms ease;
-}
-
-.menu-enter-from,
-.menu-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
-}
-</style>

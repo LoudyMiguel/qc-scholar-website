@@ -140,7 +140,6 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             firebase: ['firebase/app', 'firebase/auth', 'firebase/database'],
-            motion: ['gsap', 'lenis'],
           },
         },
       },

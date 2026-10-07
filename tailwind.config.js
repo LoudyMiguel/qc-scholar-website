@@ -1,41 +1,62 @@
+/**
+ * Every colour is a semantic token backed by a CSS variable in
+ * `src/assets/main.css`. Components say what a colour is for (`bg-surface`,
+ * `text-fg-muted`, `border-line`) rather than which shade it is, so the light
+ * and dark themes are a single variable swap instead of a `dark:` variant on
+ * every element.
+ */
+const token = (name) => `rgb(var(--${name}) / <alpha-value>)`
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './docs/**/*.html', './src/**/*.{vue,js}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        ink: '#020617',
-        panel: '#0f172a',
+        canvas: token('bg'),
+        subtle: token('bg-subtle'),
+        surface: token('surface'),
+        muted: token('surface-muted'),
+        line: {
+          DEFAULT: token('border'),
+          strong: token('border-strong'),
+        },
+        fg: {
+          DEFAULT: token('fg'),
+          muted: token('fg-muted'),
+          subtle: token('fg-subtle'),
+        },
         brand: {
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
+          DEFAULT: token('brand'),
+          hover: token('brand-hover'),
+          text: token('brand-text'),
         },
-        violet: {
-          500: '#8b5cf6',
-          600: '#7c3aed',
+        success: {
+          DEFAULT: token('success'),
+          text: token('success-text'),
         },
-        electric: '#22d3ee',
-        certificate: '#fbbf24',
+        warning: {
+          DEFAULT: token('warning'),
+          text: token('warning-text'),
+        },
+        danger: {
+          DEFAULT: token('danger'),
+          text: token('danger-text'),
+        },
       },
       fontFamily: {
-        display: ['Sora', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        // The technical register (readouts, tags, platform metadata) carries a
-        // real monospace rather than falling through to whatever the OS picks,
-        // which on Windows is Courier New and undoes the whole aesthetic.
-        mono: ['"JetBrains Mono"', 'SFMono-Regular', 'Consolas', 'monospace'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        // System monospace only: no extra font download, and Consolas is
+        // present on every supported Windows install.
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
       maxWidth: {
-        site: '1160px',
+        site: '1200px',
       },
       boxShadow: {
-        glow: '0 20px 80px rgba(79, 70, 229, 0.28)',
-        cyan: '0 18px 70px rgba(34, 211, 238, 0.14)',
-      },
-      backgroundImage: {
-        'hero-radial':
-          'radial-gradient(circle at 70% 20%, rgba(99,102,241,.20), transparent 38%), radial-gradient(circle at 20% 80%, rgba(34,211,238,.09), transparent 32%)',
+        card: '0 1px 2px rgb(var(--shadow) / 0.06), 0 1px 3px rgb(var(--shadow) / 0.08)',
+        lift: '0 10px 30px -12px rgb(var(--shadow) / 0.25)',
       },
     },
   },

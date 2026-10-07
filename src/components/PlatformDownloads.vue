@@ -1,16 +1,8 @@
 <script setup>
-import { Check, Clock, Download, Monitor, Smartphone } from '@lucide/vue'
-import { computed, onMounted, ref } from 'vue'
-import { detectPlatform, releases, siteConfig } from '../config/site'
-import {
-  prepareDownloadTracking,
-  recordApproximateDownloadOrigin,
-  recordDownloadClick,
-} from '../services/firebase'
-
-const detected = ref('')
-const downloadingId = ref('')
-const liveManifest = ref({})
+import { Check, Clock, Download, ExternalLink, LoaderCircle } from '@lucide/vue'
+import { computed } from 'vue'
+import { siteConfig } from '../config/site'
+import { useReleases } from '../composables/useReleases'
 
 const props = defineProps({
   downloadCount: {
@@ -23,362 +15,116 @@ const props = defineProps({
   },
 })
 
-const formattedDownloadCount = computed(() =>
-  props.downloadCount.toLocaleString(undefined, { maximumFractionDigits: 0 }),
-)
+const { cards, recommended, downloadingId, startDownload } = useReleases()
 
-onMounted(() => {
-  detected.value = detectPlatform()
-  fetch('/version.json', { cache: 'no-store' })
-    .then((response) => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      return response.json()
-    })
-    .then((manifest) => {
-      if (manifest && typeof manifest === 'object') liveManifest.value = manifest
-    })
-    .catch((error) => {
-      console.warn('Live release metadata is unavailable; using the build fallback.', error)
-    })
-  prepareDownloadTracking().catch((error) => {
-    console.warn('Download tracking could not be prepared.', error)
-  })
-})
-
-const platformIcons = { android: Smartphone, android32: Smartphone, windows: Monitor }
-
-// What each build actually does differently. Vague parity claims ("works
-// everywhere!") are worse than useless here — the compiler story is genuinely
-// different per platform and a visitor needs to know before downloading.
-const highlights = {
-  android: [
-    'Guided courses, quizzes, and certificates offline',
-    'Real compilers on-device through Termux',
-    'Arduino, Flutter, and web project studios',
-  ],
-  android32: [
-    'The same courses, quizzes, and certificates',
-    'Built specifically for older 32-bit ARM phones',
-    'Camera, AI, Arduino, and project tools retained',
-  ],
-  windows: [
-    'The same courses, editor, and project tools',
-    'Uses the compilers already on your PC',
-    'Larger screen, full keyboard shortcuts',
-  ],
-}
-
-const cards = computed(() =>
-  releases.map((release) => ({
-    ...release,
-    version: liveManifest.value[release.id]?.version || siteConfig.version,
-    size: liveManifest.value[release.id]?.size || release.size,
-    icon: platformIcons[release.id],
-    highlights: highlights[release.id] || [],
-    isDetected: detected.value === release.id,
-  })),
-)
-
-async function downloadRelease(event, card) {
-  event.preventDefault()
-  if (downloadingId.value || card.isPlaceholder) return
-  downloadingId.value = card.id
-
-  try {
-    await Promise.race([
-      Promise.allSettled([
-        recordDownloadClick(card.id),
-        recordApproximateDownloadOrigin(card.id),
-      ]),
-      new Promise((resolve) => window.setTimeout(resolve, 1800)),
-    ])
-  } catch (error) {
-    console.warn('Download tracking was unavailable.', error)
-  }
-
-  window.location.assign(card.url)
-}
+const formattedDownloadCount = computed(() => props.downloadCount.toLocaleString())
 </script>
 
 <template>
-  <section id="download" class="relative overflow-hidden py-24 sm:py-28">
-    <div
-      class="pointer-events-none absolute left-1/2 top-0 h-px w-[70%] -translate-x-1/2 bg-gradient-to-r from-transparent via-indigo-400/25 to-transparent"
-      aria-hidden="true"
-    />
-
-    <div class="site-container relative">
-      <div class="mx-auto max-w-3xl text-center" data-reveal>
-        <span class="eyebrow">Get the app</span>
-        <h2 class="section-heading mt-6">Choose the build for your device.</h2>
-        <p class="section-copy mt-5">
-          Free, with no account and no subscription. Pick the build that matches
-          the device you learn on.
+  <section id="download" class="section">
+    <div class="site-container">
+      <div class="mx-auto max-w-2xl text-center">
+        <p class="eyebrow">Download</p>
+        <h2 class="section-title mt-3">Get GenXYZ Lab for your device</h2>
+        <p class="section-lead mt-4">
+          Free, with no account and no subscription. Pick the build for the device you learn on.
         </p>
-        <div class="download-proof mt-7" aria-live="polite">
-          <span class="download-proof__icon" aria-hidden="true">
-            <Download :size="17" />
-          </span>
-          <span v-if="countReady">
-            <strong>{{ formattedDownloadCount }}</strong>
+        <p v-if="countReady" class="badge mt-6" aria-live="polite">
+          <span class="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true" />
+          <span>
+            <strong class="font-semibold text-fg">{{ formattedDownloadCount }}</strong>
             download{{ downloadCount === 1 ? '' : 's' }} started
           </span>
-          <span v-else>Connecting to the live download count…</span>
-          <span class="download-proof__status" aria-hidden="true" />
-          <small>Live public counter</small>
-        </div>
+        </p>
       </div>
 
       <div
-        class="mt-14 grid gap-4"
-        :class="cards.length === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-3'"
+        class="mx-auto mt-12 grid max-w-4xl gap-4"
+        :class="cards.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'"
       >
         <article
-          v-for="(card, index) in cards"
+          v-for="card in cards"
           :key="card.id"
-          class="platform-card group"
-          :class="{ 'is-detected': card.isDetected, 'is-pending': card.isPlaceholder }"
-          data-reveal
-          :style="{ '--reveal-delay': `${index * 90}ms` }"
+          class="card flex min-w-0 flex-col p-5 sm:p-8"
+          :class="{
+            'border-brand ring-1 ring-brand': card.isDetected && !card.isPlaceholder,
+            'opacity-75': card.isPlaceholder,
+          }"
         >
-          <span class="card-bracket card-bracket--tl" aria-hidden="true" />
-          <span class="card-bracket card-bracket--br" aria-hidden="true" />
+          <div class="flex items-start justify-between gap-4">
+            <span class="icon-tile h-12 w-12">
+              <component :is="card.icon" :size="24" aria-hidden="true" />
+            </span>
+            <span
+              v-if="card.isDetected && !card.isPlaceholder"
+              class="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand-text"
+            >
+              Your device
+            </span>
+            <span
+              v-else-if="card.isPlaceholder"
+              class="rounded-full bg-warning/15 px-2.5 py-1 text-xs font-semibold text-warning-text"
+            >
+              Coming soon
+            </span>
+          </div>
 
-          <div class="relative flex h-full flex-col p-6 sm:p-7">
-            <div class="flex items-start justify-between gap-4">
-              <span class="platform-glyph">
-                <component :is="card.icon" :size="24" aria-hidden="true" />
-              </span>
+          <h3 class="mt-5 text-xl font-semibold text-fg">{{ card.name }}</h3>
+          <p class="mt-1 text-sm text-fg-muted">{{ card.requirement }}</p>
 
-              <span
-                v-if="card.isDetected && !card.isPlaceholder"
-                class="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-300"
-              >
-                Your device
-              </span>
-              <span
-                v-else-if="card.isPlaceholder"
-                class="rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-amber-200"
-              >
-                Coming soon
-              </span>
-            </div>
+          <ul class="mt-6 space-y-3">
+            <li
+              v-for="item in card.highlights"
+              :key="item"
+              class="flex items-start gap-3 text-sm text-fg-muted"
+            >
+              <Check :size="17" class="mt-0.5 shrink-0 text-success-text" aria-hidden="true" />
+              {{ item }}
+            </li>
+          </ul>
 
-            <h3 class="mt-6 font-display text-2xl font-semibold tracking-tight text-white">
-              {{ card.name }}
-            </h3>
-            <p class="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-500">
-              {{ card.requirement }}
-            </p>
-
-            <ul class="mt-6 space-y-2.5">
-              <li
-                v-for="item in card.highlights"
-                :key="item"
-                class="flex items-start gap-2.5 text-sm leading-6 text-slate-400"
-              >
-                <span
-                  class="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-indigo-400/12 text-indigo-300"
-                >
-                  <Check :size="11" :stroke-width="3" aria-hidden="true" />
-                </span>
-                {{ item }}
-              </li>
-            </ul>
-
-            <div class="mt-auto pt-8">
-              <div
-                class="mb-4 flex items-center justify-between border-t border-slate-800/80 pt-4 font-mono text-[10px] uppercase tracking-[0.1em] text-slate-500"
-              >
-                <span>v{{ card.version }}</span>
-                <span v-if="!card.isPlaceholder">{{ card.fileKind }} · {{ card.size }}</span>
-                <span v-else>Not published</span>
+          <div class="mt-auto pt-8">
+            <dl class="mb-4 flex items-center justify-between border-t border-line pt-4 text-sm text-fg-subtle">
+              <div>
+                <dt class="sr-only">Version</dt>
+                <dd>v{{ card.version }}</dd>
               </div>
+              <div>
+                <dt class="sr-only">File</dt>
+                <dd>{{ card.isPlaceholder ? 'Not published yet' : `${card.fileKind} · ${card.size}` }}</dd>
+              </div>
+            </dl>
 
-              <a
-                v-if="!card.isPlaceholder"
-                :href="card.url"
-                class="button-primary w-full"
-                :aria-busy="downloadingId === card.id"
-                @click="downloadRelease($event, card)"
-              >
-                <span
-                  v-if="downloadingId === card.id"
-                  class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
-                  aria-hidden="true"
-                />
-                <Download v-else :size="18" aria-hidden="true" />
-                {{ downloadingId === card.id ? 'Preparing\u2026' : `Download for ${card.shortName}` }}
-              </a>
-              <button v-else type="button" class="button-secondary w-full" disabled>
-                <Clock :size="17" aria-hidden="true" />
-                Not available yet
-              </button>
+            <a
+              v-if="!card.isPlaceholder"
+              :href="card.url"
+              class="btn w-full sm:btn-lg"
+              :class="card.isDetected || !recommended ? 'btn-primary' : 'btn-secondary'"
+              :aria-busy="downloadingId === card.id"
+              @click.prevent="startDownload(card)"
+            >
+              <LoaderCircle v-if="downloadingId === card.id" :size="18" class="animate-spin" aria-hidden="true" />
+              <Download v-else :size="18" aria-hidden="true" />
+              {{ downloadingId === card.id ? 'Starting download…' : `Download for ${card.shortName}` }}
+            </a>
+            <button v-else type="button" class="btn btn-secondary w-full sm:btn-lg" disabled>
+              <Clock :size="18" aria-hidden="true" />
+              Not available yet
+            </button>
 
-              <p class="mt-3 text-center text-[11px] leading-5 text-slate-500">
-                {{ card.note }}
-              </p>
-            </div>
+            <p class="mt-3 text-center text-xs text-fg-subtle">{{ card.note }}</p>
           </div>
         </article>
       </div>
+
+      <p class="mt-8 text-center text-sm text-fg-muted">
+        Prefer to verify first?
+        <a :href="siteConfig.releasesUrl" target="_blank" rel="noopener noreferrer" class="text-link inline-flex items-center gap-1">
+          See every release and its SHA-256 checksums
+          <ExternalLink :size="13" aria-hidden="true" />
+          <span class="sr-only">(opens in a new tab)</span>
+        </a>
+      </p>
     </div>
   </section>
 </template>
-
-<style scoped>
-.download-proof {
-  display: inline-flex;
-  min-height: 2.75rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  border: 1px solid rgb(52 211 153 / 0.2);
-  border-radius: 999px;
-  background: rgb(6 78 59 / 0.13);
-  padding: 0.6rem 0.9rem;
-  color: rgb(203 213 225);
-  font-size: 0.78rem;
-  line-height: 1.2;
-}
-
-.download-proof strong {
-  margin-right: 0.22rem;
-  color: rgb(255 255 255);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.9rem;
-}
-
-.download-proof__icon {
-  display: grid;
-  height: 1.8rem;
-  width: 1.8rem;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  background: rgb(52 211 153 / 0.12);
-  color: rgb(110 231 183);
-}
-
-.download-proof__status {
-  height: 0.38rem;
-  width: 0.38rem;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: rgb(52 211 153);
-  box-shadow: 0 0 0 3px rgb(52 211 153 / 0.1);
-}
-
-.download-proof small {
-  color: rgb(100 116 139);
-  font-size: 0.68rem;
-}
-
-@media (max-width: 420px) {
-  .download-proof {
-    flex-wrap: wrap;
-  }
-
-  .download-proof small {
-    width: 100%;
-  }
-}
-
-.platform-card {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgb(148 163 184 / 0.13);
-  background: linear-gradient(155deg, rgb(15 23 42 / 0.82), rgb(15 23 42 / 0.48));
-  border-radius: 1.35rem;
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.05),
-    0 28px 90px rgb(2 6 23 / 0.32);
-  transition:
-    border-color 420ms ease,
-    transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.platform-card:hover {
-  border-color: rgb(148 163 184 / 0.28);
-  transform: translateY(-4px);
-}
-
-/* The detected platform gets a warmer edge and a soft interior glow, so the
-   recommended choice is legible at a glance without hiding the other one. */
-.platform-card.is-detected {
-  border-color: rgb(129 140 248 / 0.34);
-}
-
-.platform-card.is-detected::before {
-  position: absolute;
-  top: -30%;
-  right: -20%;
-  width: 24rem;
-  height: 24rem;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgb(99 102 241 / 0.16), transparent 68%);
-  content: '';
-  pointer-events: none;
-}
-
-.platform-card.is-pending {
-  opacity: 0.72;
-}
-
-.card-bracket {
-  position: absolute;
-  z-index: 1;
-  width: 13px;
-  height: 13px;
-  border: 1px solid rgb(34 211 238 / 0.4);
-  opacity: 0;
-  transition: opacity 420ms ease;
-}
-
-.platform-card:hover .card-bracket,
-.platform-card.is-detected .card-bracket {
-  opacity: 1;
-}
-
-.card-bracket--tl {
-  top: 10px;
-  left: 10px;
-  border-right: 0;
-  border-bottom: 0;
-}
-
-.card-bracket--br {
-  right: 10px;
-  bottom: 10px;
-  border-top: 0;
-  border-left: 0;
-}
-
-.platform-glyph {
-  display: grid;
-  height: 3.25rem;
-  width: 3.25rem;
-  place-items: center;
-  border: 1px solid rgb(255 255 255 / 0.07);
-  border-radius: 1rem;
-  background: rgb(2 6 23 / 0.55);
-  color: rgb(165 180 252);
-  transition: color 420ms ease, transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.platform-card:hover .platform-glyph {
-  color: rgb(103 232 249);
-  transform: translateY(-2px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .platform-card,
-  .platform-glyph {
-    transition: none;
-  }
-
-  .platform-card:hover {
-    transform: none;
-  }
-}
-</style>

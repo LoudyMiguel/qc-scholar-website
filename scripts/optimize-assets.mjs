@@ -1,13 +1,14 @@
 /**
- * One-shot asset pipeline: reads the full-resolution originals in
- * `assets-source/` and writes web-sized derivatives into `public/assets/`.
+ * One-shot asset pipeline: reads the app icon and writes the web-sized icons
+ * and social card into `public/assets/`.
  *
- * Why this exists: the originals are 1.4-1.9 MB each and were being served
- * verbatim. `app_ic.png` in particular was a 1254x1254 / 1.45 MB file used as
- * the favicon and as a 40 px header logo — every visitor paid for it before the
- * page could paint. Sources now live outside `public/` so they are never
- * copied into the bundle, and this script is the only thing that produces what
- * ships.
+ * Why this exists: `app_ic.png` is a 1254x1254 / 1.45 MB file. It used to be
+ * served verbatim as the favicon and a 40 px header logo, so every visitor paid
+ * for it before the page could paint. This script is the only thing that
+ * produces what ships.
+ *
+ * The site's illustrations are HTML and CSS (see AppPreview.vue), so there is
+ * no bitmap artwork to process here any more.
  *
  * Run with: npm run assets
  */
@@ -17,7 +18,6 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const SOURCE = join(root, 'assets-source')
 const OUT = join(root, 'public', 'assets')
 
 // The app icon's real home is the Flutter project, and this website is a
@@ -25,10 +25,11 @@ const OUT = join(root, 'public', 'assets')
 // stale through an entire rebrand: the app moved to the GenXYZ "G" mark while
 // the site kept shipping the old QC Scholar "Q" everywhere, including the
 // social card. So prefer the live app icon and treat the local file as a
-// fallback for when the website repo is checked out on its own.
+// fallback for when the website repo is checked out on its own (create
+// `assets-source/app_ic.png` only if you actually hit that case).
 const APP_ICON_CANDIDATES = [
   resolve(root, '..', 'assets', 'images', 'app_ic.png'),
-  join(SOURCE, 'app_ic.png'),
+  join(root, 'assets-source', 'app_ic.png'),
 ]
 
 async function resolveAppIcon() {
@@ -201,40 +202,6 @@ async function ogCover(source, radiusRatio) {
     .toFile(join(OUT, 'og-cover-v2.png'))
 }
 
-async function artwork() {
-  const jobs = [
-    // AI-generated hero foreground. It sits above a real HTML feature grid and
-    // is selectively masked away by the cursor reveal, so 1600 px stays crisp
-    // on wide displays without shipping the full generation-sized PNG.
-    {
-      file: 'hero-learning-studio-v2.png',
-      output: join(root, 'src', 'assets', 'hero-learning-studio-v2.webp'),
-      width: 1600,
-      quality: 82,
-    },
-    // Rendered at most ~700 CSS px wide inside the showcase frame; 1200 covers
-    // a 2x display with room to spare.
-    { file: 'feature-lab.webp', width: 1200, quality: 76 },
-    // A 30%-opacity decorative backdrop. It never needs to be sharp, and it is
-    // the single heaviest asset on the page.
-    { file: 'community-constellation.webp', width: 1600, quality: 68 },
-  ]
-
-  for (const job of jobs) {
-    const source = join(SOURCE, job.file)
-    try {
-      await stat(source)
-    } catch {
-      console.warn(`  skipped ${job.file} (no source)`)
-      continue
-    }
-    await sharp(source)
-      .resize({ width: job.width, withoutEnlargement: true })
-      .webp({ quality: job.quality, effort: 6 })
-      .toFile(job.output || join(OUT, job.file))
-  }
-}
-
 async function report() {
   const files = await readdir(OUT)
   const rows = []
@@ -256,7 +223,5 @@ console.log('Generating icons…')
 await icons(appIcon, radiusRatio)
 console.log('Generating social cover…')
 await ogCover(appIcon, radiusRatio)
-console.log('Optimising artwork…')
-await artwork()
 console.log('\npublic/assets:')
 await report()

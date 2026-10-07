@@ -277,4 +277,5 @@ export { icons, measureCornerRadiusRatio, ogCover }
 
 // `npm run assets` runs everything; importing this file runs nothing, so a
 // single output can be regenerated on its own.
-if (import.meta.url === pathToFileURL(process.argv[1]).href) await main()
+// (`node -e` has no script path, so process.argv[1] is undefined there.)
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main()

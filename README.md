@@ -308,6 +308,19 @@ If Firebase, reCAPTCHA, or the download hostname changes, update `connect-src`,
 `frame-src`, or the navigation policy in `_headers` and check the deployed
 browser console.
 
+Two allowances in the CSP are easy to mistake for leftovers:
+
+- `https://*.firebaseio.com` in `script-src` and `frame-src` is Firebase's
+  long-polling fallback. On networks that block WebSockets (common on school
+  and office Wi-Fi) the Realtime Database SDK loads its data as script tags
+  and opens a hidden disconnect frame on the database host; without these the
+  download counter and map stay empty for those visitors.
+- `https://static.cloudflareinsights.com` in `script-src` and
+  `https://cloudflareinsights.com` in `connect-src` let Cloudflare Web
+  Analytics, which the Pages project injects into every page, load and report.
+  Remove both if Web Analytics is switched off, and keep the Site analytics
+  section of `public/privacy.html` in step with that setting.
+
 The download redirector is a separate Worker under `download-worker/`. Deploy
 it with `npx wrangler deploy`, then attach the Worker Custom Domain
 `downloads.genxyzlab.org`. Do not attach that hostname to the Pages project.

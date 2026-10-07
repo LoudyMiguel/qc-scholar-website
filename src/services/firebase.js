@@ -4,7 +4,10 @@ import {
   ReCaptchaEnterpriseProvider,
 } from 'firebase/app-check'
 import {
-  getAuth,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  indexedDBLocalPersistence,
+  initializeAuth,
   signInAnonymously,
 } from 'firebase/auth'
 import {
@@ -79,7 +82,13 @@ if (isFirebaseConfigured && typeof window !== 'undefined') {
   }
 
   // App Check must be initialized before any Firebase service is accessed.
-  auth = getAuth(app)
+  // initializeAuth is getAuth() without the popup/redirect resolver: the site
+  // only signs in anonymously, and that resolver makes mobile browsers and
+  // Safari load https://apis.google.com/js/api.js and a hidden auth iframe on
+  // every page load, both of which the CSP blocks.
+  auth = initializeAuth(app, {
+    persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence],
+  })
   database = getDatabase(app)
 }
 

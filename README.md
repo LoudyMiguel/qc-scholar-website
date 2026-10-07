@@ -305,16 +305,23 @@ time from `VITE_SITE_URL` — do not add static copies, or the domain ends up
 defined in three places.
 
 If Firebase, reCAPTCHA, or the download hostname changes, update `connect-src`,
-`frame-src`, or the navigation policy in `_headers` and check the deployed
-browser console.
+`script-src`, `frame-src`, or the navigation policy in `_headers` and check the
+deployed browser console. A regional Realtime Database
+(`*.firebasedatabase.app`) needs the same `script-src` and `frame-src` entries
+as `*.firebaseio.com`.
 
 Two allowances in the CSP are easy to mistake for leftovers:
 
-- `https://*.firebaseio.com` in `script-src` and `frame-src` is Firebase's
-  long-polling fallback. On networks that block WebSockets (common on school
-  and office Wi-Fi) the Realtime Database SDK loads its data as script tags
-  and opens a hidden disconnect frame on the database host; without these the
-  download counter and map stay empty for those visitors.
+- `https://*.firebaseio.com/.lp` in `script-src` and `frame-src` is Firebase's
+  long-polling transport. The Realtime Database SDK uses it on networks that
+  block WebSockets (common on school and office Wi-Fi), whenever a WebSocket
+  has previously failed in that browser, and when site storage is blocked. It
+  loads data as script tags from `/.lp` and opens a hidden disconnect frame
+  there; without these the download counter and map stay empty for those
+  visitors. Keep the `/.lp` path: the Realtime Database REST API on every
+  `*.firebaseio.com` host echoes its `?callback=` parameter back as
+  JavaScript, so allowing the bare host would let injected HTML run any
+  script.
 - `https://static.cloudflareinsights.com` in `script-src` and
   `https://cloudflareinsights.com` in `connect-src` let Cloudflare Web
   Analytics, which the Pages project injects into every page, load and report.

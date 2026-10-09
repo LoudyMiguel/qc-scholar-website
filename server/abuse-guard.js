@@ -13,7 +13,7 @@
 // only for 30 days.
 
 import { ConflictError } from './firebase-admin.js'
-import { isBlocked, ipKey, parseBlocklist } from './ip.js'
+import { isBlocked, ipKey, parseBlocklist, rateLimitSubject } from './ip.js'
 
 export const LIMITS = Object.freeze({
   comment: Object.freeze({ minIntervalMs: 120_000, perDay: 10, globalPerHour: 60 }),
@@ -91,10 +91,14 @@ export async function createAbuseGuard({
   if (!limits) throw new Error(`Unknown action ${action}`)
 
   const ip = clientAddress(request)
-  const key = await ipKey(ip, await hashSecret(env))
+  // Limits, strikes and blocks apply to the subject: the IPv4 address, or the
+  // IPv6 /64 it belongs to. The offender log keeps the exact address too.
+  const subject = rateLimitSubject(ip)
+  const key = await ipKey(subject, await hashSecret(env))
   const cf = request.cf || {}
   const details = {
     ip,
+    range: subject === ip ? '' : subject,
     country: String(cf.country || ''),
     asn: Number.isSafeInteger(Number(cf.asn)) ? Number(cf.asn) : 0,
     network: String(cf.asOrganization || '').slice(0, 120),
@@ -121,7 +125,7 @@ export async function createAbuseGuard({
     if (strikes >= STRIKES_TO_BLOCK) {
       work.push(
         db.patch(`security/blocked/${key}`, {
-          ip,
+          ip: subject,
           reason: `${strikes} rejected ${action} requests in one day`,
           blockedAt: now,
           until: now + BLOCK_MS,

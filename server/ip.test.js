@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { ipKey, isBlocked, parseBlocklist, parseIp } from './ip.js'
+import { ipKey, isBlocked, parseBlocklist, parseIp, rateLimitSubject } from './ip.js'
 
 test('parses IPv4 and rejects malformed addresses', () => {
   assert.equal(parseIp('203.0.113.7').value, 0xcb007107n)
@@ -44,4 +44,12 @@ test('ipKey is stable, key-dependent, and safe as a database key', async () => {
   assert.notEqual(first, await ipKey('203.0.113.7', 'other secret'))
   assert.notEqual(first, await ipKey('203.0.113.8', 'secret'))
   assert.match(first, /^[A-Za-z0-9_-]{22}$/)
+})
+
+test('rate limits count IPv4 per address and IPv6 per /64', () => {
+  assert.equal(rateLimitSubject('203.0.113.7'), '203.0.113.7')
+  assert.equal(rateLimitSubject('2001:db8:1:2:aaaa::1'), '2001:0db8:0001:0002::/64')
+  assert.equal(rateLimitSubject('2001:db8:1:2:bbbb::9'), rateLimitSubject('2001:db8:1:2:aaaa::1'))
+  assert.notEqual(rateLimitSubject('2001:db8:1:3::1'), rateLimitSubject('2001:db8:1:2::1'))
+  assert.equal(rateLimitSubject('garbage'), 'unknown')
 })

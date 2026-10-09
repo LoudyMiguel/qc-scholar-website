@@ -157,3 +157,13 @@ test('cleanup removes expired rate limits, blocks, and old offenders', async () 
   assert.deepEqual(Object.keys(security.blocked), ['kept'])
   assert.deepEqual(Object.keys(security.offenders), ['fresh'])
 })
+
+test('rotating IPv6 addresses inside one /64 shares a single limit', async () => {
+  const db = createMemoryDatabase()
+  assert.ok((await (await guardFor(db, { ip: '2001:db8:5:6::1' })).guard.check()).ok)
+  const rotated = await (await guardFor(db, { ip: '2001:db8:5:6:ffff::42', now: NOW + 1000 })).guard.check()
+  assert.equal(rotated.ok, false)
+  assert.equal((await rotated.response.json()).error, 'too-soon')
+  const otherNetwork = await (await guardFor(db, { ip: '2001:db8:5:7::1', now: NOW + 1000 })).guard.check()
+  assert.ok(otherNetwork.ok)
+})

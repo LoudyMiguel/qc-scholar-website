@@ -76,6 +76,19 @@ export function isBlocked(ipText, ranges) {
   )
 }
 
+/**
+ * What the rate limits count against. One IPv6 subscriber usually controls a
+ * whole /64 and can rotate through it freely, so IPv6 is limited per /64;
+ * IPv4 per address. Unparseable input is limited as one shared bucket.
+ */
+export function rateLimitSubject(ipText) {
+  const ip = parseIp(ipText)
+  if (!ip) return 'unknown'
+  if (ip.version === 4) return String(ipText).trim()
+  const prefix = (ip.value >> 64n).toString(16).padStart(16, '0').match(/.{4}/g).join(':')
+  return `${prefix}::/64`
+}
+
 /** HMAC-SHA256 of the address, base64url, 22 characters: a stable database key. */
 export async function ipKey(ip, secret) {
   const key = await crypto.subtle.importKey(

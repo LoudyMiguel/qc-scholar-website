@@ -6,11 +6,13 @@ import {
 import {
   browserLocalPersistence,
   browserSessionPersistence,
+  connectAuthEmulator,
   indexedDBLocalPersistence,
   initializeAuth,
   signInAnonymously,
 } from 'firebase/auth'
 import {
+  connectDatabaseEmulator,
   getDatabase,
   limitToLast,
   onValue,
@@ -26,12 +28,8 @@ import {
   assertCommunityCommentAllowed,
   normalizeCommentForComparison,
 } from './comment-moderation'
-import {
-  cellKey,
-  isLocationGridValue,
-  parseCells,
-  toLegacyRegion,
-} from './download-cells'
+import { parseCells } from './download-cells'
+import { normalizeText } from './text'
 
 const env = import.meta.env
 
@@ -61,7 +59,6 @@ let app = null
 let auth = null
 let database = null
 let signInPromise = null
-let approximateOriginPromise = null
 
 const COMMENT_COOLDOWN_MS = 2 * 60 * 1000
 const COMMENT_POSTED_AT_KEY = 'genxyz-lab-comment-posted-at'
@@ -90,6 +87,13 @@ if (isFirebaseConfigured && typeof window !== 'undefined') {
     persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence],
   })
   database = getDatabase(app)
+
+  // Local development against `firebase emulators:start --only database,auth`
+  // (see README). Never set in production builds.
+  if (import.meta.env.VITE_FIREBASE_EMULATORS === 'true') {
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
+    connectDatabaseEmulator(database, '127.0.0.1', 9000)
+  }
 }
 
 function requireFirebase() {
@@ -134,32 +138,20 @@ export function subscribeToDownloadCount(onData, onError = console.error) {
   )
 }
 
-function incrementCounter(path) {
-  return runTransaction(ref(database, path), (current) => {
-    if (current === null) return 1
-    if (!Number.isSafeInteger(current) || current < 0) return
-    return current + 1
+/**
+ * Counts a download click through the same-origin Pages Function, which
+ * applies the rate limits and records the approximate location itself. The
+ * database rules deny direct client writes to the counters and the map.
+ * `keepalive` lets the request finish while the browser opens the download.
+ */
+export async function recordDownload(platform) {
+  const response = await fetch('/api/download', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ platform }),
+    keepalive: true,
   })
-}
-
-export async function recordDownloadClick(platform = '') {
-  await ensureAnonymousUser()
-
-  const result = await incrementCounter('stats/download_count')
-
-  if (!result.committed) {
-    throw new Error('The download counter transaction was not committed.')
-  }
-
-  // Per-platform breakdown is deliberately best-effort and never rethrows: it
-  // needs a rules deploy the aggregate counter does not, so a project still on
-  // the older rules keeps working instead of failing every download click.
-  const platformGroup = platform === 'android32' ? 'android' : platform
-  if (platformGroup === 'android' || platformGroup === 'windows') {
-    incrementCounter(`stats/platform_downloads/${platformGroup}`).catch(() => {})
-  }
-
-  return result.snapshot.val()
+  return response.ok
 }
 
 // Precise 0.25° cells (about 25 km). stats/download_origins holds the coarse
@@ -167,107 +159,6 @@ export async function recordDownloadClick(platform = '') {
 // the two precisions are never merged into one record.
 const LOCATIONS_PATH = 'stats/download_locations'
 const LEGACY_REGIONS_PATH = 'stats/download_origins'
-
-async function getApproximateDownloadOrigin() {
-  if (!approximateOriginPromise) {
-    approximateOriginPromise = fetch('/api/download-origin', {
-      method: 'POST',
-      headers: { Accept: 'application/json' },
-      // Give the small edge request a chance to finish if a mobile browser
-      // briefly backgrounds this page while opening the download dialog.
-      keepalive: true,
-    })
-      .then(async (response) => {
-        if (!response.ok) return null
-
-        const payload = await response.json()
-        const lat = Number(payload.lat)
-        const lng = Number(payload.lng)
-        if (
-          payload.available !== true ||
-          !Number.isFinite(lat) ||
-          !Number.isFinite(lng) ||
-          lat < -90 ||
-          lat > 90 ||
-          lng < -180 ||
-          lng > 180 ||
-          !isLocationGridValue(lat) ||
-          !isLocationGridValue(lng)
-        ) {
-          return null
-        }
-
-        return { lat, lng }
-      })
-      .catch((error) => {
-        // A failed request may be retried when the visitor confirms a
-        // download; do not permanently cache a transient network failure.
-        approximateOriginPromise = null
-        throw error
-      })
-  }
-
-  return approximateOriginPromise
-}
-
-/**
- * Start the two network prerequisites while the visitor is reading the
- * download dialog. This makes the eventual click transaction fast enough for
- * mobile browsers, which often suspend the page as soon as Drive opens.
- */
-export function prepareDownloadTracking() {
-  if (!isFirebaseConfigured) return Promise.resolve()
-  return Promise.allSettled([
-    ensureAnonymousUser(),
-    getApproximateDownloadOrigin(),
-  ])
-}
-
-function incrementCell(path, lat, lng, platformGroup) {
-  return runTransaction(ref(database, `${path}/${cellKey(lat, lng)}`), (current) => {
-    const previous = current && typeof current === 'object' ? current : {}
-    const android = Number.isSafeInteger(previous.android) ? previous.android : 0
-    const windows = Number.isSafeInteger(previous.windows) ? previous.windows : 0
-    const count = Number.isSafeInteger(previous.count) ? previous.count : 0
-    return {
-      lat,
-      lng,
-      count: count + 1,
-      android: android + (platformGroup === 'android' ? 1 : 0),
-      windows: windows + (platformGroup === 'windows' ? 1 : 0),
-    }
-  })
-}
-
-/**
- * Cloudflare supplies approximate request coordinates to the same-origin Pages
- * Function. That function snaps them to a 0.25° (~25 km) cell before returning;
- * the browser stores only an aggregate count for that cell. No IP, account id,
- * timestamp, or precise coordinate reaches Firebase.
- */
-export async function recordApproximateDownloadOrigin(platform = '') {
-  const origin = await getApproximateDownloadOrigin()
-  if (!origin) return false
-
-  await ensureAnonymousUser()
-  const platformGroup = platform === 'android32' ? 'android' : platform
-  try {
-    const result = await incrementCell(LOCATIONS_PATH, origin.lat, origin.lng, platformGroup)
-    return result.committed
-  } catch (error) {
-    // Database rules deployed before stats/download_locations existed reject
-    // the new path. Record the coarse 5° region they still accept, so no
-    // download goes unmapped while the rules deploy lags the site deploy.
-    if (error?.code !== 'PERMISSION_DENIED') throw error
-    const result = await incrementCell(
-      LEGACY_REGIONS_PATH,
-      toLegacyRegion(origin.lat),
-      toLegacyRegion(origin.lng),
-      platformGroup,
-    )
-    return result.committed
-  }
-}
 
 /**
  * Streams both map data sets: precise `locations` and the coarse legacy
@@ -358,7 +249,6 @@ export function subscribeToCommentReactions(
 }
 
 export async function createComment({ authorName, body }) {
-  const user = await ensureAnonymousUser()
   const name = normalizeText(authorName, 40) || 'Anonymous builder'
   const message = normalizeText(body, 500)
 
@@ -366,32 +256,33 @@ export async function createComment({ authorName, body }) {
     throw new Error('Please write at least 3 characters.')
   }
 
+  // The same checks run on the server; doing them here first gives instant
+  // feedback without spending the visitor's rate limit.
+  assertCommunityCommentAllowed(name)
   assertCommunityCommentAllowed(message)
   enforceLocalCommentCooldown(message)
 
-  const commentRef = push(ref(database, 'comments'))
-  const rateLimitRef = ref(database, `commentRateLimits/${user.uid}`)
+  let response
   try {
-    await set(rateLimitRef, {
-      commentId: commentRef.key,
-      createdAt: serverTimestamp(),
+    response = await fetch('/api/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ authorName: name, body: message }),
     })
-  } catch (error) {
-    if (error?.code === 'PERMISSION_DENIED') {
-      throw new Error('Please wait two minutes before posting another comment.')
-    }
-    throw error
+  } catch {
+    throw new Error('The comment could not be sent. Check your connection and try again.')
   }
 
-  await set(commentRef, {
-    authorName: name,
-    body: message,
-    createdAt: serverTimestamp(),
-  })
+  const result = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    if (result.error === 'too-soon' && Number.isSafeInteger(result.retryAfter)) {
+      throw new Error(`Please wait ${result.retryAfter} seconds before posting again.`)
+    }
+    throw new Error(result.message || 'The comment could not be posted. Please try again later.')
+  }
 
   rememberLocalComment(message)
-
-  return commentRef.key
+  return result.id
 }
 
 const reactionTypes = new Set(['upvote', 'like', 'heart'])
@@ -450,17 +341,6 @@ export async function createBugReport({
   return reportRef.key
 }
 
-function normalizeText(value, maxLength) {
-  return String(value || '')
-    // Control characters are the point of this expression, not an accident:
-    // visitor-supplied names and comments are stripped of them before they
-    // reach the database.
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
-    .trim()
-    .slice(0, maxLength)
-}
-
 function enforceLocalCommentCooldown(message) {
   try {
     const lastPostedAt = Number(localStorage.getItem(COMMENT_POSTED_AT_KEY))
@@ -475,7 +355,7 @@ function enforceLocalCommentCooldown(message) {
     }
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('Please')) throw error
-    // Storage can be unavailable in privacy modes. Firebase rules still apply.
+    // Storage can be unavailable in privacy modes. The server still limits posts.
   }
 }
 
@@ -484,6 +364,6 @@ function rememberLocalComment(message) {
     localStorage.setItem(COMMENT_POSTED_AT_KEY, String(Date.now()))
     localStorage.setItem(COMMENT_BODY_KEY, normalizeCommentForComparison(message))
   } catch {
-    // Optional fast feedback only; Firebase rules enforce the real cooldown.
+    // Optional fast feedback only; the server enforces the real cooldown.
   }
 }

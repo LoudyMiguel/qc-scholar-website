@@ -4,69 +4,28 @@
     ".write": false,
     "stats": {
       "download_count": {
-        ".read": true,
-        ".write": "auth != null && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.isNumber() && newData.val() === data.val() + 1))"
+        ".read": true
       },
       "platform_downloads": {
-        ".read": true,
-        "$platform": {
-          ".write": "auth != null && ($platform === 'android' || $platform === 'windows') && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.isNumber() && newData.val() === data.val() + 1))",
-          ".validate": "newData.isNumber()"
-        }
+        ".read": true
       },
       "download_origins": {
-        ".read": true,
-        "$bucket": {
-          ".write": "auth != null && newData.hasChildren(['lat', 'lng', 'count', 'android', 'windows']) && ((!data.exists() && newData.child('count').val() === 1) || (data.exists() && newData.child('count').val() === data.child('count').val() + 1))",
-          ".validate": "newData.child('android').val() + newData.child('windows').val() === newData.child('count').val() && ((!data.exists()) || (newData.child('lat').val() === data.child('lat').val() && newData.child('lng').val() === data.child('lng').val()))",
-          "lat": {
-            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90 && newData.val() % 5 === 0"
-          },
-          "lng": {
-            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180 && newData.val() % 5 === 0"
-          },
-          "count": {
-            ".validate": "newData.isNumber() && newData.val() >= 1"
-          },
-          "android": {
-            ".validate": "newData.isNumber() && newData.val() >= 0"
-          },
-          "windows": {
-            ".validate": "newData.isNumber() && newData.val() >= 0"
-          },
-          "$other": { ".validate": false }
-        }
+        ".read": true
       },
       "download_locations": {
-        ".read": true,
-        "$bucket": {
-          ".write": "auth != null && newData.hasChildren(['lat', 'lng', 'count', 'android', 'windows']) && ((!data.exists() && newData.child('count').val() === 1) || (data.exists() && newData.child('count').val() === data.child('count').val() + 1))",
-          ".validate": "newData.child('android').val() + newData.child('windows').val() === newData.child('count').val() && ((!data.exists()) || (newData.child('lat').val() === data.child('lat').val() && newData.child('lng').val() === data.child('lng').val()))",
-          "lat": {
-            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90 && (newData.val() * 4) % 1 === 0"
-          },
-          "lng": {
-            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180 && (newData.val() * 4) % 1 === 0"
-          },
-          "count": {
-            ".validate": "newData.isNumber() && newData.val() >= 1"
-          },
-          "android": {
-            ".validate": "newData.isNumber() && newData.val() >= 0"
-          },
-          "windows": {
-            ".validate": "newData.isNumber() && newData.val() >= 0"
-          },
-          "$other": { ".validate": false }
-        }
+        ".read": true
       },
-      "$other": { ".validate": false }
+      "$other": {
+        ".validate": false
+      }
     },
     "comments": {
       ".read": true,
-      ".indexOn": ["createdAt"],
+      ".indexOn": [
+        "createdAt"
+      ],
       "$commentId": {
-        ".write": "auth != null && (auth.token.admin === true || (!data.exists() && newData.exists() && root.child('commentRateLimits').child(auth.uid).child('commentId').val() === $commentId && root.child('commentRateLimits').child(auth.uid).child('createdAt').val() >= now - 15000))",
+        ".write": "auth != null && auth.token.admin === true",
         ".validate": "newData.hasChildren(['authorName', 'body', 'createdAt'])",
         "authorName": {
           ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
@@ -77,20 +36,9 @@
         "createdAt": {
           ".validate": "newData.isNumber() && ((!data.exists() && newData.val() >= now - 60000 && newData.val() <= now + 1000) || (data.exists() && newData.val() === data.val()))"
         },
-        "$other": { ".validate": false }
-      }
-    },
-    "commentRateLimits": {
-      "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid && newData.hasChildren(['commentId', 'createdAt']) && (!data.exists() || newData.child('createdAt').val() >= data.child('createdAt').val() + 120000)",
-        "commentId": {
-          ".validate": "newData.isString() && newData.val().length >= 16 && newData.val().length <= 32"
-        },
-        "createdAt": {
-          ".validate": "newData.isNumber() && newData.val() >= now - 1000 && newData.val() <= now + 1000"
-        },
-        "$other": { ".validate": false }
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "commentReactions": {
@@ -106,7 +54,10 @@
     },
     "bugReports": {
       ".read": "auth != null && auth.token.admin === true",
-      ".indexOn": ["createdAt", "status"],
+      ".indexOn": [
+        "createdAt",
+        "status"
+      ],
       "$reportId": {
         ".read": "auth != null && (auth.token.admin === true || data.child('authorId').val() === auth.uid)",
         ".write": "auth != null && (auth.token.admin === true || (!data.exists() && newData.exists() && newData.child('authorId').val() === auth.uid))",
@@ -138,9 +89,20 @@
         "status": {
           ".validate": "newData.isString() && ((!data.exists() && newData.val() === 'new') || (data.exists() && auth.token.admin === true && (newData.val() === 'new' || newData.val() === 'triaged' || newData.val() === 'resolved')))"
         },
-        "$other": { ".validate": false }
+        "$other": {
+          ".validate": false
+        }
       }
     },
-    "$other": { ".validate": false }
+    "security": {
+      "offenders": {
+        ".indexOn": [
+          "lastSeen"
+        ]
+      }
+    },
+    "$other": {
+      ".validate": false
+    }
   }
 }

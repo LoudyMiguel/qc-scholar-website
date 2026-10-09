@@ -1,11 +1,7 @@
 import { Monitor, Smartphone } from '@lucide/vue'
 import { computed, onMounted, ref } from 'vue'
 import { detectPlatform, releases, siteConfig } from '../config/site'
-import {
-  prepareDownloadTracking,
-  recordApproximateDownloadOrigin,
-  recordDownloadClick,
-} from '../services/firebase'
+import { recordDownload } from '../services/firebase'
 
 // Shared by the hero and the download cards, so the page makes one manifest
 // request and both buttons reflect the same in-flight download.
@@ -70,10 +66,6 @@ function start() {
     .catch((error) => {
       console.warn('Live release metadata is unavailable; using the build fallback.', error)
     })
-
-  prepareDownloadTracking().catch((error) => {
-    console.warn('Download tracking could not be prepared.', error)
-  })
 }
 
 async function startDownload(card) {
@@ -81,12 +73,11 @@ async function startDownload(card) {
   downloadingId.value = card.id
 
   try {
+    // One small same-origin request; `keepalive` lets it finish after the
+    // browser moves on, so the download never waits long for the count.
     await Promise.race([
-      Promise.allSettled([
-        recordDownloadClick(card.id),
-        recordApproximateDownloadOrigin(card.id),
-      ]),
-      new Promise((resolve) => window.setTimeout(resolve, 1800)),
+      recordDownload(card.id),
+      new Promise((resolve) => window.setTimeout(resolve, 800)),
     ])
   } catch (error) {
     console.warn('Download tracking was unavailable.', error)

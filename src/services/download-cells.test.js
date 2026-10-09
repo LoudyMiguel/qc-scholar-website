@@ -5,7 +5,7 @@ import {
   cellKey,
   isLocationGridValue,
   parseCells,
-  toLegacyRegion,
+  snapToLocationGrid,
 } from './download-cells.js'
 
 test('encodes keys without characters Firebase rejects', () => {
@@ -31,12 +31,21 @@ test('accepts only 0.25 degree grid values for precise locations', () => {
   }
 })
 
-test('falls back to the legacy 5 degree region the old rules accept', () => {
-  assert.equal(toLegacyRegion(14.5), 15)
-  assert.equal(toLegacyRegion(121), 120)
-  assert.equal(toLegacyRegion(179.75), 180)
-  assert.equal(toLegacyRegion(-89.75), -90)
-  assert.ok(!Object.is(toLegacyRegion(-0.25), -0))
+test('snaps coordinates to the 0.25 degree grid', () => {
+  assert.equal(snapToLocationGrid('14.5995', -90, 90), 14.5)
+  assert.equal(snapToLocationGrid('120.9842', -180, 180), 121)
+  assert.equal(snapToLocationGrid(-0.1, -90, 90), 0)
+  assert.ok(!Object.is(snapToLocationGrid(-0.1, -90, 90), -0))
+  assert.equal(snapToLocationGrid(95, -90, 90), 90)
+  for (const value of ['-33.8688', '151.2093', '-0.1276']) {
+    assert.ok(isLocationGridValue(snapToLocationGrid(value, -180, 180)))
+  }
+})
+
+test('reports no location when Cloudflare has none', () => {
+  for (const value of [undefined, null, '', 'abc', Number.NaN]) {
+    assert.equal(snapToLocationGrid(value, -90, 90), null)
+  }
 })
 
 test('parses cells, skips malformed records, and sorts busiest first', () => {

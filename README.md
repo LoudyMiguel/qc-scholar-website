@@ -26,7 +26,12 @@ website/
 │  ├─ _headers                    # CSP and cache policy
 │  ├─ _redirects                  # SPA fallback
 │  └─ privacy.html
-├─ functions/api/download-origin.js  # 0.25° Cloudflare coordinate endpoint
+├─ functions/
+│  ├─ _middleware.js              # www redirect, BLOCKED_IPS
+│  └─ api/comments.js  api/download.js  # the only write paths (rate-limited)
+├─ server/                        # shared by the functions: Firebase admin
+│                                 # REST client, IP parsing, rate limits
+├─ incidents/                     # incident reports and cleanup data
 ├─ src/
 │  ├─ assets/main.css             # theme tokens and shared component classes
 │  ├─ components/
@@ -67,8 +72,25 @@ npm run build     # production bundle into dist/
 npm run check     # lint, then build (run this before deploying)
 npm run preview   # serve the built bundle
 npm run assets    # regenerate public/assets from the Flutter app icon
-node --test 'functions/**/*.test.js' 'src/**/*.test.js' 'download-worker/src/*.test.js'
+node --test 'functions/**/*.test.js' 'src/**/*.test.js' 'server/*.test.js' 'download-worker/src/*.test.js'
 ```
+
+`server/emulator.test.js` runs the write endpoints against the Realtime
+Database emulator. It is skipped unless the emulator is running:
+
+```bash
+firebase emulators:start --only database --project demo-genxyz
+# in another terminal
+FIREBASE_DATABASE_EMULATOR_HOST=127.0.0.1:9000 node --test server/emulator.test.js
+```
+
+To click through the whole site locally without touching production, start
+the database and auth emulators, build with `VITE_FIREBASE_EMULATORS=true` and
+the `demo-genxyz` project values, and serve it with
+`npx wrangler pages dev dist --binding FIREBASE_DATABASE_EMULATOR_HOST=127.0.0.1:9000 --binding FIREBASE_DATABASE_URL=https://demo-genxyz-default-rtdb.firebaseio.com`.
+Load the rules into the emulator with
+`curl -X PUT -H "Authorization: Bearer owner" --data-binary @database.rules.json "http://127.0.0.1:9000/.settings/rules.json?ns=demo-genxyz-default-rtdb"`
+if `firebase.json` is not picked up.
 
 **Run `npm run lint` before deploying.** A clean `vite build` does not mean the
 page works: a bundler resolves imports, it does not check that every identifier
@@ -177,24 +199,22 @@ active locations" list, which also zooms the map to a location when clicked.
 The wheel never hijacks page scrolling: it zooms only after the map is clicked
 or focused, and on phones one finger scrolls the page while pinch zooms.
 
-New download clicks call the same-origin Pages Function, which reads
-Cloudflare's approximate request coordinates, snaps them to a **0.25° cell**
-(about 25 km), and returns only that cell. Firebase stores an aggregate count
-per cell under `stats/download_locations` — never an IP, precise coordinate,
-user id, timestamp, or device identifier. Keys encode the decimal point as `p`
-(`n14p25_e121`) because Firebase keys cannot contain `.`.
+A download click posts `{ platform }` to `/api/download`. The function reads
+Cloudflare's approximate request coordinates (never the browser's), snaps them
+to a **0.25° cell** (about 25 km), and adds one to that cell's aggregate count
+under `stats/download_locations`, together with the download counter and the
+platform total. The map stores no IP address, precise coordinate, user id,
+timestamp or device identifier. Keys encode the decimal point as `p`
+(`n14p25_e121`), because Firebase keys cannot contain `.`.
 
 Downloads recorded before October 2026 were rounded to 5° and stay under
 `stats/download_origins`, a separate data set so the two precisions are never
 merged. The map draws them as faint, true-size ~550 km areas instead of points,
 and leaves them out of the "Most active locations" list.
 
-The database rules change is additive: `stats/download_origins` keeps its
-original rules and `stats/download_locations` is new. Deploy it with
-`firebase deploy --only database` (after `firebase use --add` once, which
-writes `.firebaserc`). Until it is deployed, the old rules reject the new path,
-and the client falls back to recording the 5° region exactly as before, so no
-download goes unmapped while the two deploys are out of step.
+Browsers can read the map but not write to it. The rules deny every client
+write under `stats`, so a script cannot place points (see
+`incidents/2026-10-08`).
 
 ## Connect Firebase
 
@@ -204,7 +224,9 @@ download goes unmapped while the two deploys are out of step.
    invisible anonymous UID; no login screen is shown.
 4. Copy `.env.example` to `.env.local` and fill in every `VITE_FIREBASE_*`
    value. Firebase Web API keys are intentionally public; never put a
-   service-account key in this site.
+   service-account key in a `VITE_*` variable (those ship to every browser).
+   The service account belongs only in the Cloudflare secret described under
+   "Abuse protection".
 5. Deploy the included default-deny rules:
 
    ```bash
@@ -230,6 +252,10 @@ stats/download_origins/{cell}   # legacy 5° regions (before Oct 2026), same sha
 comments/{commentId}
 commentReactions/{commentId}/{upvote|like|heart}/{anonymousUid}
 bugReports/{reportId}
+security/rateLimits/{action}/{yyyymmdd}/{ipHash}  # admin-only, kept 2 days
+security/globalLimits/{action}/{yyyymmddhh}       # admin-only, kept 2 days
+security/blocked/{ipHash}                         # admin-only, 24 h blocks
+security/offenders/{ipHash}                       # admin-only, kept 30 days
 ```
 
 Comments and reaction totals are public and update through live listeners.
@@ -240,20 +266,79 @@ account with an `admin: true` custom claim read a report. Public visitors
 cannot edit or delete comments after submission; moderate through the Firebase
 console or Admin SDK.
 
-`stats/platform_downloads` needs the updated rules deployed. Its client
-increment is deliberately best-effort and never rethrows, so a project still on
-the older rules keeps working instead of failing every download click.
-
 ### What the counters mean
 
-They count confirmation-link clicks, not completed installations. A public
-client counter can never be authoritative: scripted anonymous accounts can
-click repeatedly, navigation can interrupt an in-flight request, and direct
-Direct GitHub asset links bypass the page entirely. Use GitHub release asset
-statistics and site analytics as supporting evidence rather than treating the counter as an
-installation total. For stronger abuse controls, move
-comment and download writes behind a rate-limited Cloudflare Worker or a
-Firebase callable function.
+They count download-button clicks, not completed installations. The server
+counts at most 20 clicks per network address per day and 400 site-wide per
+hour. Direct GitHub asset links bypass the page entirely. Use GitHub release
+asset statistics and site analytics as supporting evidence rather than
+treating the counter as an installation total.
+
+## Abuse protection
+
+Browsers never write comments, counters or map points to Firebase. They post
+to two Pages Functions, which write with a Google service account after these
+checks:
+
+| | Per address | Site-wide |
+| --- | --- | --- |
+| `POST /api/comments` | 1 per 2 minutes, 10 per day | 60 per hour |
+| `POST /api/download` | 1 per 15 seconds, 20 per day | 400 per hour |
+
+- **Blocklist first.** `BLOCKED_IPS` and the automatic blocks are checked
+  before anything else.
+- **Same-origin only.** Requests must carry this site's `Origin` header.
+- **Comment checks.** Comments pass the form's moderation checks again and must
+  not repeat any of the last 50 comments.
+- **Strikes and blocks.** A request that breaks a limit, or a comment refused
+  as spam or as a duplicate, counts as a strike against its address. After
+  **20 strikes in a UTC day** the address is blocked for 24 hours on both
+  endpoints.
+- **Site-wide cap.** It is checked last, so refused junk never uses up real
+  visitors' allowance, and it never strikes anyone.
+- **What is stored.** Rate-limit records hold only an HMAC of the address.
+
+Limits live in `server/abuse-guard.js` (`LIMITS`, `STRIKES_TO_BLOCK`).
+
+### Setup (required, or comments and download counting stop)
+
+1. **Firebase console → Project settings → Service accounts → Generate new
+   private key.** This downloads a JSON file.
+2. **Cloudflare → Workers & Pages → the Pages project → Settings → Variables
+   and Secrets → Add.** Choose type **Secret**, name it
+   `FIREBASE_SERVICE_ACCOUNT`, and paste the whole JSON file as the value.
+   Add it for Production (and Preview, if previews should accept writes).
+3. Delete the downloaded JSON file. Anyone with it has full database access.
+4. Redeploy the site, then deploy the rules: `firebase deploy --only database`.
+
+The functions read the database URL from `VITE_FIREBASE_DATABASE_URL`, which
+is already set. You can optionally set `FIREBASE_DATABASE_URL` to override it,
+and `IP_HASH_SECRET` (any long random string) to key the address hashes
+independently of the service account. Without `FIREBASE_SERVICE_ACCOUNT`,
+both endpoints answer 503: the form shows "Comments are temporarily unavailable", and
+downloads still start but are not counted.
+
+### Tracking and blocking addresses
+
+- **Offenders.** In **Firebase console → Realtime Database → Data →
+  `security/offenders`**, every address that broke a rule appears with its IP,
+  country, network (ASN and name), user agent, first and last time seen,
+  rejection count and last reason. `security/blocked` lists the current
+  automatic 24-hour blocks.
+- **Live events.** **Cloudflare → the Pages project → Functions → Real-time
+  logs** shows each refusal as it happens (`"event":"abuse"`).
+- **Permanent blocks.** Add the address or range under **Cloudflare → the
+  domain → Security → WAF → Tools → IP Access Rules → Block**. This takes
+  effect immediately and covers every request, including static files.
+  Alternatively, list addresses or CIDR ranges in the `BLOCKED_IPS` Pages
+  variable (comma or space separated). The middleware and both endpoints
+  refuse them, but a variable change needs a redeploy.
+- **Unblock early.** Delete the entry under `security/blocked`.
+
+For a second layer, add a Cloudflare WAF rate-limiting rule for
+`/api/comments` and `/api/download`. You can also lower **Authentication →
+Settings → Sign-up quota** in Firebase, because anonymous accounts are still
+used for reactions and bug reports, or enforce App Check (step 7 above).
 
 ## Images
 

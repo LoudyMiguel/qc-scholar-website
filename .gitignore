@@ -9,3 +9,7 @@ dist-ssr/
 firebase-debug.log
 *.log
 .DS_Store
+
+# Local database exports (may contain private bug reports)
+backup-*.json
+.wrangler/
